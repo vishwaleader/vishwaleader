@@ -110,7 +110,7 @@
         </div>
 
         <!-- Mobile Navigation Menu -->
-        <div id="mobileMenu" class="hidden md:hidden bg-white border-t border-zinc-200 px-6 py-4 space-y-3 shadow-inner">
+        <div id="mobileMenu" class="md:hidden max-h-0 opacity-0 overflow-hidden transition-all duration-300 ease-in-out bg-white border-t border-zinc-200 px-6 space-y-3 shadow-inner">
             <a href="#about" class="block py-2 text-sm font-semibold text-zinc-700 hover:text-brandBlue">About & Media</a>
             <a href="#london" class="block py-2 text-sm font-semibold text-zinc-700 hover:text-brandBlue">London Summit 2026</a>
             <a href="#networks" class="block py-2 text-sm font-semibold text-zinc-700 hover:text-brandBlue">Global Networks</a>
@@ -531,7 +531,7 @@
             </div>
 
             <!-- Profile Info Display Card -->
-            <div class="border border-zinc-200 bg-white rounded p-8 shadow-sm relative overflow-hidden max-w-4xl">
+            <div id="profileCard" class="border border-zinc-200 bg-white rounded p-8 shadow-sm relative overflow-hidden max-w-4xl transition-all duration-150 ease-in-out">
                 <!-- Decorative Top Border Badge -->
                 <div id="profileBadge" class="absolute top-0 right-0 bg-brandBlue text-white text-[9px] font-extrabold uppercase tracking-widest px-3 py-1">
                     Primary Subject
@@ -753,7 +753,14 @@
         const mobileMenu = document.getElementById('mobileMenu');
         
         menuBtn.addEventListener('click', () => {
-            mobileMenu.classList.toggle('hidden');
+            const isOpen = !mobileMenu.classList.contains('max-h-0');
+            if (isOpen) {
+                mobileMenu.classList.add('max-h-0', 'opacity-0');
+                mobileMenu.classList.remove('max-h-96', 'opacity-100', 'py-4');
+            } else {
+                mobileMenu.classList.remove('max-h-0', 'opacity-0');
+                mobileMenu.classList.add('max-h-96', 'opacity-100', 'py-4');
+            }
         });
 
         // Compliance Desk Identity Switcher Data
@@ -786,34 +793,44 @@
 
         function selectProfile(profileId) {
             const data = registryData[profileId];
+            const card = document.getElementById('profileCard');
 
-            // Update DOM Elements
-            document.getElementById('profileName').textContent = data.name;
-            document.getElementById('profileRegion').textContent = data.region;
-            document.getElementById('profileAffiliation').textContent = data.affiliation;
-            document.getElementById('profileRole').textContent = data.desc;
-            
-            const badge = document.getElementById('profileBadge');
-            badge.textContent = data.badge;
-            badge.className = "absolute top-0 right-0 text-[9px] font-extrabold uppercase tracking-widest px-3 py-1 " + data.badgeClass;
+            // Fade out
+            card.classList.add('opacity-0', 'translate-y-1');
 
-            // Reset active button styles
-            const buttons = ['director', 'financial', 'municipal'];
-            buttons.forEach(btn => {
-                const buttonEl = document.getElementById('btn-' + btn);
-                if (btn === profileId) {
-                    buttonEl.className = "w-full text-xs font-bold uppercase tracking-wider py-3 px-4 rounded text-center transition-all bg-white text-zinc-900 shadow-sm";
-                } else {
-                    buttonEl.className = "w-full text-xs font-bold uppercase tracking-wider py-3 px-4 rounded text-center transition-all text-zinc-500 hover:text-zinc-900";
-                }
-            });
+            setTimeout(() => {
+                // Update DOM Elements
+                document.getElementById('profileName').textContent = data.name;
+                document.getElementById('profileRegion').textContent = data.region;
+                document.getElementById('profileAffiliation').textContent = data.affiliation;
+                document.getElementById('profileRole').textContent = data.desc;
+                
+                const badge = document.getElementById('profileBadge');
+                badge.textContent = data.badge;
+                badge.className = "absolute top-0 right-0 text-[9px] font-extrabold uppercase tracking-widest px-3 py-1 " + data.badgeClass;
+
+                // Reset active button styles
+                const buttons = ['director', 'financial', 'municipal'];
+                buttons.forEach(btn => {
+                    const buttonEl = document.getElementById('btn-' + btn);
+                    if (btn === profileId) {
+                        buttonEl.className = "w-full text-xs font-bold uppercase tracking-wider py-3 px-4 rounded text-center transition-all bg-white text-zinc-900 shadow-sm";
+                    } else {
+                        buttonEl.className = "w-full text-xs font-bold uppercase tracking-wider py-3 px-4 rounded text-center transition-all text-zinc-500 hover:text-zinc-900";
+                    }
+                });
+
+                // Fade in
+                card.classList.remove('opacity-0', 'translate-y-1');
+            }, 150);
         }
 
         // Close mobile menu when a link is clicked
         const mobileMenuLinks = mobileMenu.querySelectorAll('a');
         mobileMenuLinks.forEach(link => {
             link.addEventListener('click', () => {
-                mobileMenu.classList.add('hidden');
+                mobileMenu.classList.add('max-h-0', 'opacity-0');
+                mobileMenu.classList.remove('max-h-96', 'opacity-100', 'py-4');
             });
         });
 
