@@ -223,8 +223,8 @@
                 </p>
             </div>
 
-            <!-- Two Columns for Magazine and Corporate Entity (Styled like project showcase) -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch mb-16">
+            <!-- Three Columns for Magazine, Corporate Entity, and Book (Styled like project showcase) -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch mb-16">
                 <!-- Card 1: Print Publication -->
                 <div class="group border border-zinc-200 hover:border-zinc-400 hover:shadow-sm rounded transition-all p-8 flex flex-col justify-between bg-zinc-50/50">
                     <div>
@@ -242,13 +242,9 @@
                         </p>
                         
                         <div class="bg-white border border-zinc-200 rounded p-4 space-y-2 text-xs text-zinc-700 mb-6">
-                            <div class="flex justify-between py-1 border-b border-zinc-100">
+                            <div class="flex flex-col sm:flex-row sm:justify-between py-1 gap-1">
                                 <span class="text-zinc-400">Ownership & Editor</span>
                                 <span class="font-semibold text-zinc-900">Shirish Bhageshwar Ramteke</span>
-                            </div>
-                            <div class="flex justify-between py-1">
-                                <span class="text-zinc-400">Printing Location</span>
-                                <span class="font-semibold text-zinc-900">Usha Printers</span>
                             </div>
                         </div>
                     </div>
@@ -274,17 +270,17 @@
                         </p>
                         
                         <div class="bg-white border border-zinc-200 rounded p-4 space-y-2 text-xs text-zinc-700 mb-6 font-mono">
-                            <div class="flex justify-between py-1 border-b border-zinc-100">
+                            <div class="flex flex-col sm:flex-row sm:justify-between py-1 border-b border-zinc-100 gap-1">
                                 <span class="text-zinc-400">CIN</span>
                                 <span class="font-semibold text-zinc-900">U74999MH2016PTC273606</span>
                             </div>
-                            <div class="flex justify-between py-1 border-b border-zinc-100">
+                            <div class="flex flex-col sm:flex-row sm:justify-between py-1 border-b border-zinc-100 gap-1">
                                 <span class="text-zinc-400">Capital Status</span>
                                 <span class="font-semibold text-zinc-900">Authorized: Rs. 100k / Paid-Up: Rs. 100k</span>
                             </div>
-                            <div class="flex justify-between py-1">
+                            <div class="flex flex-col sm:flex-row sm:justify-between py-1 gap-1">
                                 <span class="text-zinc-400 text-left">Address</span>
-                                <span class="font-semibold text-zinc-900 text-right text-[10px] leading-tight max-w-[220px]">Unit 1, Malwa Patanwala Complex, LBS Marg, Ghatkopar W, Mumbai - 400086</span>
+                                <span class="font-semibold text-zinc-900 sm:text-right text-[10px] leading-tight sm:max-w-[220px]">Unit 1, Malwa Patanwala Complex, LBS Marg, Ghatkopar W, Mumbai - 400086</span>
                             </div>
                         </div>
                     </div>
@@ -292,7 +288,42 @@
                         View Corporate Profile <i class="fa-solid fa-square-arrow-up-right text-[10px]"></i>
                     </a>
                 </div>
-            </div>
+
+                <!-- Card 3: Featured Publication (Book) -->
+                <div class="group border border-zinc-200 hover:border-zinc-400 hover:shadow-sm rounded transition-all p-8 flex flex-col justify-between bg-zinc-50/50">
+                    <div>
+                        <div class="flex items-center gap-3 mb-6">
+                            <div class="w-10 h-10 rounded bg-brandBlue/5 text-brandBlue flex items-center justify-center border border-brandBlue/10">
+                                <i class="fa-solid fa-book-open text-lg"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-extrabold text-zinc-900 uppercase tracking-tight">Featured Book</h3>
+                                <span class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Research & Souvenir</span>
+                            </div>
+                        </div>
+                        <p class="text-sm text-zinc-600 leading-relaxed mb-6 font-normal">
+                            <strong class="text-zinc-900 font-bold">Transnational Advocacy and Diaspora Mobilization:</strong> An Analysis of the Vishwa Leader London Program and the Socio-Political Networks of Shirish Ramteke. This book documents the translation of Ambedkarite constitutional values to international academic forums in the United Kingdom.
+                        </p>
+                        
+                        <div class="bg-white border border-zinc-200 rounded p-4 space-y-2 text-xs text-zinc-700 mb-6 font-mono">
+                            <div class="flex flex-col sm:flex-row sm:justify-between py-1 border-b border-zinc-100 gap-1">
+                                <span class="text-zinc-400">Subject</span>
+                                <span class="font-semibold text-zinc-900">Socio-Political Advocacy</span>
+                            </div>
+                            <div class="flex flex-col sm:flex-row sm:justify-between py-1 border-b border-zinc-100 gap-1">
+                                <span class="text-zinc-400">Published</span>
+                                <span class="font-semibold text-zinc-900">London Program Souvenir (2026)</span>
+                            </div>
+                            <div class="flex flex-col sm:flex-row sm:justify-between py-1 gap-1">
+                                <span class="text-zinc-400 text-left">Authors</span>
+                                <span class="font-semibold text-zinc-900 sm:text-right text-[10px] leading-tight sm:max-w-[220px]">Shirish Bhageshwar Ramteke, SOAS Scholars & Sanghakaya Delegation</span>
+                            </div>
+                        </div>
+                    </div>
+                    <a href="#contact" class="inline-flex items-center gap-1.5 text-xs font-bold text-brandBlue hover:text-brandDark transition-colors group-hover:underline uppercase tracking-wider">
+                        Request Copy <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                    </a>
+                </div>
 
             <!-- Comparison Table (Registration Profiles) -->
             <div class="mb-12">
@@ -523,7 +554,7 @@
                     Shirish Bhageshwar Ramteke
                 </button>
                 <button onclick="selectProfile('financial')" id="btn-financial" class="w-full text-xs font-bold uppercase tracking-wider py-3 px-4 rounded text-center transition-all text-zinc-500 hover:text-zinc-900">
-                    Shirish S. Ramteke
+                    Shirish B. Ramteke
                 </button>
                 <button onclick="selectProfile('municipal')" id="btn-municipal" class="w-full text-xs font-bold uppercase tracking-wider py-3 px-4 rounded text-center transition-all text-zinc-500 hover:text-zinc-900">
                     Shirish Ramteke (Municipal)
@@ -584,7 +615,7 @@
                                 <td class="px-6 py-4">Publisher, Director, Media Coordinator, and International Event Organizer</td>
                             </tr>
                             <tr class="hover:bg-zinc-50 transition-colors">
-                                <td class="px-6 py-4 font-bold text-zinc-900">Shirish S. Ramteke</td>
+                                <td class="px-6 py-4 font-bold text-zinc-900">Shirish B. Ramteke</td>
                                 <td class="px-6 py-4">Nagpur (Suyog Nagar)</td>
                                 <td class="px-6 py-4">S. M. Dhole Financial Services</td>
                                 <td class="px-6 py-4">Financial Agent specializing in livestock, transit, property, and agricultural insurance</td>
@@ -774,7 +805,7 @@
                 desc: "Director of Vishwa Leader Techmedia Private Limited (DIN: 07427260) and publisher of the registered print magazine. Directs the global media operations, international collaborations, and the World Leader Ambedkar International Award program in London."
             },
             financial: {
-                name: "Shirish S. Ramteke",
+                name: "Shirish B. Ramteke",
                 region: "Ring Road, Suyog Nagar, Nagpur",
                 affiliation: "S. M. Dhole Financial Services",
                 badge: "Distinct Commercial Entity",

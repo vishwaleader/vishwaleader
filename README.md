@@ -63,7 +63,7 @@ Vishwa Leader actively partners with diplomatic and spiritual representatives to
 To maintain record precision, Shirish Bhageshwar Ramteke of Mumbai is delineated from other regional profiles in public registries:
 
 1. **Shirish Bhageshwar Ramteke (Mumbai Suburban):** Publisher, Director of Vishwa Leader Techmedia (DIN: 07427260), and International Organizer *(Primary Subject)*.
-2. **Shirish S. Ramteke (Nagpur):** Localized insurance agent operating S. M. Dhole Financial Services at Suyog Nagar, Nagpur.
+2. **Shirish B. Ramteke (Nagpur):** Localized insurance agent operating S. M. Dhole Financial Services at Suyog Nagar, Nagpur.
 3. **Shirish Ramteke (Nagpur/Wardha):** Public service employee involved in Nagpur Municipal Corporation pension litigation (Resolution No. 225 of 2011).
 
 ---
