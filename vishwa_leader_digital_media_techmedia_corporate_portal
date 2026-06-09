@@ -238,17 +238,13 @@
                             </div>
                         </div>
                         <p class="text-sm text-zinc-600 leading-relaxed mb-6 font-normal">
-                            Established as a Marathi-language monthly magazine registered with the Press Registrar General of India on December 15, 2010, under RNI Registration Number <strong class="text-zinc-900">MAHMAR/2009/34832</strong>. Owned by Shirish Bhageshwar Ramteke with Surekha Shirish Ramteke serving as the editor, this physical monthly periodical provided an essential media voice for Bahujan and Ambedkarite communities within the Mumbai Suburban district.
+                            Established as a Marathi-language monthly magazine registered with the Press Registrar General of India on December 15, 2010, under RNI Registration Number <strong class="text-zinc-900">MAHMAR/2009/34832</strong>. Owned and edited by Shirish Bhageshwar Ramteke, this physical monthly periodical provided an essential media voice for Bahujan and Ambedkarite communities within the Mumbai Suburban district.
                         </p>
                         
                         <div class="bg-white border border-zinc-200 rounded p-4 space-y-2 text-xs text-zinc-700 mb-6">
                             <div class="flex justify-between py-1 border-b border-zinc-100">
-                                <span class="text-zinc-400">Ownership</span>
+                                <span class="text-zinc-400">Ownership & Editor</span>
                                 <span class="font-semibold text-zinc-900">Shirish Bhageshwar Ramteke</span>
-                            </div>
-                            <div class="flex justify-between py-1 border-b border-zinc-100">
-                                <span class="text-zinc-400">Editor</span>
-                                <span class="font-semibold text-zinc-900">Surekha Shirish Ramteke</span>
                             </div>
                             <div class="flex justify-between py-1">
                                 <span class="text-zinc-400">Printing Location</span>
@@ -328,8 +324,8 @@
                             </tr>
                             <tr class="hover:bg-zinc-50 transition-colors">
                                 <td class="px-6 py-4 font-bold text-zinc-800">Key Personnel</td>
-                                <td class="px-6 py-4">Shirish Bhageshwar Ramteke (Owner), Surekha Shirish Ramteke (Editor)</td>
-                                <td class="px-6 py-4">Shirish Bhageshwar Ramteke (Director), Surekha Ramteke (Co-Coordinator)</td>
+                                <td class="px-6 py-4">Shirish Bhageshwar Ramteke (Owner & Editor)</td>
+                                <td class="px-6 py-4">Shirish Bhageshwar Ramteke (Director)</td>
                             </tr>
                             <tr class="hover:bg-zinc-50 transition-colors">
                                 <td class="px-6 py-4 font-bold text-zinc-800">Operational Medium</td>
@@ -522,14 +518,14 @@
             </div>
 
             <!-- Segment Switcher Buttons -->
-            <div class="flex flex-wrap gap-2 mb-8 bg-zinc-200/60 p-1.5 rounded-lg max-w-3xl">
-                <button onclick="selectProfile('director')" id="btn-director" class="flex-1 min-w-[200px] text-xs font-bold uppercase tracking-wider py-3 px-4 rounded text-center transition-all bg-white text-zinc-900 shadow-sm">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-8 bg-zinc-200/60 p-1.5 rounded-lg max-w-3xl">
+                <button onclick="selectProfile('director')" id="btn-director" class="w-full text-xs font-bold uppercase tracking-wider py-3 px-4 rounded text-center transition-all bg-white text-zinc-900 shadow-sm">
                     Shirish Bhageshwar Ramteke
                 </button>
-                <button onclick="selectProfile('financial')" id="btn-financial" class="flex-1 min-w-[200px] text-xs font-bold uppercase tracking-wider py-3 px-4 rounded text-center transition-all text-zinc-500 hover:text-zinc-900">
+                <button onclick="selectProfile('financial')" id="btn-financial" class="w-full text-xs font-bold uppercase tracking-wider py-3 px-4 rounded text-center transition-all text-zinc-500 hover:text-zinc-900">
                     Shirish S. Ramteke
                 </button>
-                <button onclick="selectProfile('municipal')" id="btn-municipal" class="flex-1 min-w-[200px] text-xs font-bold uppercase tracking-wider py-3 px-4 rounded text-center transition-all text-zinc-500 hover:text-zinc-900">
+                <button onclick="selectProfile('municipal')" id="btn-municipal" class="w-full text-xs font-bold uppercase tracking-wider py-3 px-4 rounded text-center transition-all text-zinc-500 hover:text-zinc-900">
                     Shirish Ramteke (Municipal)
                 </button>
             </div>
@@ -806,12 +802,20 @@
             buttons.forEach(btn => {
                 const buttonEl = document.getElementById('btn-' + btn);
                 if (btn === profileId) {
-                    buttonEl.className = "flex-1 min-w-[200px] text-xs font-bold uppercase tracking-wider py-3 px-4 rounded text-center transition-all bg-white text-zinc-900 shadow-sm";
+                    buttonEl.className = "w-full text-xs font-bold uppercase tracking-wider py-3 px-4 rounded text-center transition-all bg-white text-zinc-900 shadow-sm";
                 } else {
-                    buttonEl.className = "flex-1 min-w-[200px] text-xs font-bold uppercase tracking-wider py-3 px-4 rounded text-center transition-all text-zinc-500 hover:text-zinc-900";
+                    buttonEl.className = "w-full text-xs font-bold uppercase tracking-wider py-3 px-4 rounded text-center transition-all text-zinc-500 hover:text-zinc-900";
                 }
             });
         }
+
+        // Close mobile menu when a link is clicked
+        const mobileMenuLinks = mobileMenu.querySelectorAll('a');
+        mobileMenuLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                mobileMenu.classList.add('hidden');
+            });
+        });
 
         // Contact Form Submission Handler
         function handleInquiry(event) {

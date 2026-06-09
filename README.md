@@ -20,7 +20,7 @@ Our operations rest on a dual infrastructure combining a registered regional pri
 #### 1. Vishwa Leader Marathi Magazine (Print Periodical)
 * **Registration Number:** RNI MAHMAR/2009/34832
 * **Date of Registration:** December 15, 2010
-* **Ownership:** Shirish Bhageshwar Ramteke (Owner/Publisher), Surekha Shirish Ramteke (Editor)
+* **Ownership:** Shirish Bhageshwar Ramteke (Owner/Publisher/Editor)
 * **Description:** A monthly Marathi periodical established to provide a media outlet for Bahujan and Ambedkarite community representation within the Mumbai Suburban district. Printed at Usha Printers.
 * **Registry Verification:** [Press Registrar General of India (PRGI) Record](https://prgi.gov.in)
 
@@ -29,7 +29,7 @@ Our operations rest on a dual infrastructure combining a registered regional pri
 * **Date of Incorporation:** February 29, 2016 (under ROC Mumbai)
 * **Capitalization:** Authorized Capital: Rs. 100,000 | Paid-up Capital: Rs. 100,000
 * **Address:** Unit 1, Malwa Patanwala Complex, Lalbahadur Shastri Marg, Ghatkopar West, Mumbai - 400086
-* **Key Personnel:** Shirish Bhageshwar Ramteke (Director), Surekha Ramteke (Co-Coordinator)
+* **Key Personnel:** Shirish Bhageshwar Ramteke (Director)
 * **Registry Verification:** [Ministry of Corporate Affairs (MCA) Profile via Tracxn](https://tracxn.com/d/legal-entities/india/vishwa-leader-techmedia-private-limited/__jDthDz58Owry-yAaHPhKSuhVYScE1DyjR4IGLp2Bhz8)
 
 ---
