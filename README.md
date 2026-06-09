@@ -9,7 +9,7 @@ This repository serves as the official corporate registry and digital portal for
 
 ### 🌐 Digital Portal
 Our interactive corporate and compliance portal is hosted on GitHub Pages:
-👉 **[Live Corporate Portal](https://vishwaleader.github.io/vishwaleader/)** *(Alternative testing URL: [opendev-labs.github.io/vishwaleader](https://opendev-labs.github.io/vishwaleader/))*
+👉 **[Live Corporate Portal](https://vishwaleader.github.io/)** *(Alternative testing URL: [opendev-labs.github.io/vishwaleader](https://opendev-labs.github.io/vishwaleader/))*
 
 ---
 
