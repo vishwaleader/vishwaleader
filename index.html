@@ -59,6 +59,36 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #94A3B8;
         }
+        /* Custom horizontal gallery scrollbar and item rules */
+        #gallery-grid {
+            display: flex;
+            flex-direction: row;
+            gap: 24px;
+            overflow-x: auto;
+            padding-bottom: 24px;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+            snap-type: x mandatory;
+        }
+        #gallery-grid::-webkit-scrollbar {
+            height: 6px;
+        }
+        #gallery-grid::-webkit-scrollbar-track {
+            background: #F1F5F9;
+            border-radius: 9999px;
+        }
+        #gallery-grid::-webkit-scrollbar-thumb {
+            background: #CBD5E1;
+            border-radius: 9999px;
+        }
+        #gallery-grid::-webkit-scrollbar-thumb:hover {
+            background: #94A3B8;
+        }
+        .gallery-item {
+            snap-align: start;
+            flex-shrink: 0;
+            width: 290px;
+        }
     </style>
 </head>
 
@@ -527,25 +557,13 @@
     <!-- Dynamic Image & Media Gallery Section -->
     <section id="gallery" class="py-20 md:py-24 bg-white border-b border-slate-200/60">
         <div class="max-w-7xl mx-auto px-6">
-            <div class="max-w-3xl mb-12 space-y-4">
-                <span class="text-xs font-bold tracking-widest text-brandBlue uppercase">Media Assets</span>
-                <h2 class="font-display text-3xl md:text-4xl font-black tracking-tight text-slate-900">Photo & Media Gallery</h2>
-                <p class="text-slate-500 leading-relaxed text-sm">
-                    Browse historical print covers, local civil rights rallies, and international summits hosted in London.
-                </p>
-            </div>
-
-            <!-- Gallery Filter Toggle Switch -->
-            <div class="inline-flex flex-wrap bg-slate-100 p-1 rounded-full border border-slate-200/80 gap-1 mb-10 text-xs font-bold uppercase tracking-wider shadow-inner">
-                <button onclick="filterGallery('all')" id="filter-all" class="gallery-filter-btn px-5 py-2.5 rounded-full bg-brandBlue text-white shadow-sm transition-all duration-200">All</button>
-                <button onclick="filterGallery('london')" id="filter-london" class="gallery-filter-btn px-5 py-2.5 rounded-full text-slate-600 hover:text-slate-900 bg-transparent transition-all duration-200">London Summit</button>
-                <button onclick="filterGallery('dignitaries')" id="filter-dignitaries" class="gallery-filter-btn px-5 py-2.5 rounded-full text-slate-600 hover:text-slate-900 bg-transparent transition-all duration-200">Dignitaries & Guests</button>
-                <button onclick="filterGallery('events')" id="filter-events" class="gallery-filter-btn px-5 py-2.5 rounded-full text-slate-600 hover:text-slate-900 bg-transparent transition-all duration-200">Events & Drives</button>
-                <button onclick="filterGallery('covers')" id="filter-covers" class="gallery-filter-btn px-5 py-2.5 rounded-full text-slate-600 hover:text-slate-900 bg-transparent transition-all duration-200">Magazine Covers</button>
+            <div class="max-w-3xl mb-12 space-y-2">
+                <h2 class="font-display text-3xl md:text-4xl font-black tracking-tight text-slate-900 uppercase">PREVIOUS EVENTS AND DRIVES</h2>
+                <p class="text-slate-400 font-bold text-sm tracking-wide">( Photo Gallery )</p>
             </div>
 
             <!-- Gallery Grid -->
-            <div id="gallery-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <div id="gallery-grid">
                 
                 <!-- London Awards 2026 -->
                 <div class="gallery-item london border border-slate-200 rounded-xl bg-slate-50 overflow-hidden group hover:shadow-md transition-all cursor-pointer" 
