@@ -60,34 +60,19 @@
             background: #94A3B8;
         }
         /* Custom horizontal gallery scrollbar and item rules */
-        #gallery-grid {
-            display: flex;
-            flex-direction: row;
-            gap: 24px;
-            overflow-x: auto;
-            padding-bottom: 24px;
-            scroll-behavior: smooth;
-            -webkit-overflow-scrolling: touch;
-            snap-type: x mandatory;
-        }
-        #gallery-grid::-webkit-scrollbar {
+        #carousel-thumbnails::-webkit-scrollbar {
             height: 6px;
         }
-        #gallery-grid::-webkit-scrollbar-track {
+        #carousel-thumbnails::-webkit-scrollbar-track {
             background: #F1F5F9;
             border-radius: 9999px;
         }
-        #gallery-grid::-webkit-scrollbar-thumb {
+        #carousel-thumbnails::-webkit-scrollbar-thumb {
             background: #CBD5E1;
             border-radius: 9999px;
         }
-        #gallery-grid::-webkit-scrollbar-thumb:hover {
+        #carousel-thumbnails::-webkit-scrollbar-thumb:hover {
             background: #94A3B8;
-        }
-        .gallery-item {
-            snap-align: start;
-            flex-shrink: 0;
-            width: 290px;
         }
     </style>
 </head>
@@ -562,265 +547,52 @@
                 <p class="text-slate-400 font-bold text-sm tracking-wide">( Photo Gallery )</p>
             </div>
 
-            <!-- Gallery Grid -->
-            <div id="gallery-grid">
-                
-                <!-- London Awards 2026 -->
-                <div class="gallery-item london border border-slate-200 rounded-xl bg-slate-50 overflow-hidden group hover:shadow-md transition-all cursor-pointer" 
-                     onclick="openLightbox('wp-content/uploads/2026/06/Vishwa-Leader-DR-B.R.-AMBEDKAR-International-AWARDS-2026-LONDON-UK.jpg', 'Vishwa Leader Dr B.R. Ambedkar International Awards 2026 London UK')">
-                    <div class="h-48 overflow-hidden bg-slate-200 relative">
-                        <img src="wp-content/uploads/2026/06/Vishwa-Leader-DR-B.R.-AMBEDKAR-International-AWARDS-2026-LONDON-UK.jpg" 
+            <!-- Carousel Gallery Container -->
+            <div class="space-y-8 max-w-5xl mx-auto">
+                <!-- 1. The Main Hero Frame (Bigger Photo) -->
+                <div class="border border-slate-200 rounded-2xl overflow-hidden bg-slate-50 shadow-sm relative group cursor-pointer"
+                     onclick="openHeroLightbox()">
+                    <div class="aspect-[16/9] md:h-[480px] w-full overflow-hidden bg-slate-200 relative">
+                        <img id="carousel-hero-img" 
+                             src="wp-content/uploads/2026/06/Vishwa-Leader-DR-B.R.-AMBEDKAR-International-AWARDS-2026-LONDON-UK.jpg" 
                              alt="Vishwa Leader Dr B.R. Ambedkar International Awards 2026 London UK" 
-                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                             class="w-full h-full object-cover transition-opacity duration-150"
                              onerror="this.src='https://i0.wp.com/vishwaleader.com/wp-content/uploads/2026/06/Vishwa-Leader-DR-B.R.-AMBEDKAR-International-AWARDS-2026-LONDON-UK.jpg'" />
-                        <span class="absolute top-3 left-3 bg-brandBlue text-white text-[9px] font-extrabold uppercase px-2 py-0.5 rounded shadow">London Summit</span>
+                        
+                        <!-- Light Gradient Overlay at the bottom of the image -->
+                        <div class="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent pointer-events-none"></div>
+
+                        <!-- Left/Right Nav Buttons (Light/Blue theme) -->
+                        <button onclick="event.stopPropagation(); carouselPrev();" class="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/95 hover:bg-white border border-slate-200 flex items-center justify-center text-slate-700 hover:text-brandBlue shadow transition-all opacity-0 group-hover:opacity-100">
+                            <i class="fa-solid fa-chevron-left text-lg"></i>
+                        </button>
+                        <button onclick="event.stopPropagation(); carouselNext();" class="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/95 hover:bg-white border border-slate-200 flex items-center justify-center text-slate-700 hover:text-brandBlue shadow transition-all opacity-0 group-hover:opacity-100">
+                            <i class="fa-solid fa-chevron-right text-lg"></i>
+                        </button>
+
+                        <!-- Badge on top of image -->
+                        <span id="carousel-hero-badge" class="absolute top-4 left-4 bg-brandBlue text-white text-[10px] font-extrabold uppercase px-2.5 py-1 rounded shadow">London Summit</span>
                     </div>
-                    <div class="p-4 bg-white">
-                        <h4 class="font-bold text-slate-800 text-xs truncate">Dr. Ambedkar International Awards London</h4>
-                        <p class="text-[10px] text-slate-450 mt-1 font-medium">Uploaded: 2026 / 06</p>
+
+                    <!-- Details Box (Light Theme) -->
+                    <div class="p-6 bg-white border-t border-slate-100 space-y-3">
+                        <div class="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-450 font-bold uppercase tracking-wider">
+                            <span id="carousel-hero-date"><i class="fa-solid fa-calendar mr-1 text-brandBlue"></i> Sep 18-20, 2026</span>
+                            <span id="carousel-hero-location"><i class="fa-solid fa-location-dot mr-1 text-brandBlue"></i> London, UK</span>
+                        </div>
+                        <h3 id="carousel-hero-title" class="font-display font-black text-slate-800 text-lg md:text-xl uppercase leading-tight">Vishwa Leader Dr B.R. Ambedkar International Awards London UK</h3>
+                        <p id="carousel-hero-desc" class="text-xs md:text-sm text-slate-500 leading-relaxed max-w-4xl">
+                            Grand transnational summit organized in London, UK, to celebrate social justice, equality, and outstanding leaders. Featuring global dignitaries, academic seminars at the London School of Economics, and ceremonies at the British Parliament.
+                        </p>
                     </div>
                 </div>
 
-                <!-- WhatsApp Image Group -->
-                <div class="gallery-item london border border-slate-200 rounded-xl bg-slate-50 overflow-hidden group hover:shadow-md transition-all cursor-pointer" 
-                     onclick="openLightbox('wp-content/uploads/2026/06/WhatsApp-Image-2026-06-18-at-12.15.22-PM.jpeg', 'Vishwa Leader London Summit Delegation Ceremony')">
-                    <div class="h-48 overflow-hidden bg-slate-200 relative">
-                        <img src="wp-content/uploads/2026/06/WhatsApp-Image-2026-06-18-at-12.15.22-PM.jpeg" 
-                             alt="Vishwa Leader London Summit Delegation Ceremony" 
-                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                             onerror="this.src='https://i0.wp.com/vishwaleader.com/wp-content/uploads/2026/06/WhatsApp-Image-2026-06-18-at-12.15.22-PM.jpeg'" />
-                        <span class="absolute top-3 left-3 bg-brandBlue text-white text-[9px] font-extrabold uppercase px-2 py-0.5 rounded shadow">London Summit</span>
-                    </div>
-                    <div class="p-4 bg-white">
-                        <h4 class="font-bold text-slate-800 text-xs truncate">Awards Ceremony Delegation Group</h4>
-                        <p class="text-[10px] text-slate-450 mt-1 font-medium">Uploaded: 2026 / 06</p>
+                <!-- 2. The Bottom Thumbnail Row -->
+                <div class="w-full overflow-hidden">
+                    <div id="carousel-thumbnails" class="flex flex-row gap-4 overflow-x-auto pb-4 pt-2 scroll-smooth select-none snap-x snap-mandatory">
+                        <!-- Dynamic Thumbnails -->
                     </div>
                 </div>
-
-                <!-- House of Lord -->
-                <div class="gallery-item london border border-slate-200 rounded-xl bg-slate-50 overflow-hidden group hover:shadow-md transition-all cursor-pointer" 
-                     onclick="openLightbox('wp-content/uploads/2025/02/With-House-of-Lord-in-British-Parliament.png', 'With House of Lord in British Parliament')">
-                    <div class="h-48 overflow-hidden bg-slate-200 relative">
-                        <img src="wp-content/uploads/2025/02/With-House-of-Lord-in-British-Parliament.png" 
-                             alt="With House of Lord in British Parliament" 
-                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                             onerror="this.src='https://i0.wp.com/vishwaleader.com/wp-content/uploads/2025/02/With-House-of-Lord-in-British-Parliament.png'" />
-                        <span class="absolute top-3 left-3 bg-brandBlue text-white text-[9px] font-extrabold uppercase px-2 py-0.5 rounded shadow">London Summit</span>
-                    </div>
-                    <div class="p-4 bg-white">
-                        <h4 class="font-bold text-slate-800 text-xs truncate">With House of Lord in British Parliament</h4>
-                        <p class="text-[10px] text-slate-450 mt-1 font-medium">Uploaded: 2025 / 02</p>
-                    </div>
-                </div>
-
-                <!-- Jackie Shroff -->
-                <div class="gallery-item dignitaries border border-slate-200 rounded-xl bg-slate-50 overflow-hidden group hover:shadow-md transition-all cursor-pointer" 
-                     onclick="openLightbox('wp-content/uploads/2025/02/Jakie-Shroff.png', 'With Veteran Bollywood Actor Jackie Shroff')">
-                    <div class="h-48 overflow-hidden bg-slate-200 relative">
-                        <img src="wp-content/uploads/2025/02/Jakie-Shroff.png" 
-                             alt="With Jackie Shroff" 
-                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                             onerror="this.src='https://i0.wp.com/vishwaleader.com/wp-content/uploads/2025/02/Jakie-Shroff.png'" />
-                        <span class="absolute top-3 left-3 bg-brandDark text-white text-[9px] font-extrabold uppercase px-2 py-0.5 rounded shadow">Dignitary</span>
-                    </div>
-                    <div class="p-4 bg-white">
-                        <h4 class="font-bold text-slate-800 text-xs truncate">With Bollywood Actor Jackie Shroff</h4>
-                        <p class="text-[10px] text-slate-450 mt-1 font-medium">Uploaded: 2025 / 02</p>
-                    </div>
-                </div>
-
-                <!-- Dhanraj Pillai -->
-                <div class="gallery-item dignitaries border border-slate-200 rounded-xl bg-slate-50 overflow-hidden group hover:shadow-md transition-all cursor-pointer" 
-                     onclick="openLightbox('wp-content/uploads/2025/02/Dhanraj-Pillai.png', 'With Hockey Icon Dhanraj Pillai')">
-                    <div class="h-48 overflow-hidden bg-slate-200 relative">
-                        <img src="wp-content/uploads/2025/02/Dhanraj-Pillai.png" 
-                             alt="With Dhanraj Pillai" 
-                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                             onerror="this.src='https://i0.wp.com/vishwaleader.com/wp-content/uploads/2025/02/Dhanraj-Pillai.png'" />
-                        <span class="absolute top-3 left-3 bg-brandDark text-white text-[9px] font-extrabold uppercase px-2 py-0.5 rounded shadow">Dignitary</span>
-                    </div>
-                    <div class="p-4 bg-white">
-                        <h4 class="font-bold text-slate-800 text-xs truncate">With Indian Hockey Legend Dhanraj Pillai</h4>
-                        <p class="text-[10px] text-slate-450 mt-1 font-medium">Uploaded: 2025 / 02</p>
-                    </div>
-                </div>
-
-                <!-- Bhimrao Ambedkar and Bandu Pandit -->
-                <div class="gallery-item events border border-slate-200 rounded-xl bg-slate-50 overflow-hidden group hover:shadow-md transition-all cursor-pointer" 
-                     onclick="openLightbox('wp-content/uploads/2025/02/Bhimrao-Ambedkar-and-Bandu-Pandit-scaled.jpg', 'Bhimrao Ambedkar and Bandu Pandit')">
-                    <div class="h-48 overflow-hidden bg-slate-200 relative">
-                        <img src="wp-content/uploads/2025/02/Bhimrao-Ambedkar-and-Bandu-Pandit-scaled.jpg" 
-                             alt="Bhimrao Ambedkar and Bandu Pandit" 
-                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                             onerror="this.src='https://i0.wp.com/vishwaleader.com/wp-content/uploads/2025/02/Bhimrao-Ambedkar-and-Bandu-Pandit-scaled.jpg'" />
-                        <span class="absolute top-3 left-3 bg-amber-500 text-white text-[9px] font-extrabold uppercase px-2 py-0.5 rounded shadow">History</span>
-                    </div>
-                    <div class="p-4 bg-white">
-                        <h4 class="font-bold text-slate-800 text-xs truncate">Bhimrao Ambedkar & Bandu Pandit</h4>
-                        <p class="text-[10px] text-slate-450 mt-1 font-medium">Uploaded: 2025 / 02</p>
-                    </div>
-                </div>
-
-                <!-- 6 Dec Cleanness Drive -->
-                <div class="gallery-item events border border-slate-200 rounded-xl bg-slate-50 overflow-hidden group hover:shadow-md transition-all cursor-pointer" 
-                     onclick="openLightbox('wp-content/uploads/2025/02/IMG_0079.png', '6 Dec 2011 Cleanness Awareness Drive')">
-                    <div class="h-48 overflow-hidden bg-slate-200 relative">
-                        <img src="wp-content/uploads/2025/02/IMG_0079.png" 
-                             alt="6 Dec 2011 Cleanness Awareness Drive" 
-                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                             onerror="this.src='https://i0.wp.com/vishwaleader.com/wp-content/uploads/2025/02/IMG_0079.png'" />
-                        <span class="absolute top-3 left-3 bg-emerald-600 text-white text-[9px] font-extrabold uppercase px-2 py-0.5 rounded shadow">Social Event</span>
-                    </div>
-                    <div class="p-4 bg-white">
-                        <h4 class="font-bold text-slate-800 text-xs truncate">6 Dec 2011 Cleanness Drive Rally</h4>
-                        <p class="text-[10px] text-slate-450 mt-1 font-medium">Uploaded: 2025 / 02</p>
-                    </div>
-                </div>
-
-                <!-- New Event: Hari Narke Campaign -->
-                <div class="gallery-item events border border-slate-200 rounded-xl bg-slate-50 overflow-hidden group hover:shadow-md transition-all cursor-pointer" 
-                     onclick="openLightbox('wp-content/uploads/2025/02/Hari-Narke-J-P-Dange-Laxman-Doble.png', 'Socio-Cultural Forum with Hari Narke, J P Dange, Laxman Doble')">
-                    <div class="h-48 overflow-hidden bg-slate-200 relative">
-                        <img src="wp-content/uploads/2025/02/Hari-Narke-J-P-Dange-Laxman-Doble.png" 
-                             alt="Socio-Cultural Forum" 
-                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                             onerror="this.src='https://i0.wp.com/vishwaleader.com/wp-content/uploads/2025/02/Hari-Narke-J-P-Dange-Laxman-Doble.png'" />
-                        <span class="absolute top-3 left-3 bg-emerald-600 text-white text-[9px] font-extrabold uppercase px-2 py-0.5 rounded shadow">Social Event</span>
-                    </div>
-                    <div class="p-4 bg-white">
-                        <h4 class="font-bold text-slate-800 text-xs truncate font-display">Socio-Cultural Campaign Forum</h4>
-                        <p class="text-[10px] text-slate-450 mt-1 font-medium">Uploaded: 2025 / 02</p>
-                    </div>
-                </div>
-
-                <!-- New Event: Administrative Summit -->
-                <div class="gallery-item events border border-slate-200 rounded-xl bg-slate-50 overflow-hidden group hover:shadow-md transition-all cursor-pointer" 
-                     onclick="openLightbox('wp-content/uploads/2025/02/Nirmal-Deshmukh-SS-Shinde-and-R-D-Shinde.png', 'Administrative Briefing with Nirmal Deshmukh, S S Shinde & R D Shinde')">
-                    <div class="h-48 overflow-hidden bg-slate-200 relative">
-                        <img src="wp-content/uploads/2025/02/Nirmal-Deshmukh-SS-Shinde-and-R-D-Shinde.png" 
-                             alt="Administrative Summit" 
-                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                             onerror="this.src='https://i0.wp.com/vishwaleader.com/wp-content/uploads/2025/02/Nirmal-Deshmukh-SS-Shinde-and-R-D-Shinde.png'" />
-                        <span class="absolute top-3 left-3 bg-emerald-600 text-white text-[9px] font-extrabold uppercase px-2 py-0.5 rounded shadow">Social Event</span>
-                    </div>
-                    <div class="p-4 bg-white">
-                        <h4 class="font-bold text-slate-800 text-xs truncate font-display">Administrative Advisory Forum</h4>
-                        <p class="text-[10px] text-slate-450 mt-1 font-medium">Uploaded: 2025 / 02</p>
-                    </div>
-                </div>
-
-                <!-- New Dignitary: South Hall Vihara -->
-                <div class="gallery-item dignitaries london border border-slate-200 rounded-xl bg-slate-50 overflow-hidden group hover:shadow-md transition-all cursor-pointer" 
-                     onclick="openLightbox('wp-content/uploads/2025/02/With-Sanjay-Khandagale-at-South-Hall-Vihara.png', 'With Sanjay Khandagale at South Hall Vihara, London')">
-                    <div class="h-48 overflow-hidden bg-slate-200 relative">
-                        <img src="wp-content/uploads/2025/02/With-Sanjay-Khandagale-at-South-Hall-Vihara.png" 
-                             alt="With Sanjay Khandagale at South Hall Vihara" 
-                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                             onerror="this.src='https://i0.wp.com/vishwaleader.com/wp-content/uploads/2025/02/With-Sanjay-Khandagale-at-South-Hall-Vihara.png'" />
-                        <span class="absolute top-3 left-3 bg-brandDark text-white text-[9px] font-extrabold uppercase px-2 py-0.5 rounded shadow">Dignitary</span>
-                    </div>
-                    <div class="p-4 bg-white">
-                        <h4 class="font-bold text-slate-800 text-xs truncate font-display">With Sanjay Khandagale in London</h4>
-                        <p class="text-[10px] text-slate-450 mt-1 font-medium">Uploaded: 2025 / 02</p>
-                    </div>
-                </div>
-
-                <!-- New Dignitary: Jackie & Dhanraj delegation -->
-                <div class="gallery-item dignitaries border border-slate-200 rounded-xl bg-slate-50 overflow-hidden group hover:shadow-md transition-all cursor-pointer" 
-                     onclick="openLightbox('wp-content/uploads/2025/02/Dhanraj-Pillai-and-Jakie-Shroff.png', 'With Bollywood Legend Jackie Shroff & Hockey Icon Dhanraj Pillai')">
-                    <div class="h-48 overflow-hidden bg-slate-200 relative">
-                        <img src="wp-content/uploads/2025/02/Dhanraj-Pillai-and-Jakie-Shroff.png" 
-                             alt="With Jackie Shroff & Dhanraj Pillai" 
-                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                             onerror="this.src='https://i0.wp.com/vishwaleader.com/wp-content/uploads/2025/02/Dhanraj-Pillai-and-Jakie-Shroff.png'" />
-                        <span class="absolute top-3 left-3 bg-brandDark text-white text-[9px] font-extrabold uppercase px-2 py-0.5 rounded shadow">Dignitary</span>
-                    </div>
-                    <div class="p-4 bg-white">
-                        <h4 class="font-bold text-slate-800 text-xs truncate font-display">Jackie Shroff & Dhanraj Pillai</h4>
-                        <p class="text-[10px] text-slate-450 mt-1 font-medium">Uploaded: 2025 / 02</p>
-                    </div>
-                </div>
-
-                <!-- New Cover: JAN-2013 -->
-                <div class="gallery-item covers border border-slate-200 rounded-xl bg-slate-50 overflow-hidden group hover:shadow-md transition-all cursor-pointer" 
-                     onclick="openLightbox('wp-content/uploads/2025/02/JAN-2013.png', 'Vishwa Leader Monthly Print Magazine Cover: Jan 2013')">
-                    <div class="h-48 overflow-hidden bg-slate-200 relative">
-                        <img src="wp-content/uploads/2025/02/JAN-2013.png" 
-                             alt="Print Cover January 2013" 
-                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                             onerror="this.src='https://i0.wp.com/vishwaleader.com/wp-content/uploads/2025/02/JAN-2013.png'" />
-                        <span class="absolute top-3 left-3 bg-purple-600 text-white text-[9px] font-extrabold uppercase px-2 py-0.5 rounded shadow">Cover</span>
-                    </div>
-                    <div class="p-4 bg-white">
-                        <h4 class="font-bold text-slate-800 text-xs truncate font-display">Print Cover: January 2013</h4>
-                        <p class="text-[10px] text-slate-450 mt-1 font-medium">Uploaded: 2025 / 02</p>
-                    </div>
-                </div>
-
-                <!-- New Cover: FEB-2013 -->
-                <div class="gallery-item covers border border-slate-200 rounded-xl bg-slate-50 overflow-hidden group hover:shadow-md transition-all cursor-pointer" 
-                     onclick="openLightbox('wp-content/uploads/2025/02/FEB-2013.png', 'Vishwa Leader Monthly Print Magazine Cover: Feb 2013')">
-                    <div class="h-48 overflow-hidden bg-slate-200 relative">
-                        <img src="wp-content/uploads/2025/02/FEB-2013.png" 
-                             alt="Print Cover February 2013" 
-                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                             onerror="this.src='https://i0.wp.com/vishwaleader.com/wp-content/uploads/2025/02/FEB-2013.png'" />
-                        <span class="absolute top-3 left-3 bg-purple-600 text-white text-[9px] font-extrabold uppercase px-2 py-0.5 rounded shadow">Cover</span>
-                    </div>
-                    <div class="p-4 bg-white">
-                        <h4 class="font-bold text-slate-800 text-xs truncate font-display">Print Cover: February 2013</h4>
-                        <p class="text-[10px] text-slate-450 mt-1 font-medium">Uploaded: 2025 / 02</p>
-                    </div>
-                </div>
-
-                <!-- New Cover: MARCH-2013 -->
-                <div class="gallery-item covers border border-slate-200 rounded-xl bg-slate-50 overflow-hidden group hover:shadow-md transition-all cursor-pointer" 
-                     onclick="openLightbox('wp-content/uploads/2025/02/MARCH-2013.png', 'Vishwa Leader Monthly Print Magazine Cover: March 2013')">
-                    <div class="h-48 overflow-hidden bg-slate-200 relative">
-                        <img src="wp-content/uploads/2025/02/MARCH-2013.png" 
-                             alt="Print Cover March 2013" 
-                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                             onerror="this.src='https://i0.wp.com/vishwaleader.com/wp-content/uploads/2025/02/MARCH-2013.png'" />
-                        <span class="absolute top-3 left-3 bg-purple-600 text-white text-[9px] font-extrabold uppercase px-2 py-0.5 rounded shadow">Cover</span>
-                    </div>
-                    <div class="p-4 bg-white">
-                        <h4 class="font-bold text-slate-800 text-xs truncate font-display">Print Cover: March 2013</h4>
-                        <p class="text-[10px] text-slate-450 mt-1 font-medium">Uploaded: 2025 / 02</p>
-                    </div>
-                </div>
-
-                <!-- New Cover: LEADER-45 -->
-                <div class="gallery-item covers border border-slate-200 rounded-xl bg-slate-50 overflow-hidden group hover:shadow-md transition-all cursor-pointer" 
-                     onclick="openLightbox('wp-content/uploads/2025/02/LEADER-45.png', 'Vishwa Leader Monthly Print Magazine Cover: Issue 45')">
-                    <div class="h-48 overflow-hidden bg-slate-200 relative">
-                        <img src="wp-content/uploads/2025/02/LEADER-45.png" 
-                             alt="Print Cover Issue 45" 
-                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                             onerror="this.src='https://i0.wp.com/vishwaleader.com/wp-content/uploads/2025/02/LEADER-45.png'" />
-                        <span class="absolute top-3 left-3 bg-purple-600 text-white text-[9px] font-extrabold uppercase px-2 py-0.5 rounded shadow">Cover</span>
-                    </div>
-                    <div class="p-4 bg-white">
-                        <h4 class="font-bold text-slate-800 text-xs truncate font-display">Print Cover: Issue 45</h4>
-                        <p class="text-[10px] text-slate-450 mt-1 font-medium">Uploaded: 2025 / 02</p>
-                    </div>
-                </div>
-
-                <!-- Magazine Cover Covers -->
-                <div class="gallery-item covers border border-slate-200 rounded-xl bg-slate-50 overflow-hidden group hover:shadow-md transition-all cursor-pointer" 
-                     onclick="openLightbox('wp-content/uploads/2017/07/news-portal.png', 'Vishwa Leader News Portal Cover')">
-                    <div class="h-48 overflow-hidden bg-slate-200 relative">
-                        <img src="wp-content/uploads/2017/07/news-portal.png" 
-                             alt="Vishwa Leader News Portal Cover" 
-                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                             onerror="this.src='https://i0.wp.com/vishwaleader.com/wp-content/uploads/2017/07/news-portal.png'" />
-                        <span class="absolute top-3 left-3 bg-purple-600 text-white text-[9px] font-extrabold uppercase px-2 py-0.5 rounded shadow">Cover</span>
-                    </div>
-                    <div class="p-4 bg-white">
-                        <h4 class="font-bold text-slate-800 text-xs truncate">Vishwa Leader Publication Cover</h4>
-                        <p class="text-[10px] text-slate-450 mt-1 font-medium">Uploaded: 2017 / 07</p>
-                    </div>
-                </div>
-
             </div>
         </div>
     </section>
@@ -1314,12 +1086,10 @@
         let currentImageIndex = 0;
 
         function getActiveImages() {
-            const activeItems = Array.from(document.querySelectorAll('.gallery-item')).filter(item => item.style.display !== 'none');
-            return activeItems.map(item => {
-                const img = item.querySelector('img');
+            return carouselMedia.map(item => {
                 return {
-                    src: img.getAttribute('src'),
-                    alt: img.getAttribute('alt')
+                    src: item.src,
+                    alt: item.alt
                 };
             });
         }
@@ -1457,10 +1227,172 @@
             }
         });
 
+        // Carousel with Thumbnails State
+        let carouselMedia = [];
+        let carouselIndex = 0;
+
+        const fallbackMedia = [
+            {
+                src: 'wp-content/uploads/2026/06/Vishwa-Leader-DR-B.R.-AMBEDKAR-International-AWARDS-2026-LONDON-UK.jpg',
+                alt: 'Vishwa Leader Dr B.R. Ambedkar International Awards 2026 London UK',
+                title: 'Vishwa Leader Dr B.R. Ambedkar International Awards London UK',
+                description: 'Grand transnational summit organized in London, UK, to celebrate social justice, equality, and outstanding leaders. Featuring global dignitaries, academic seminars at the London School of Economics, and ceremonies at the British Parliament.',
+                date: 'Sep 18-20, 2026',
+                location: 'London, UK',
+                category: 'london',
+                badgeClass: 'bg-brandBlue',
+                badgeText: 'London Summit'
+            },
+            {
+                src: 'wp-content/uploads/2026/06/WhatsApp-Image-2026-06-18-at-12.15.22-PM.jpeg',
+                alt: 'Vishwa Leader London Summit Delegation Ceremony',
+                title: 'Awards Ceremony Delegation Group',
+                description: 'Official delegation gathering in the UK for the prestigious 1st Vishwa Leader Dr. B. R. Ambedkar International Awards ceremony and seminar.',
+                date: 'Jun 18, 2026',
+                location: 'London, UK',
+                category: 'london',
+                badgeClass: 'bg-brandBlue',
+                badgeText: 'London Summit'
+            },
+            {
+                src: 'wp-content/uploads/2025/02/With-House-of-Lord-in-British-Parliament.png',
+                alt: 'With House of Lord in British Parliament',
+                title: 'With House of Lord in British Parliament',
+                description: 'Bilateral civil rights discussion and advocacy meeting inside the historic House of Lords in the British Parliament, London.',
+                date: 'Feb 15, 2025',
+                location: 'London, UK',
+                category: 'london',
+                badgeClass: 'bg-brandBlue',
+                badgeText: 'London Summit'
+            },
+            {
+                src: 'wp-content/uploads/2025/02/Dhanraj-Pillai.png',
+                alt: 'With Hockey Icon Dhanraj Pillai',
+                title: 'With Indian Hockey Legend Dhanraj Pillai',
+                description: 'Honoring Indian hockey icon Dhanraj Pillai during the socio-cultural achievement awards ceremony organized by Vishwa Leader.',
+                date: 'Feb 10, 2025',
+                location: 'Mumbai, India',
+                category: 'dignitaries',
+                badgeClass: 'bg-brandDark',
+                badgeText: 'Dignitary'
+            },
+            {
+                src: 'wp-content/uploads/2025/02/Bhimrao-Ambedkar-and-Bandu-Pandit-scaled.jpg',
+                alt: 'Bhimrao Ambedkar and Bandu Pandit',
+                title: 'Bhimrao Ambedkar & Bandu Pandit',
+                description: 'Archived historical photograph of Dr. B. R. Ambedkar with his close associate Bandu Pandit, preserved in the Vishwa Leader archives.',
+                date: 'Archived',
+                location: 'India',
+                category: 'events',
+                badgeClass: 'bg-amber-500',
+                badgeText: 'History'
+            }
+        ];
+
+        function selectCarouselItem(index) {
+            if (!carouselMedia || carouselMedia.length === 0) return;
+            carouselIndex = index;
+            const item = carouselMedia[index];
+
+            // Update Hero elements
+            const heroImg = document.getElementById('carousel-hero-img');
+            const heroTitle = document.getElementById('carousel-hero-title');
+            const heroDesc = document.getElementById('carousel-hero-desc');
+            const heroBadge = document.getElementById('carousel-hero-badge');
+            const heroDate = document.getElementById('carousel-hero-date');
+            const heroLocation = document.getElementById('carousel-hero-location');
+
+            if (heroImg) {
+                heroImg.classList.add('opacity-0');
+                setTimeout(() => {
+                    heroImg.src = item.src;
+                    heroImg.alt = item.alt;
+                    heroImg.classList.remove('opacity-0');
+                }, 150);
+            }
+
+            if (heroTitle) heroTitle.textContent = item.title;
+            if (heroDesc) heroDesc.textContent = item.description;
+            
+            if (heroBadge) {
+                heroBadge.textContent = item.badgeText;
+                heroBadge.className = `absolute top-4 left-4 ${item.badgeClass} text-white text-[10px] font-extrabold uppercase px-2.5 py-1 rounded shadow`;
+            }
+            
+            if (heroDate) heroDate.innerHTML = `<i class="fa-solid fa-calendar mr-1 text-brandBlue"></i> ${item.date}`;
+            if (heroLocation) heroLocation.innerHTML = `<i class="fa-solid fa-location-dot mr-1 text-brandBlue"></i> ${item.location}`;
+
+            // Update active state in thumbnails
+            const thumbnails = document.querySelectorAll('.carousel-thumb-btn');
+            thumbnails.forEach((thumb, i) => {
+                if (i === index) {
+                    thumb.classList.add('ring-4', 'ring-brandBlue', 'ring-offset-2', 'opacity-100');
+                    thumb.classList.remove('opacity-60');
+                    // Auto scroll thumb into view
+                    thumb.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                } else {
+                    thumb.classList.remove('ring-4', 'ring-brandBlue', 'ring-offset-2', 'opacity-100');
+                    thumb.classList.add('opacity-60');
+                }
+            });
+        }
+
+        function carouselPrev() {
+            if (carouselMedia.length === 0) return;
+            let nextIndex = (carouselIndex - 1 + carouselMedia.length) % carouselMedia.length;
+            selectCarouselItem(nextIndex);
+        }
+
+        function carouselNext() {
+            if (carouselMedia.length === 0) return;
+            let nextIndex = (carouselIndex + 1) % carouselMedia.length;
+            selectCarouselItem(nextIndex);
+        }
+
+        function openHeroLightbox() {
+            if (carouselMedia && carouselMedia.length > 0) {
+                const activeItem = carouselMedia[carouselIndex];
+                openLightbox(activeItem.src, activeItem.alt);
+            }
+        }
+
+        function renderCarouselThumbnails() {
+            const thumbContainer = document.getElementById('carousel-thumbnails');
+            if (!thumbContainer) return;
+            
+            thumbContainer.innerHTML = '';
+            carouselMedia.forEach((item, index) => {
+                const thumbHtml = `
+                    <button onclick="selectCarouselItem(${index})" 
+                            class="carousel-thumb-btn snap-start shrink-0 w-64 border border-slate-200 rounded-xl overflow-hidden bg-white text-left shadow-sm hover:shadow transition-all duration-200 focus:outline-none relative group opacity-60">
+                        <div class="h-36 overflow-hidden bg-slate-200 relative">
+                            <img src="${item.src}" 
+                                 alt="${item.title}" 
+                                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200" 
+                                 onerror="this.src='https://i0.wp.com/vishwaleader.com/${item.src}'" />
+                            <span class="absolute top-2 left-2 ${item.badgeClass} text-white text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded shadow">${item.badgeText}</span>
+                        </div>
+                        <div class="p-3 bg-white">
+                            <h4 class="font-bold text-slate-800 text-[11px] truncate font-display">${item.title}</h4>
+                            <p class="text-[9px] text-slate-400 mt-0.5 font-bold uppercase tracking-wider">${item.date}</p>
+                        </div>
+                    </button>
+                `;
+                thumbContainer.insertAdjacentHTML('beforeend', thumbHtml);
+            });
+
+            // Select first item
+            selectCarouselItem(0);
+        }
+
         // Dynamic API loader for 100+ images from WordPress media feed
         async function loadWordPressMedia() {
-            const grid = document.getElementById('gallery-grid');
-            if (!grid) return;
+            const thumbContainer = document.getElementById('carousel-thumbnails');
+            if (!thumbContainer) return;
+
+            // Load fallback media initially
+            carouselMedia = [...fallbackMedia];
+            renderCarouselThumbnails();
 
             let allMedia = [];
             let page = 1;
@@ -1485,9 +1417,7 @@
                 }
 
                 if (allMedia.length > 0) {
-                    // Clear hardcoded fallback cards before rendering live stream
-                    grid.innerHTML = '';
-                    
+                    const dynamicMedia = [];
                     allMedia.forEach(item => {
                         const src = item.source_url;
                         if (!src) return;
@@ -1513,8 +1443,8 @@
                         const tempDiv = document.createElement('div');
                         tempDiv.innerHTML = title;
                         title = tempDiv.textContent || tempDiv.innerText || title;
-                        if (title.length > 40) {
-                            title = title.substring(0, 37) + '...';
+                        if (title.length > 60) {
+                            title = title.substring(0, 57) + '...';
                         }
 
                         // Determine visual label / badge colors
@@ -1531,29 +1461,53 @@
                             badgeText = 'Dignitary';
                         }
 
-                        const cardHtml = `
-                            <div class="gallery-item ${category} border border-slate-200 rounded-xl bg-slate-50 overflow-hidden group hover:shadow-md transition-all cursor-pointer" 
-                                 onclick="openLightbox('${src}', '${alt.replace(/'/g, "\\'")}')">
-                                <div class="h-48 overflow-hidden bg-slate-200 relative">
-                                    <img src="${src}" 
-                                         alt="${alt.replace(/"/g, '&quot;')}" 
-                                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                                    <span class="absolute top-3 left-3 ${badgeClass} text-white text-[9px] font-extrabold uppercase px-2 py-0.5 rounded shadow">${badgeText}</span>
-                                </div>
-                                <div class="p-4 bg-white">
-                                    <h4 class="font-bold text-slate-800 text-xs truncate font-display">${title}</h4>
-                                    <p class="text-[10px] text-slate-450 mt-1 font-medium">Live Feed</p>
-                                </div>
-                            </div>
-                        `;
-                        grid.insertAdjacentHTML('beforeend', cardHtml);
+                        // Parse date and description professionally
+                        const dateObj = item.date ? new Date(item.date) : new Date();
+                        const formattedDate = dateObj.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+                        
+                        let description = item.description ? (item.description.rendered || '') : '';
+                        if (!description || description.trim() === '') {
+                            description = item.caption ? (item.caption.rendered || '') : '';
+                        }
+                        const tempDivDesc = document.createElement('div');
+                        tempDivDesc.innerHTML = description;
+                        description = tempDivDesc.textContent || tempDivDesc.innerText || '';
+                        description = description.trim();
+                        if (!description || description.length < 5) {
+                            if (category === 'london') {
+                                description = `Official photo documenting the international delegation at LSE and the British Parliament. Celebrating Ambedkarite values in the United Kingdom.`;
+                            } else if (category === 'covers') {
+                                description = `Historical archive publication print cover page of the Vishwa Leader magazine, highlighting social reform, leadership, and digital journalism.`;
+                            } else if (category === 'dignitaries') {
+                                description = `Vishwa Leader leadership meeting with national and international figures, discussing socio-cultural mobilization and advocacy.`;
+                            } else {
+                                description = `Socio-cultural rally and community engagement drive conducted by Vishwa Leader activists to promote education, sanitation, and equality.`;
+                            }
+                        }
+
+                        let location = 'India';
+                        if (lowerAlt.includes('london') || lowerSrc.includes('london') || lowerAlt.includes('lse') || lowerAlt.includes('parliament')) {
+                            location = 'London, UK';
+                        } else if (lowerAlt.includes('mumbai') || lowerAlt.includes('maharashtra') || lowerAlt.includes('ghatkopar')) {
+                            location = 'Mumbai, India';
+                        }
+
+                        dynamicMedia.push({
+                            src,
+                            alt,
+                            title,
+                            description,
+                            date: formattedDate,
+                            location,
+                            category,
+                            badgeClass,
+                            badgeText
+                        });
                     });
 
-                    // Synchronize active filter toggle selection
-                    const activeFilterBtn = document.querySelector('.gallery-filter-btn.bg-brandBlue');
-                    if (activeFilterBtn) {
-                        const categoryId = activeFilterBtn.id.replace('filter-', '');
-                        filterGallery(categoryId);
+                    if (dynamicMedia.length > 0) {
+                        carouselMedia = dynamicMedia;
+                        renderCarouselThumbnails();
                     }
                 }
             } catch (err) {
