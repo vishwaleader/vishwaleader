@@ -659,8 +659,6 @@
                     </div>
                 </div>
 
-                </div>
-
                 <!-- New Event: Hari Narke Campaign -->
                 <div class="gallery-item events border border-slate-200 rounded-xl bg-slate-50 overflow-hidden group hover:shadow-md transition-all cursor-pointer" 
                      onclick="openLightbox('wp-content/uploads/2025/02/Hari-Narke-J-P-Dange-Laxman-Doble.png', 'Socio-Cultural Forum with Hari Narke, J P Dange, Laxman Doble')">
@@ -1439,6 +1437,115 @@
                 if (e.key === 'ArrowLeft') prevImage();
                 if (e.key === 'ArrowRight') nextImage();
             }
+        });
+
+        // Dynamic API loader for 100+ images from WordPress media feed
+        async function loadWordPressMedia() {
+            const grid = document.getElementById('gallery-grid');
+            if (!grid) return;
+
+            let allMedia = [];
+            let page = 1;
+            let keepFetching = true;
+
+            try {
+                // Fetch up to 5 pages (500 media assets) to fetch all available images
+                while (keepFetching && page <= 5) {
+                    const response = await fetch(`https://vishwaleader.com/wp-json/wp/v2/media?per_page=100&page=${page}`);
+                    if (!response.ok) {
+                        break;
+                    }
+                    const mediaItems = await response.json();
+                    if (!mediaItems || mediaItems.length === 0) {
+                        break;
+                    }
+                    allMedia = allMedia.concat(mediaItems);
+                    if (mediaItems.length < 100) {
+                        break;
+                    }
+                    page++;
+                }
+
+                if (allMedia.length > 0) {
+                    // Clear hardcoded fallback cards before rendering live stream
+                    grid.innerHTML = '';
+                    
+                    allMedia.forEach(item => {
+                        const src = item.source_url;
+                        if (!src) return;
+                        
+                        const titleRendered = item.title ? (item.title.rendered || '') : '';
+                        const alt = item.alt_text || titleRendered || 'Vishwa Leader Media';
+                        
+                        // Deduce category using file path or alt description keywords
+                        let category = 'events';
+                        const lowerAlt = alt.toLowerCase();
+                        const lowerSrc = src.toLowerCase();
+                        
+                        if (lowerAlt.includes('london') || lowerAlt.includes('summit') || lowerAlt.includes('lse') || lowerSrc.includes('london') || lowerSrc.includes('summit')) {
+                            category = 'london';
+                        } else if (lowerAlt.includes('cover') || lowerAlt.includes('jan-') || lowerAlt.includes('feb-') || lowerAlt.includes('march-') || lowerAlt.includes('leader-') || lowerAlt.includes('2012') || lowerAlt.includes('2013') || lowerSrc.includes('cover') || lowerSrc.includes('leader')) {
+                            category = 'covers';
+                        } else if (lowerAlt.includes('dhanraj') || lowerAlt.includes('jakie') || lowerAlt.includes('shroff') || lowerAlt.includes('pillai') || lowerAlt.includes('sanjay') || lowerAlt.includes('khandagale') || lowerAlt.includes('dange') || lowerAlt.includes('doble') || lowerAlt.includes('narke') || lowerAlt.includes('sunil') || lowerAlt.includes('secretary')) {
+                            category = 'dignitaries';
+                        }
+
+                        // Sanitize rendering title
+                        let title = alt;
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = title;
+                        title = tempDiv.textContent || tempDiv.innerText || title;
+                        if (title.length > 40) {
+                            title = title.substring(0, 37) + '...';
+                        }
+
+                        // Determine visual label / badge colors
+                        let badgeClass = 'bg-emerald-600';
+                        let badgeText = 'Social Event';
+                        if (category === 'london') {
+                            badgeClass = 'bg-brandBlue';
+                            badgeText = 'London Summit';
+                        } else if (category === 'covers') {
+                            badgeClass = 'bg-purple-600';
+                            badgeText = 'Cover';
+                        } else if (category === 'dignitaries') {
+                            badgeClass = 'bg-brandDark';
+                            badgeText = 'Dignitary';
+                        }
+
+                        const cardHtml = `
+                            <div class="gallery-item ${category} border border-slate-200 rounded-xl bg-slate-50 overflow-hidden group hover:shadow-md transition-all cursor-pointer" 
+                                 onclick="openLightbox('${src}', '${alt.replace(/'/g, "\\'")}')">
+                                <div class="h-48 overflow-hidden bg-slate-200 relative">
+                                    <img src="${src}" 
+                                         alt="${alt.replace(/"/g, '&quot;')}" 
+                                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                                    <span class="absolute top-3 left-3 ${badgeClass} text-white text-[9px] font-extrabold uppercase px-2 py-0.5 rounded shadow">${badgeText}</span>
+                                </div>
+                                <div class="p-4 bg-white">
+                                    <h4 class="font-bold text-slate-800 text-xs truncate font-display">${title}</h4>
+                                    <p class="text-[10px] text-slate-450 mt-1 font-medium">Live Feed</p>
+                                </div>
+                            </div>
+                        `;
+                        grid.insertAdjacentHTML('beforeend', cardHtml);
+                    });
+
+                    // Synchronize active filter toggle selection
+                    const activeFilterBtn = document.querySelector('.gallery-filter-btn.bg-brandBlue');
+                    if (activeFilterBtn) {
+                        const categoryId = activeFilterBtn.id.replace('filter-', '');
+                        filterGallery(categoryId);
+                    }
+                }
+            } catch (err) {
+                console.warn('WordPress API fetch failed or blocked by CORS. Using fallback local gallery items.', err);
+            }
+        }
+
+        // Trigger dynamic API load on document mount
+        window.addEventListener('DOMContentLoaded', () => {
+            loadWordPressMedia();
         });
     </script>
 </body>
