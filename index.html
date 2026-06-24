@@ -94,6 +94,7 @@
                 <a href="#conference" class="hover:text-brandBlue transition-colors">LSE Seminar 2025</a>
                 <a href="#gallery" class="hover:text-brandBlue transition-colors">Photo Gallery</a>
                 <a href="#networks" class="hover:text-brandBlue transition-colors">Global Networks</a>
+                <a href="#advertisers" class="hover:text-brandBlue transition-colors">Advertisers</a>
                 <a href="#compliance" class="hover:text-brandBlue transition-colors">Compliance</a>
                 <a href="#contact" class="bg-brandBlue text-white px-4 py-2.5 rounded hover:bg-brandBlue/90 transition-colors text-xs font-bold tracking-wide uppercase shadow-sm">
                     Contact Us
@@ -112,6 +113,7 @@
             <a href="#conference" class="block py-2 text-sm font-semibold text-slate-700 hover:text-brandBlue">LSE Seminar 2025</a>
             <a href="#gallery" class="block py-2 text-sm font-semibold text-slate-700 hover:text-brandBlue">Photo Gallery</a>
             <a href="#networks" class="block py-2 text-sm font-semibold text-slate-700 hover:text-brandBlue">Global Networks</a>
+            <a href="#advertisers" class="block py-2 text-sm font-semibold text-slate-700 hover:text-brandBlue">Advertisers</a>
             <a href="#compliance" class="block py-2 text-sm font-semibold text-slate-700 hover:text-brandBlue">Compliance</a>
             <a href="#contact" class="block py-3 text-center bg-brandBlue text-white rounded text-xs font-bold tracking-wide uppercase">Contact Us</a>
         </div>
@@ -661,6 +663,112 @@
         </div>
     </section>
 
+    <!-- Section: Advertisers & Subscriptions -->
+    <section id="advertisers" class="py-20 md:py-24 bg-white border-b border-slate-200/60">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="max-w-3xl mb-16 space-y-4">
+                <span class="text-xs font-bold tracking-widest text-brandBlue uppercase">Partner with Us</span>
+                <h2 class="font-display text-3xl md:text-4xl font-black tracking-tight text-slate-900">Advertisers & Subscriptions</h2>
+                <p class="text-slate-500 leading-relaxed text-sm">
+                    Reach a global audience of academics, social advocates, and the global diaspora. Partner with Vishwa Leader through our monthly print periodical or digital portal.
+                </p>
+            </div>
+
+            <!-- Ad Layout Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch mb-12">
+                <!-- Rates & Packages (Left 6 cols) -->
+                <div class="lg:col-span-6 border border-slate-200 rounded-2xl p-8 bg-slate-50/50 flex flex-col justify-between">
+                    <div>
+                        <h3 class="font-display text-lg font-bold text-slate-900 mb-6 uppercase tracking-tight">Print & Digital Ad Packages</h3>
+                        <div class="space-y-4 text-xs">
+                            <div class="flex justify-between items-center p-3.5 bg-white border border-slate-200/60 rounded-xl hover:shadow-sm transition-all">
+                                <div>
+                                    <h4 class="font-bold text-slate-800">Print: Full Page Color Ad</h4>
+                                    <p class="text-slate-400 mt-0.5">Vishwa Leader Monthly Print Magazine</p>
+                                </div>
+                                <span class="bg-brandBlue/15 text-brandBlue font-bold px-3 py-1 rounded text-[11px]">INR 25,000 / $300</span>
+                            </div>
+                            <div class="flex justify-between items-center p-3.5 bg-white border border-slate-200/60 rounded-xl hover:shadow-sm transition-all">
+                                <div>
+                                    <h4 class="font-bold text-slate-800">Print: Half Page Color Ad</h4>
+                                    <p class="text-slate-400 mt-0.5">Vishwa Leader Monthly Print Magazine</p>
+                                </div>
+                                <span class="bg-brandBlue/15 text-brandBlue font-bold px-3 py-1 rounded text-[11px]">INR 15,000 / $200</span>
+                            </div>
+                            <div class="flex justify-between items-center p-3.5 bg-white border border-slate-200/60 rounded-xl hover:shadow-sm transition-all">
+                                <div>
+                                    <h4 class="font-bold text-slate-800">Digital: Header Leaderboard (728x90)</h4>
+                                    <p class="text-slate-400 mt-0.5">Monthly Slot on Digital News Portal</p>
+                                </div>
+                                <span class="bg-brandBlue/15 text-brandBlue font-bold px-3 py-1 rounded text-[11px]">INR 10,000 / $125</span>
+                            </div>
+                            <div class="flex justify-between items-center p-3.5 bg-white border border-slate-200/60 rounded-xl hover:shadow-sm transition-all">
+                                <div>
+                                    <h4 class="font-bold text-slate-800">Digital: Sponsored Press Release</h4>
+                                    <p class="text-slate-400 mt-0.5">Featured Academic/Social Article Slot</p>
+                                </div>
+                                <span class="bg-brandBlue/15 text-brandBlue font-bold px-3 py-1 rounded text-[11px]">INR 8,000 / $100</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-6 pt-4 border-t border-slate-200 text-xs text-slate-500">
+                        * Special discounted rates apply for non-profits, academic conferences, and socio-economic institutions. Contact our office desk for custom quotes.
+                    </div>
+                </div>
+
+                <!-- Subscriptions & Interactive Estimator (Right 6 cols) -->
+                <div class="lg:col-span-6 flex flex-col gap-6 justify-between">
+                    <!-- Interactive Booking Estimator Card -->
+                    <div class="border border-slate-200 rounded-2xl p-8 bg-brandDark text-white shadow-md flex-1">
+                        <h3 class="font-display text-lg font-bold text-amber-400 mb-4 uppercase tracking-tight">Interactive Ad & Subscription Estimator</h3>
+                        <p class="text-xs text-slate-300 mb-6 leading-relaxed">Select your desired media promotion format below to calculate pricing estimate in real time.</p>
+
+                        <div class="space-y-4 text-xs">
+                            <div class="space-y-1.5">
+                                <label class="font-bold uppercase tracking-wider text-slate-400">Media Package Type</label>
+                                <select id="ad-type" onchange="calculateAdCost()" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:border-brandBlue text-xs">
+                                    <option value="25000">Print: Full Page Color Ad (INR 25,000)</option>
+                                    <option value="15000">Print: Half Page Color Ad (INR 15,000)</option>
+                                    <option value="10000">Digital: Portal Header Banner (INR 10,000)</option>
+                                    <option value="8000">Digital: Sponsored Article (INR 8,000)</option>
+                                    <option value="1200">Print: 1-Year Reader Subscription (INR 1,200)</option>
+                                </select>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="space-y-1.5">
+                                    <label class="font-bold uppercase tracking-wider text-slate-400">Quantity / Months</label>
+                                    <input type="number" id="ad-qty" value="1" min="1" onchange="calculateAdCost()" oninput="calculateAdCost()" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:border-brandBlue text-xs">
+                                </div>
+                                <div class="space-y-1.5">
+                                    <label class="font-bold uppercase tracking-wider text-slate-400">Estimated Total Cost</label>
+                                    <div class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-amber-400 font-mono font-bold text-sm flex items-center">
+                                        INR <span id="ad-cost" class="ml-1">25,000</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button onclick="bookAd()" class="w-full bg-brandBlue hover:bg-brandBlue/90 text-white font-bold py-3.5 rounded-xl transition-colors uppercase tracking-wider text-xs shadow-md mt-2">
+                                Request Reservation Booking
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Reader Subscription Summary -->
+                    <div class="border border-slate-200 rounded-2xl p-6 bg-slate-50/50 flex items-center justify-between">
+                        <div class="space-y-1">
+                            <h4 class="font-bold text-slate-800 text-sm">Become a Monthly Subscriber</h4>
+                            <p class="text-xs text-slate-500 max-w-sm">Get 12 issues of Vishwa Leader Monthly Print Magazine delivered to your door.</p>
+                        </div>
+                        <a href="#contact" class="bg-slate-900 text-white font-bold px-4 py-2.5 rounded-lg text-[10px] hover:bg-slate-850 transition-colors uppercase tracking-wider">
+                            Subscribe
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Legal Compliance Desk -->
     <section id="compliance" class="py-20 md:py-24 bg-white border-b border-slate-200/60">
         <div class="max-w-7xl mx-auto px-6">
@@ -928,6 +1036,40 @@
                     item.style.display = 'none';
                 }
             });
+        }
+
+        // Advertising Cost Calculator
+        function calculateAdCost() {
+            const typeSelect = document.getElementById('ad-type');
+            const qtyInput = document.getElementById('ad-qty');
+            const costSpan = document.getElementById('ad-cost');
+
+            const unitCost = parseInt(typeSelect.value) || 0;
+            const qty = parseInt(qtyInput.value) || 1;
+            
+            const total = unitCost * qty;
+            costSpan.textContent = total.toLocaleString('en-IN');
+        }
+
+        function bookAd() {
+            const typeSelect = document.getElementById('ad-type');
+            const selectedLabel = typeSelect.options[typeSelect.selectedIndex].text;
+            const qty = document.getElementById('ad-qty').value;
+            const cost = document.getElementById('ad-cost').textContent;
+
+            // Pre-fill contact form
+            const categorySelect = document.querySelector('select[name="category"]');
+            if (categorySelect) {
+                categorySelect.value = 'Vishwa Leader Magazine - Subscriptions & Print Ads';
+            }
+            
+            const messageArea = document.querySelector('textarea[name="message"]');
+            if (messageArea) {
+                messageArea.value = `I am interested in advertising/subscribing.\n\nPackage: ${selectedLabel}\nQuantity/Months: ${qty}\nEstimated Cost: INR ${cost}\nPlease contact me to finalize the billing details.`;
+            }
+
+            // Scroll smoothly to contact section
+            document.getElementById('contact').scrollIntoView({ behavior: 'smooth' });
         }
 
         // Lightbox Functionality
