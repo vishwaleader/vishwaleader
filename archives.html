@@ -4,8 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vishwa Leader | Document Center & Publication Archives</title>
-    <meta name="description" content="Explore and download official documents, seminar circulars, registration certificates, and the print archives of Vishwa Leader.">
+    <title>Vishwa Leader | Digital Library & Archive Store</title>
+    <meta name="description" content="Explore, preview, and download official documents, seminar circulars, and the complete print archive of Vishwa Leader.">
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -25,7 +25,7 @@
                         brandBlue: '#0056CA',     // Vibrant Ambedkar Blue
                         brandDark: '#0A1E4B',     // Deep Navy
                         accentGold: '#D4AF37',    // Premium Gold
-                        bgGray: '#F8FAFC'
+                        slate950: '#020617'
                     },
                     fontFamily: {
                         sans: ['Inter', 'sans-serif'],
@@ -40,7 +40,7 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #020617; /* Slate 950 */
+            background-color: #030712; /* Dark Gray 950 */
         }
         .font-display {
             font-family: 'Outfit', sans-serif;
@@ -51,104 +51,224 @@
             height: 8px;
         }
         ::-webkit-scrollbar-track {
-            background: #0f172a;
+            background: #0b0f19;
         }
         ::-webkit-scrollbar-thumb {
-            background: #334155;
+            background: #1e293b;
             border-radius: 4px;
         }
         ::-webkit-scrollbar-thumb:hover {
-            background: #475569;
+            background: #334155;
+        }
+
+        /* 3D Book perspective styles */
+        .book-container {
+            perspective: 1000px;
+        }
+        .book-cover-3d {
+            transform-style: preserve-3d;
+            transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1), box-shadow 0.4s ease;
+        }
+        .book-container:hover .book-cover-3d {
+            transform: rotateY(-18deg) translateZ(10px);
+            box-shadow: -15px 15px 30px rgba(0, 0, 0, 0.7);
+        }
+        /* Realistic book spine thickness shadow */
+        .book-spine-side {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 12px;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.35);
+            transform: rotateY(-90deg) translateX(-6px);
+            transform-origin: left center;
+        }
+
+        /* Modern metallic glow shelf styling */
+        .shelf-glow {
+            box-shadow: 0 4px 20px rgba(0, 86, 202, 0.15), 0 1px 0 rgba(255, 255, 255, 0.05) inset;
         }
     </style>
 </head>
 
-<body class="selection:bg-brandBlue/30 selection:text-white min-h-screen flex flex-col antialiased text-slate-100">
+<body class="selection:bg-brandBlue/30 selection:text-white min-h-screen flex flex-col antialiased text-slate-200">
 
     <!-- Navigation Header -->
-    <header class="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-40">
+    <header class="bg-slate-950/80 backdrop-blur-md border-b border-slate-900 sticky top-0 z-40">
         <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
             <div class="flex items-center gap-4">
                 <a href="index.html" class="group flex items-center gap-3">
                     <img src="wp-content/uploads/2025/02/Vishwa_Leader_Logo-removebg-preview-e1738584466936.png" 
-                         alt="Vishwa Leader Logo" 
-                         class="h-12 w-auto object-contain transition-transform group-hover:scale-105" 
-                         onerror="this.src='https://i0.wp.com/vishwaleader.com/wp-content/uploads/2025/02/Vishwa_Leader_Logo-removebg-preview-e1738584466936.png?fit=250%2C142&ssl=1'" />
-                    <span class="text-[10px] font-black tracking-widest text-brandBlue uppercase border border-brandBlue/20 px-2 py-0.5 rounded bg-brandBlue/10">
-                        Document Center
+                          alt="Vishwa Leader Logo" 
+                          class="h-12 w-auto object-contain transition-transform group-hover:scale-105" 
+                          onerror="this.src='https://i0.wp.com/vishwaleader.com/wp-content/uploads/2025/02/Vishwa_Leader_Logo-removebg-preview-e1738584466936.png?fit=250%2C142&ssl=1'" />
+                    <span class="text-[10px] font-black tracking-widest text-brandBlue uppercase border border-brandBlue/20 px-2.5 py-0.5 rounded bg-brandBlue/10">
+                        Digital Library
                     </span>
                 </a>
             </div>
             
-            <a href="index.html" class="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white font-bold px-4 py-2 rounded-xl text-xs transition-colors uppercase tracking-wider border border-slate-700">
-                <i class="fa-solid fa-arrow-left-long"></i> Back to Website
+            <a href="index.html" class="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white font-bold px-4 py-2.5 rounded-xl text-xs transition-colors uppercase tracking-wider border border-slate-800">
+                <i class="fa-solid fa-arrow-left-long text-amber-500"></i> Back to Homepage
             </a>
         </div>
     </header>
 
     <!-- Main Workspace -->
-    <main class="flex-grow max-w-7xl w-full mx-auto px-4 md:px-6 py-8 flex flex-col lg:flex-row gap-8">
+    <main class="flex-grow max-w-7xl w-full mx-auto px-6 py-12 space-y-20">
         
-        <!-- Left Sidebar: Switcher & Items List -->
-        <section class="w-full lg:w-[400px] shrink-0 flex flex-col gap-6">
-            
-            <!-- Welcome Info -->
-            <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-6">
-                <h1 class="font-display text-xl font-black text-white">Publication Archives</h1>
-                <p class="text-xs text-slate-400 mt-2 leading-relaxed">
-                    Welcome to the Vishwa Leader Administrative & Editorial Repository. Select a resource below to read the high-fidelity preview and access direct downloads.
+        <!-- Welcome Hero Section -->
+        <section class="relative rounded-3xl border border-slate-900 bg-slate-950 p-8 md:p-12 overflow-hidden shadow-2xl">
+            <div class="absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_50%_0%,rgba(0,86,202,0.15),transparent_100%)]"></div>
+            <div class="relative z-10 max-w-3xl space-y-4">
+                <span class="text-[10px] font-black tracking-widest text-amber-400 uppercase bg-amber-400/10 px-3 py-1 rounded-full border border-amber-400/25">Document Center</span>
+                <h1 class="font-display text-3xl md:text-5xl font-black text-white leading-none tracking-tight">
+                    Vishwa Leader Repository
+                </h1>
+                <p class="text-slate-400 text-xs md:text-sm leading-relaxed max-w-2xl font-light">
+                    Welcome to our archival publication library. Select any document or magazine issue from the storefront shelves below to preview high-fidelity pages instantly or download them directly to your device.
                 </p>
-            </div>
-
-            <!-- Tab Switcher -->
-            <div class="bg-slate-900 p-1.5 rounded-xl border border-slate-800 flex gap-2">
-                <button onclick="switchTab('pdfs')" id="tab-pdfs" class="flex-1 py-3 rounded-lg text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 bg-brandBlue text-white shadow-md">
-                    <i class="fa-solid fa-file-pdf text-sm"></i> Documents
-                </button>
-                <button onclick="switchTab('covers')" id="tab-covers" class="flex-1 py-3 rounded-lg text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 text-slate-400 hover:text-white">
-                    <i class="fa-solid fa-book-open text-sm"></i> Covers
-                </button>
-            </div>
-
-            <!-- List Containers -->
-            <div class="flex-grow overflow-y-auto max-h-[60vh] lg:max-h-[calc(100vh-340px)] pr-2 space-y-3" id="items-list">
-                <!-- Items loaded dynamically -->
             </div>
         </section>
 
-        <!-- Right Preview Pane -->
-        <section class="flex-grow flex flex-col bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden min-h-[500px]">
-            <!-- Active Resource Header -->
-            <div class="bg-slate-950 px-6 py-4 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                    <span id="preview-badge" class="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded bg-brandBlue text-white tracking-wider">PDF Document</span>
-                    <h2 id="preview-title" class="font-display text-base font-bold text-white mt-1.5 leading-tight">Selecting document...</h2>
-                    <p id="preview-meta" class="text-[10px] text-slate-400 font-mono mt-1">Size: -- | Format: PDF</p>
+        <!-- Shelf 1: Official Documents (PDF) -->
+        <section class="space-y-6">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div class="flex items-center gap-3">
+                    <span class="w-8 h-8 rounded-lg bg-brandBlue/10 text-brandBlue flex items-center justify-center border border-brandBlue/20">
+                        <i class="fa-solid fa-file-pdf"></i>
+                    </span>
+                    <div>
+                        <h2 class="font-display text-lg font-bold text-white uppercase tracking-wider">Official Circulars & Conference Documents</h2>
+                        <p class="text-[10px] text-slate-550 font-medium">Verified PDF Downloads & Academic Forms</p>
+                    </div>
                 </div>
-                <a id="preview-download-btn" href="#" download class="inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-5 py-3 rounded-xl text-xs uppercase tracking-wider transition-all shadow-md shrink-0">
-                    <i class="fa-solid fa-download"></i> Download Resource
-                </a>
+                <span class="text-[10px] font-mono text-slate-500 font-bold uppercase tracking-wider bg-slate-900 px-3 py-1 rounded-full border border-slate-800">9 Resources Available</span>
             </div>
 
-            <!-- Viewer Area -->
-            <div class="flex-grow p-4 bg-slate-950 flex justify-center items-center relative" id="viewer-container">
-                <!-- PDF iframe viewer or Cover image viewer -->
-                <div id="viewer-placeholder" class="text-center text-slate-500 p-8">
-                    <i class="fa-solid fa-circle-notch animate-spin text-3xl text-brandBlue mb-4"></i>
-                    <p class="text-xs">Initializing secure viewer...</p>
+            <!-- Shelf Grid -->
+            <div class="relative pb-10">
+                <!-- Bookshelf Base Grid -->
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-8 gap-y-12 pt-6 px-4" id="pdfs-shelf">
+                    <!-- PDF Books Rendered Dynamically -->
                 </div>
-                <iframe id="pdf-frame" src="" class="hidden w-full h-full border-0 rounded-xl bg-slate-850" style="min-height: 550px; height: 100%;"></iframe>
-                <div id="image-frame" class="hidden max-w-full max-h-[70vh] flex flex-col items-center">
-                    <img id="preview-image" src="" alt="Cover Preview" class="max-w-full max-h-[60vh] object-contain rounded-lg border border-slate-800 shadow-2xl" />
+                <!-- Shelf Wood-style Overlay Panel -->
+                <div class="h-4 w-full bg-slate-900 border-t border-slate-850 rounded-lg mt-4 shelf-glow relative">
+                    <div class="absolute inset-0 bg-gradient-to-b from-white/5 to-black/30 pointer-events-none"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Shelf 2: Magazine Archive (Covers) -->
+        <section class="space-y-6">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div class="flex items-center gap-3">
+                    <span class="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-500 flex items-center justify-center border border-amber-500/20">
+                        <i class="fa-solid fa-book-open"></i>
+                    </span>
+                    <div>
+                        <h2 class="font-display text-lg font-bold text-white uppercase tracking-wider">Print Magazine Cover Archive</h2>
+                        <p class="text-[10px] text-slate-550 font-medium">Historical Monthly Magazine Publications (Paused)</p>
+                    </div>
+                </div>
+                <span class="text-[10px] font-mono text-slate-500 font-bold uppercase tracking-wider bg-slate-900 px-3 py-1 rounded-full border border-slate-800">21 Issues Archived</span>
+            </div>
+
+            <!-- Shelf Grid -->
+            <div class="relative pb-10">
+                <!-- Bookshelf Base Grid -->
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-8 gap-y-12 pt-6 px-4" id="covers-shelf">
+                    <!-- Cover Magazines Rendered Dynamically -->
+                </div>
+                <!-- Shelf Wood-style Overlay Panel -->
+                <div class="h-4 w-full bg-slate-900 border-t border-slate-850 rounded-lg mt-4 shelf-glow relative">
+                    <div class="absolute inset-0 bg-gradient-to-b from-white/5 to-black/30 pointer-events-none"></div>
                 </div>
             </div>
         </section>
     </main>
 
     <!-- Footer -->
-    <footer class="bg-slate-950 border-t border-slate-900 py-6 mt-auto text-center text-[10px] text-slate-500 font-normal">
-        <p>© 2026 Vishwa Leader Techmedia Private Limited. All Administrative Archives are verified.</p>
+    <footer class="bg-slate-950 border-t border-slate-900 py-8 mt-20 text-center text-xs text-slate-500 font-normal">
+        <p>© 2026 Vishwa Leader Techmedia Private Limited. All Digital Archives are legally registered.</p>
     </footer>
+
+    <!-- Immersive Document Reader Overlay (Modal) -->
+    <div id="reader-overlay" class="fixed inset-0 z-50 bg-slate-950/98 backdrop-blur-md opacity-0 pointer-events-none transition-all duration-300 flex flex-col">
+        <!-- Reader Header -->
+        <div class="bg-slate-950 border-b border-slate-900 px-6 py-4 flex items-center justify-between h-20">
+            <div class="flex items-center gap-3">
+                <span id="reader-badge" class="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded tracking-wider">PDF DOCUMENT</span>
+                <h3 id="reader-title" class="font-display font-bold text-white text-sm md:text-base leading-tight truncate max-w-md">Selecting...</h3>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <a id="reader-download-btn" href="#" download class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2.5 rounded-xl text-[10px] uppercase tracking-wider transition-colors shadow-md">
+                    <i class="fa-solid fa-download"></i> Download
+                </a>
+                <button onclick="closeReader()" class="w-10 h-10 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-white hover:text-red-400 flex items-center justify-center text-base transition-colors" title="Close Reader">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Reader Workspace -->
+        <div class="flex-grow flex flex-col lg:flex-row">
+            
+            <!-- Left Info Panel (Hidden on Mobile) -->
+            <div class="hidden lg:flex w-80 shrink-0 border-r border-slate-900 bg-slate-950/60 p-6 flex-col justify-between overflow-y-auto">
+                <div class="space-y-6">
+                    <div class="aspect-[3/4] w-48 mx-auto rounded-xl overflow-hidden bg-slate-900 border border-slate-800 shadow-2xl relative" id="reader-cover-container">
+                        <!-- Immersive Cover Preview Image or Book mockup -->
+                        <img id="reader-cover-img" src="" alt="Cover Image" class="w-full h-full object-cover hidden" />
+                        <div id="reader-cover-mockup" class="w-full h-full bg-gradient-to-br from-slate-900 to-brandDark flex flex-col justify-between p-4 animate-pulse">
+                            <div class="absolute top-0 left-0 w-2.5 h-full bg-black/25"></div>
+                            <span class="self-end bg-brandBlue text-white text-[8px] font-bold px-1.5 py-0.5 rounded">VL DOC</span>
+                            <p id="reader-cover-title-text" class="text-white text-xs font-bold font-display pl-2 leading-tight">Publication Document</p>
+                            <span class="text-[8px] font-mono text-slate-500 pl-2">Vishwa Leader</span>
+                        </div>
+                    </div>
+
+                    <div class="space-y-3">
+                        <h4 class="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Document Metadata</h4>
+                        <div class="space-y-2 text-xs font-mono bg-slate-900/40 p-4 rounded-xl border border-slate-900">
+                            <p class="text-slate-400"><span class="text-slate-600">Size:</span> <span id="meta-size">--</span></p>
+                            <p class="text-slate-400"><span class="text-slate-600">Type:</span> <span id="meta-type">PDF</span></p>
+                            <p class="text-slate-400"><span class="text-slate-600">Owner:</span> Techmedia Ltd.</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <h4 class="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Summary</h4>
+                        <p id="reader-desc" class="text-xs text-slate-400 leading-relaxed font-light">
+                            Detailed overview description of this circular/document.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="pt-6 border-t border-slate-900 text-[10px] text-slate-600">
+                    Press <span class="bg-slate-900 border border-slate-800 px-1 rounded font-mono">Esc</span> to close secure reader.
+                </div>
+            </div>
+
+            <!-- Central Viewer Area -->
+            <div class="flex-grow bg-slate-950 flex justify-center items-center relative p-4" id="viewer-pane">
+                <div id="viewer-loading" class="absolute inset-0 flex flex-col justify-center items-center bg-slate-950 z-10">
+                    <i class="fa-solid fa-circle-notch animate-spin text-3xl text-brandBlue mb-4"></i>
+                    <p class="text-xs text-slate-550">Loading document pages securely...</p>
+                </div>
+                
+                <!-- PDF Viewer frame -->
+                <iframe id="pdf-viewer" src="" class="hidden w-full h-full border-0 rounded-2xl shadow-2xl" style="height: 100%; min-height: calc(100vh - 120px);"></iframe>
+                
+                <!-- Image Viewer frame -->
+                <div id="image-viewer" class="hidden max-w-full max-h-[calc(100vh-140px)] flex justify-center items-center">
+                    <img id="preview-img" src="" alt="Publication Page Preview" class="max-w-full max-h-[calc(100vh-140px)] object-contain rounded-xl border border-slate-800 shadow-2xl" />
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Script Block -->
     <script>
@@ -234,176 +354,196 @@
             { src: 'feb 2012.jpg', title: 'February 2012 Cover', date: 'Feb 2012' }
         ];
 
-        let currentTab = 'pdfs';
-        let activeFile = '';
-        let activeCover = '';
-
-        function switchTab(tabId) {
-            currentTab = tabId;
-            const btnPdfs = document.getElementById('tab-pdfs');
-            const btnCovers = document.getElementById('tab-covers');
-            
-            if (tabId === 'pdfs') {
-                btnPdfs.className = "flex-1 py-3 rounded-lg text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 bg-brandBlue text-white shadow-md";
-                btnCovers.className = "flex-1 py-3 rounded-lg text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 text-slate-400 hover:text-white";
-                renderList(pdfDownloadsList, 'pdf');
-                // Select first PDF by default if none selected
-                if (pdfDownloadsList.length > 0) {
-                    selectPdf(pdfDownloadsList[0].file);
-                }
-            } else {
-                btnCovers.className = "flex-1 py-3 rounded-lg text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 bg-brandBlue text-white shadow-md";
-                btnPdfs.className = "flex-1 py-3 rounded-lg text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 text-slate-400 hover:text-white";
-                renderList(magazineCoversList, 'cover');
-                // Select first cover by default if none selected
-                if (magazineCoversList.length > 0) {
-                    selectCover(magazineCoversList[0].src);
-                }
-            }
-        }
-
-        function renderList(items, type) {
-            const container = document.getElementById('items-list');
-            container.innerHTML = '';
-            
-            if (type === 'pdf') {
-                items.forEach(pdf => {
-                    const isActive = activeFile === pdf.file;
-                    const cardHtml = `
-                        <div onclick="selectPdf('${pdf.file}')" 
-                             class="group border ${isActive ? 'border-brandBlue bg-brandBlue/10' : 'border-slate-800 bg-slate-900/40 hover:border-slate-750 hover:bg-slate-900/70'} p-4 rounded-xl cursor-pointer transition-all flex flex-col justify-between gap-3 shadow-sm select-none">
-                            <div>
-                                <div class="flex items-center gap-3">
-                                    <span class="w-8 h-8 rounded-lg ${isActive ? 'bg-brandBlue text-white' : 'bg-red-500/10 text-red-500'} flex items-center justify-center shrink-0 border border-red-500/20">
-                                        <i class="fa-solid fa-file-pdf text-sm"></i>
-                                    </span>
-                                    <div class="min-w-0">
-                                        <h4 class="font-bold text-white text-xs leading-tight truncate" title="${pdf.title}">${pdf.title}</h4>
-                                        <span class="text-[9px] text-slate-450 font-bold uppercase tracking-wider">${pdf.size}</span>
-                                    </div>
-                                </div>
-                                <p class="text-[10px] text-slate-400 mt-2.5 leading-relaxed font-normal">${pdf.desc}</p>
+        // Render Bookshelf for PDFs
+        function renderPdfsShelf() {
+            const container = document.getElementById('pdfs-shelf');
+            container.innerHTML = pdfDownloadsList.map(pdf => `
+                <div class="flex flex-col items-center text-center space-y-4 group cursor-pointer" onclick="openPdf('${pdf.file}')">
+                    <!-- 3D Book Cover structure -->
+                    <div class="book-container relative w-[130px] h-[190px]">
+                        <div class="book-cover-3d relative w-full h-full bg-gradient-to-br from-slate-900 via-brandDark to-slate-900 border border-slate-700/50 rounded-r-lg shadow-lg flex flex-col justify-between p-4 overflow-hidden">
+                            <!-- Crease line shadow -->
+                            <div class="absolute top-0 left-0 w-3 h-full bg-black/30 border-r border-white/5 z-20"></div>
+                            <!-- Book spine side depth -->
+                            <div class="book-spine-side"></div>
+                            
+                            <!-- Badges -->
+                            <div class="self-end bg-brandBlue/90 backdrop-blur-sm border border-brandBlue/35 text-[7px] font-black text-white uppercase px-1.5 py-0.5 rounded tracking-widest z-10">
+                                PDF
+                            </div>
+                            
+                            <!-- Title on cover -->
+                            <div class="pl-2 flex-grow flex items-center justify-center pt-2">
+                                <h4 class="font-display font-extrabold text-white text-[10px] leading-tight line-clamp-4 select-none">
+                                    ${pdf.title}
+                                </h4>
+                            </div>
+                            
+                            <!-- Footer size stats -->
+                            <div class="pl-2 border-t border-slate-800/80 pt-2 flex items-center justify-between text-[7px] font-mono text-slate-500 uppercase tracking-widest z-10">
+                                <span>VL DOC</span>
+                                <span>${pdf.size}</span>
                             </div>
                         </div>
-                    `;
-                    container.insertAdjacentHTML('beforeend', cardHtml);
-                });
-            } else {
-                items.forEach(cover => {
-                    const isActive = activeCover === cover.src;
-                    const cardHtml = `
-                        <div onclick="selectCover('${cover.src}')" 
-                             class="group border ${isActive ? 'border-brandBlue bg-brandBlue/10' : 'border-slate-800 bg-slate-900/40 hover:border-slate-750 hover:bg-slate-900/70'} p-3 rounded-xl cursor-pointer transition-all flex items-center gap-3 shadow-sm select-none">
-                            <div class="w-10 h-12 bg-slate-800 rounded overflow-hidden shrink-0 border border-slate-700">
-                                <img src="magazine-covers/${cover.src}" alt="${cover.title}" class="w-full h-full object-cover" />
-                            </div>
-                            <div class="min-w-0">
-                                <h4 class="font-bold text-white text-xs leading-tight truncate" title="${cover.title}">${cover.title}</h4>
-                                <span class="text-[9px] text-amber-500 font-extrabold uppercase mt-0.5 block tracking-wider">${cover.date}</span>
-                            </div>
-                        </div>
-                    `;
-                    container.insertAdjacentHTML('beforeend', cardHtml);
-                });
-            }
+                    </div>
+                    
+                    <!-- Cover bottom labeling -->
+                    <div class="w-[140px] space-y-1">
+                        <h4 class="text-xs font-bold text-slate-355 leading-tight line-clamp-2 group-hover:text-brandBlue transition-colors font-display">${pdf.title}</h4>
+                        <span class="text-[9px] font-mono font-bold text-slate-500 uppercase tracking-wide">${pdf.size} | PDF</span>
+                    </div>
+                </div>
+            `).join('');
         }
 
-        function selectPdf(filename) {
-            activeFile = filename;
-            activeCover = '';
-            
-            // Re-render sidebar list to update active states
-            renderList(pdfDownloadsList, 'pdf');
-            
+        // Render Bookshelf for Covers
+        function renderCoversShelf() {
+            const container = document.getElementById('covers-shelf');
+            container.innerHTML = magazineCoversList.map(cover => `
+                <div class="flex flex-col items-center text-center space-y-4 group cursor-pointer" onclick="openCover('${cover.src}')">
+                    <!-- Magazine visual book cover structure -->
+                    <div class="book-container relative w-[130px] h-[190px]">
+                        <div class="book-cover-3d relative w-full h-full bg-slate-900 border border-slate-800/80 rounded-md shadow-lg overflow-hidden">
+                            <img src="magazine-covers/${cover.src}" alt="${cover.title}" class="w-full h-full object-cover" />
+                            <!-- Spine crease shadow -->
+                            <div class="absolute top-0 left-0 w-2.5 h-full bg-gradient-to-r from-black/45 to-transparent z-10"></div>
+                            <!-- Gloss reflection overlay -->
+                            <div class="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/10 pointer-events-none z-10"></div>
+                            <div class="book-spine-side"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Cover bottom labeling -->
+                    <div class="w-[140px] space-y-1">
+                        <h4 class="text-xs font-bold text-slate-355 leading-tight line-clamp-2 group-hover:text-amber-400 transition-colors font-display">${cover.title}</h4>
+                        <span class="text-[9px] font-mono font-bold text-amber-500/80 uppercase tracking-wider">${cover.date} | Issue</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Open Reader Modal with PDF
+        function openPdf(filename) {
             const pdf = pdfDownloadsList.find(p => p.file === filename);
             if (!pdf) return;
 
-            // Update Preview Header Info
-            document.getElementById('preview-badge').textContent = 'PDF Document';
-            document.getElementById('preview-badge').className = 'text-[9px] font-extrabold uppercase px-2 py-0.5 rounded bg-brandBlue text-white tracking-wider';
-            document.getElementById('preview-title').textContent = pdf.title;
-            document.getElementById('preview-meta').textContent = `Size: ${pdf.size} | Format: PDF`;
-            
-            const downloadBtn = document.getElementById('preview-download-btn');
+            // Setup Reader metadata
+            document.getElementById('reader-badge').textContent = 'PDF DOCUMENT';
+            document.getElementById('reader-badge').className = 'text-[9px] font-extrabold uppercase px-2 py-0.5 rounded tracking-wider bg-brandBlue text-white';
+            document.getElementById('reader-title').textContent = pdf.title;
+            document.getElementById('meta-size').textContent = pdf.size;
+            document.getElementById('meta-type').textContent = 'PDF';
+            document.getElementById('reader-desc').textContent = pdf.desc;
+
+            // Setup cover image fallback representation
+            document.getElementById('reader-cover-img').classList.add('hidden');
+            document.getElementById('reader-cover-mockup').classList.remove('hidden');
+            document.getElementById('reader-cover-title-text').textContent = pdf.title;
+
+            // Setup download trigger
+            const downloadBtn = document.getElementById('reader-download-btn');
             downloadBtn.href = `pdfs/${encodeURIComponent(pdf.file)}`;
             downloadBtn.download = pdf.file;
 
-            // Update Viewer Content
-            const placeholder = document.getElementById('viewer-placeholder');
-            const pdfFrame = document.getElementById('pdf-frame');
-            const imgFrame = document.getElementById('image-frame');
+            // Show secure reader container
+            const overlay = document.getElementById('reader-overlay');
+            overlay.classList.remove('pointer-events-none', 'opacity-0');
+            overlay.classList.add('opacity-100');
 
-            placeholder.classList.remove('hidden');
-            pdfFrame.classList.add('hidden');
-            imgFrame.classList.add('hidden');
+            // Force load iframe source
+            const loader = document.getElementById('viewer-loading');
+            const pdfViewer = document.getElementById('pdf-viewer');
+            const imgViewer = document.getElementById('image-viewer');
 
-            // Force load the iframe
-            pdfFrame.src = `pdfs/${encodeURIComponent(pdf.file)}`;
-            
-            pdfFrame.onload = () => {
-                placeholder.classList.add('hidden');
-                pdfFrame.classList.remove('hidden');
+            loader.classList.remove('hidden');
+            pdfViewer.classList.add('hidden');
+            imgViewer.classList.add('hidden');
+
+            pdfViewer.src = `pdfs/${encodeURIComponent(pdf.file)}`;
+            pdfViewer.onload = () => {
+                loader.classList.add('hidden');
+                pdfViewer.classList.remove('hidden');
             };
         }
 
-        function selectCover(src) {
-            activeCover = src;
-            activeFile = '';
-
-            // Re-render sidebar list to update active states
-            renderList(magazineCoversList, 'cover');
-
+        // Open Reader Modal with Magazine Cover
+        function openCover(src) {
             const cover = magazineCoversList.find(c => c.src === src);
             if (!cover) return;
 
-            // Update Preview Header Info
-            document.getElementById('preview-badge').textContent = 'Magazine Cover';
-            document.getElementById('preview-badge').className = 'text-[9px] font-extrabold uppercase px-2 py-0.5 rounded bg-purple-600 text-white tracking-wider';
-            document.getElementById('preview-title').textContent = cover.title;
-            document.getElementById('preview-meta').textContent = `Published: ${cover.date} | Format: JPEG Image`;
+            // Setup Reader metadata
+            document.getElementById('reader-badge').textContent = 'MAGAZINE COVER';
+            document.getElementById('reader-badge').className = 'text-[9px] font-extrabold uppercase px-2 py-0.5 rounded tracking-wider bg-amber-500 text-slate-950';
+            document.getElementById('reader-title').textContent = cover.title;
+            document.getElementById('meta-size').textContent = 'Optimized Jpeg';
+            document.getElementById('meta-type').textContent = 'JPEG';
+            document.getElementById('reader-desc').textContent = `Commemorative print edition of Vishwa Leader Magazine published for ${cover.date}. This stands as a legacy document of our founding print media operations.`;
 
-            const downloadBtn = document.getElementById('preview-download-btn');
+            // Setup cover image thumbnail on left
+            const coverImgLeft = document.getElementById('reader-cover-img');
+            const coverMockupLeft = document.getElementById('reader-cover-mockup');
+            coverMockupLeft.classList.add('hidden');
+            coverImgLeft.classList.remove('hidden');
+            coverImgLeft.src = `magazine-covers/${cover.src}`;
+
+            // Setup download trigger
+            const downloadBtn = document.getElementById('reader-download-btn');
             downloadBtn.href = `magazine-covers/${encodeURIComponent(cover.src)}`;
             downloadBtn.download = cover.src;
 
-            // Update Viewer Content
-            const placeholder = document.getElementById('viewer-placeholder');
-            const pdfFrame = document.getElementById('pdf-frame');
-            const imgFrame = document.getElementById('image-frame');
-            const img = document.getElementById('preview-image');
+            // Show secure reader container
+            const overlay = document.getElementById('reader-overlay');
+            overlay.classList.remove('pointer-events-none', 'opacity-0');
+            overlay.classList.add('opacity-100');
 
-            placeholder.classList.remove('hidden');
-            pdfFrame.classList.add('hidden');
-            imgFrame.classList.add('hidden');
+            // Force load cover image in central panel
+            const loader = document.getElementById('viewer-loading');
+            const pdfViewer = document.getElementById('pdf-viewer');
+            const imgViewer = document.getElementById('image-viewer');
+            const previewImg = document.getElementById('preview-img');
 
-            img.src = `magazine-covers/${cover.src}`;
-            img.onload = () => {
-                placeholder.classList.add('hidden');
-                imgFrame.classList.remove('hidden');
+            loader.classList.remove('hidden');
+            pdfViewer.classList.add('hidden');
+            imgViewer.classList.add('hidden');
+
+            previewImg.src = `magazine-covers/${cover.src}`;
+            previewImg.onload = () => {
+                loader.classList.add('hidden');
+                imgViewer.classList.remove('hidden');
             };
         }
 
-        // Initialize and handle deep links via query parameters
+        // Close Reader Modal
+        function closeReader() {
+            const overlay = document.getElementById('reader-overlay');
+            overlay.classList.add('pointer-events-none', 'opacity-0');
+            overlay.classList.remove('opacity-100');
+
+            // Clean up iframe to stop background content loading
+            document.getElementById('pdf-viewer').src = '';
+        }
+
+        // Close Reader on keypress Escape
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                closeReader();
+            }
+        });
+
+        // Initialize shelves and handle incoming query deep links
         window.addEventListener('DOMContentLoaded', () => {
+            renderPdfsShelf();
+            renderCoversShelf();
+
+            // Handle incoming deep link parameters from homepage click events
             const urlParams = new URLSearchParams(window.location.search);
             const targetFile = urlParams.get('file');
             const targetCover = urlParams.get('cover');
 
             if (targetFile) {
-                // If a PDF is requested, open the PDF tab and select the file
-                currentTab = 'pdfs';
-                activeFile = targetFile;
-                switchTab('pdfs');
-                selectPdf(targetFile);
+                openPdf(targetFile);
             } else if (targetCover) {
-                // If a cover is requested, open the cover tab and select it
-                currentTab = 'covers';
-                activeCover = targetCover;
-                switchTab('covers');
-                selectCover(targetCover);
-            } else {
-                // Default to PDF list
-                switchTab('pdfs');
+                openCover(targetCover);
             }
         });
     </script>
