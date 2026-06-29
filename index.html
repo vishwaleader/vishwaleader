@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vishwa Leader | Transnational Advocacy & Diaspora Mobilization</title>
-    <meta name="description" content="Official portal of Vishwa Leader Techmedia Pvt. Ltd. and print magazine, promoting the LSE Academic Conference and Dr. B. R. Ambedkar International Awards.">
+    <meta name="description" content="Official portal of Vishwa Leader Techmedia Pvt. Ltd. and print magazine, promoting the SOAS University Academic Conference and Dr. B. R. Ambedkar International Awards.">
 
     <!-- Google Fonts: Inter & Outfit for modern, premium typography -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -17,6 +17,10 @@
 
     <!-- Tailwind CSS Script CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Firebase SDK Compat (Loaded for dynamic content overrides) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -93,16 +97,18 @@
 <body class="selection:bg-brandBlue/10 selection:text-brandBlue min-h-screen flex flex-col antialiased">
 
     <!-- Top Call for Articles Alert Banner -->
-    <div class="bg-brandDark text-white py-3 px-4 text-center border-b border-white/10 text-xs tracking-wide font-medium relative z-50">
-        <span class="inline-flex items-center gap-2 flex-wrap justify-center">
-            <span class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></span>
-            <strong>Call for Articles:</strong> International Seminar at LSE, London — Submit abstracts by Jan 31, 2025.
-            <a href="#conference" class="underline hover:text-amber-300 font-bold ml-2">Learn More &rarr;</a>
-        </span>
+    <div class="bg-brandBlue text-white py-3 px-4 text-center border-b border-white/10 text-xs tracking-wide font-semibold relative z-50">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6">
+            <a id="nav-abstract-strip" data-field="announcements.abstractLink" href="#conference" class="hover:text-amber-300 transition-colors flex items-center gap-1.5"><i class="fa-solid fa-graduation-cap"></i> Call for Abstracts</a>
+            <span class="hidden sm:inline text-white/30">|</span>
+            <a id="nav-award-strip" data-field="announcements.awardLink" href="#contact" class="hover:text-amber-300 transition-colors flex items-center gap-1.5"><i class="fa-solid fa-trophy"></i> Call for Award Nominations</a>
+            <span class="hidden sm:inline text-white/30">|</span>
+            <a id="nav-business-strip" data-field="announcements.businessLink" href="#contact" class="hover:text-amber-300 transition-colors flex items-center gap-1.5"><i class="fa-solid fa-briefcase"></i> Call for Business Participation</a>
+        </div>
     </div>
 
     <!-- Navigation Header -->
-    <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-sm">
+    <header class="bg-white/80 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-40">
         <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
             <div class="flex items-center gap-4">
                 <a href="#home" class="group flex items-center gap-3">
@@ -119,7 +125,7 @@
             <!-- Desktop Navigation -->
             <nav class="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-600">
                 <a href="#about" class="hover:text-brandBlue transition-colors">Corporate</a>
-                <a href="#conference" class="hover:text-brandBlue transition-colors">LSE Seminar</a>
+                <a href="#conference" class="hover:text-brandBlue transition-colors">SOAS Conference</a>
                 <a href="#events" class="hover:text-brandBlue transition-colors">Events</a>
                 <a href="#gallery" class="hover:text-brandBlue transition-colors">Gallery</a>
                 <a href="archives.html" class="hover:text-brandBlue transition-colors">Archive</a>
@@ -140,7 +146,7 @@
         <!-- Mobile Navigation Menu -->
         <div id="mobileMenu" class="md:hidden max-h-0 opacity-0 overflow-hidden transition-all duration-300 ease-in-out bg-white border-t border-slate-200 px-6 space-y-3 shadow-inner">
             <a href="#about" class="block py-2 text-sm font-semibold text-slate-700 hover:text-brandBlue">Corporate</a>
-            <a href="#conference" class="block py-2 text-sm font-semibold text-slate-700 hover:text-brandBlue">LSE Seminar</a>
+            <a href="#conference" class="block py-2 text-sm font-semibold text-slate-700 hover:text-brandBlue">SOAS Conference</a>
             <a href="#events" class="block py-2 text-sm font-semibold text-slate-700 hover:text-brandBlue">Events</a>
             <a href="#gallery" class="block py-2 text-sm font-semibold text-slate-700 hover:text-brandBlue">Gallery</a>
             <a href="archives.html" class="block py-2 text-sm font-semibold text-slate-700 hover:text-brandBlue">Archive</a>
@@ -152,45 +158,51 @@
     </header>
 
     <!-- Main Hero Section -->
-    <section id="home" class="relative py-20 md:py-28 bg-white border-b border-slate-200/60 overflow-hidden">
+    <section id="home" class="relative py-20 md:py-28 bg-brandDark text-white border-b border-slate-900 overflow-hidden">
         <!-- Subtle grid background -->
-        <div class="absolute inset-0 bg-[linear-gradient(to_right,#e2e8f0_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f0_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-70"></div>
+        <div class="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-70"></div>
+        <!-- Ambient radial glow -->
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-brandBlue/20 rounded-full blur-[120px] pointer-events-none"></div>
 
         <div class="max-w-7xl mx-auto px-6 relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             <!-- Left Content -->
             <div class="lg:col-span-7 space-y-6">
-                <div class="inline-flex items-center gap-2 border border-brandBlue/20 bg-brandBlue/5 px-4 py-1.5 rounded-full text-xs font-bold tracking-wide text-brandBlue">
-                    <span class="w-2 h-2 rounded-full bg-brandBlue animate-ping"></span>
-                    DR. AMBEDKAR LSE CONFERENCE • 2025
+                <div class="inline-flex items-center gap-2 border border-amber-500/30 bg-amber-500/10 px-4 py-1.5 rounded-full text-xs font-bold tracking-wide text-amber-400">
+                    <span class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></span>
+                    <span data-field="hero.location">London, UK</span> • SEPTEMBER 18-20, 2026
                 </div>
-                <h1 class="font-display text-4xl md:text-5xl lg:text-6xl font-black leading-tight tracking-tight text-slate-900">
-                    Propagating Social Justice <br>
-                    <span class="text-brandBlue">On a Transnational Stage.</span>
+                <h1 class="font-display text-4xl md:text-5xl lg:text-6xl font-black leading-tight tracking-tight text-white">
+                    <span data-field="hero.title">Vishwa Leader Dr. B. R. Ambedkar International Awards 2026</span>
                 </h1>
-                <p class="text-slate-600 text-base md:text-lg leading-relaxed max-w-2xl font-normal">
+                <p class="text-slate-300 text-base md:text-lg leading-relaxed max-w-2xl font-normal" data-field="hero.description">
                     Vishwa Leader Techmedia Pvt. Ltd. coordinates global advocacy networks, academic research, and media ecosystems to amplify constitutional values and diaspora empowerment.
                 </p>
-                <div class="flex flex-col sm:flex-row gap-4 pt-4">
-                    <a href="#conference" class="bg-brandDark text-white font-bold px-6 py-4 rounded hover:bg-brandDark/95 text-xs tracking-wider uppercase text-center transition-all shadow-md">
-                        Submit Articles
+                
+                <!-- CTA buttons for the three main calls -->
+                <div class="flex flex-col sm:flex-row flex-wrap gap-4 pt-4">
+                    <a id="btn-abstract" data-field="announcements.abstractLink" href="#conference" class="bg-brandBlue text-white font-bold px-6 py-4 rounded hover:bg-brandBlue/90 text-xs tracking-wider uppercase text-center transition-all shadow-md flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-graduation-cap"></i> Submit Abstract
                     </a>
-                    <a href="#gallery" class="border border-slate-300 text-slate-700 bg-white font-bold px-6 py-4 rounded hover:bg-slate-50 text-xs tracking-wider uppercase text-center transition-all shadow-sm">
-                        View Photo Gallery
+                    <a id="btn-nomination" data-field="announcements.awardLink" href="#contact" class="bg-amber-500 text-brandDark font-bold px-6 py-4 rounded hover:bg-amber-400 text-xs tracking-wider uppercase text-center transition-all shadow-md flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-trophy"></i> Nominate for Award
+                    </a>
+                    <a id="btn-business" data-field="announcements.businessLink" href="#contact" class="border border-slate-500 text-white bg-slate-900/60 font-bold px-6 py-4 rounded hover:bg-slate-800 text-xs tracking-wider uppercase text-center transition-all shadow-sm flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-briefcase"></i> Business Participation
                     </a>
                 </div>
             </div>
 
-            <!-- Right Card: LSE Event Box -->
+            <!-- Right Card: Interactive Event Box -->
             <div class="lg:col-span-5 relative">
-                <div class="relative bg-brandDark border border-slate-800 rounded-2xl p-8 shadow-2xl overflow-hidden group">
+                <div class="relative bg-slate-900/90 border border-slate-800 rounded-2xl p-8 shadow-2xl overflow-hidden group">
                     <div class="absolute -inset-[1px] bg-gradient-to-r from-brandBlue to-amber-500 rounded-2xl opacity-40 blur-[2px] -z-10"></div>
-                    <div class="absolute inset-0 bg-brandDark rounded-2xl -z-10"></div>
+                    <div class="absolute inset-0 bg-slate-950 rounded-2xl -z-10"></div>
 
                     <div class="flex justify-between items-start border-b border-slate-800 pb-4 mb-4">
                         <div>
-                            <span class="text-[10px] font-bold tracking-widest text-amber-400 uppercase">Featured Seminar</span>
-                            <h3 class="font-display text-lg font-bold text-white mt-0.5 uppercase tracking-tight">London School of Economics</h3>
-                            <p class="text-xs text-slate-400 font-medium">LSE Seminar & Awards Ceremony</p>
+                            <span class="text-[10px] font-bold tracking-widest text-amber-400 uppercase">Grand Celebration</span>
+                            <h3 class="font-display text-lg font-bold text-white mt-0.5 uppercase tracking-tight">Ambedkar Awards 2026</h3>
+                            <p class="text-xs text-slate-400 font-medium">SOAS University & London Forums</p>
                         </div>
                         <span class="bg-brandBlue/20 text-white border border-brandBlue/30 text-[10px] font-bold px-2.5 py-1 rounded">London, UK</span>
                     </div>
@@ -199,33 +211,32 @@
                         <div class="flex items-center gap-3">
                             <span class="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-amber-400"><i class="fa-solid fa-calendar-days text-xs"></i></span>
                             <div>
-                                <p class="text-[10px] text-slate-400 font-bold uppercase">Date of Event</p>
-                                <p class="font-semibold">April 13, 2025</p>
+                                <p class="text-[10px] text-slate-400 font-bold uppercase">Dates of Events</p>
+                                <p class="font-semibold">September 18 - 20, 2026</p>
                             </div>
                         </div>
                         <div class="flex items-center gap-3">
                             <span class="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-amber-400"><i class="fa-solid fa-graduation-cap text-xs"></i></span>
                             <div>
-                                <p class="text-[10px] text-slate-400 font-bold uppercase">Academic Partner</p>
-                                <p class="font-semibold">LSE Organizing Committee</p>
+                                <p class="text-[10px] text-slate-400 font-bold uppercase">Academic Venue</p>
+                                <p class="font-semibold">SOAS University of London</p>
                             </div>
                         </div>
                         <div class="flex items-center gap-3">
                             <span class="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-amber-400"><i class="fa-solid fa-trophy text-xs"></i></span>
                             <div>
-                                <p class="text-[10px] text-slate-400 font-bold uppercase">Commemoration</p>
-                                <p class="font-semibold">1st Dr. B. R. Ambedkar International Awards</p>
+                                <p class="text-[10px] text-slate-400 font-bold uppercase">Awards Ceremony</p>
+                                <p class="font-semibold">Dr. B. R. Ambedkar International Awards</p>
                             </div>
                         </div>
                     </div>
 
                     <div class="mt-6 pt-4 border-t border-slate-800 text-xs text-slate-400 flex justify-between items-center">
                         <span><strong>Director:</strong> Shirish B. Ramteke</span>
-                        <a href="#conference" class="text-amber-400 font-bold hover:underline">Full Details &rarr;</a>
+                        <a href="#events" class="text-amber-400 font-bold hover:underline">Timeline &rarr;</a>
                     </div>
                 </div>
             </div>
-        </div>
         </div>
     </section>
 
@@ -241,8 +252,8 @@
                 <span class="block text-[10px] uppercase font-bold tracking-widest text-slate-400 mt-1">Media Photos</span>
             </div>
             <div>
-                <span class="font-display block text-3xl font-black text-slate-900">LSE / SOAS</span>
-                <span class="block text-[10px] uppercase font-bold tracking-widest text-slate-400 mt-1">London Academic Venues</span>
+                <span class="font-display block text-3xl font-black text-slate-900">SOAS University</span>
+                <span class="block text-[10px] uppercase font-bold tracking-widest text-slate-400 mt-1">London Conference Venue</span>
             </div>
             <div>
                 <span class="font-display block text-3xl font-black text-slate-900">Global</span>
@@ -362,8 +373,8 @@
                         </p>
                         <div class="bg-white border border-slate-250 rounded-xl p-4 space-y-2 text-xs text-slate-700 mb-6">
                             <div class="flex justify-between py-1">
-                                <span class="text-slate-450">Coordinated by</span>
-                                <span class="font-bold text-slate-900">Sanghakaya Foundation</span>
+                                <span class="text-slate-450">Format</span>
+                                <span class="font-bold text-slate-900">Souvenir PDF & Print</span>
                             </div>
                         </div>
                     </div>
@@ -375,17 +386,17 @@
         </div>
     </section>
 
-    <!-- Calling for Articles / LSE Conference Section -->
+    <!-- Calling for Articles / SOAS Conference Section -->
     <section id="conference" class="py-20 md:py-24 bg-slate-50 border-b border-slate-200/60">
         <div class="max-w-7xl mx-auto px-6">
             <!-- Header -->
             <div class="max-w-4xl mb-16 space-y-4">
                 <span class="text-xs font-bold tracking-widest text-brandBlue uppercase">Academic Invitation</span>
                 <h2 class="font-display text-3xl md:text-4xl font-black tracking-tight text-slate-900">
-                    Calling for Articles: LSE Conference 2025
+                    Calling for Articles: SOAS University Conference 2026
                 </h2>
                 <p class="text-slate-600 leading-relaxed text-sm md:text-base">
-                    Held on the eve of the <strong>1st Vishwa Leader Dr. B. R. Ambedkar International Awards 2025</strong> in London, UK. The organizing committee invites scholars, researchers, and activists to submit abstracts and full research papers for an academic seminar at the <strong>London School of Economics (LSE)</strong>.
+                    Held on the eve of the <strong>Vishwa Leader Dr. B. R. Ambedkar International Awards 2026</strong> in London, UK. The organizing committee invites scholars, researchers, and activists to submit abstracts and full research papers for the academic conference at <strong>SOAS University of London</strong>.
                 </p>
             </div>
 
@@ -395,7 +406,7 @@
                 <div class="lg:col-span-8 space-y-8">
                     <div class="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm">
                         <span class="text-[10px] font-bold text-brandBlue uppercase bg-brandBlue/5 px-2.5 py-1 rounded">Primary Theme</span>
-                        <h3 class="font-display text-2xl font-black text-slate-900 mt-3 mb-6">
+                        <h3 class="font-display text-2xl font-black text-slate-900 mt-3 mb-6" data-field="conference.primaryTheme">
                             "Reimagining Equality and Justice: Dr. B. R. Ambedkar's Vision in the 21st Century"
                         </h3>
 
@@ -455,19 +466,19 @@
                         <div class="space-y-4 text-xs">
                             <div class="flex justify-between items-center py-1">
                                 <span class="text-slate-400 font-medium">Abstract Deadline</span>
-                                <span class="bg-amber-400/20 text-amber-300 font-bold px-2 py-0.5 rounded">31st Jan 2025</span>
+                                <span class="bg-amber-400/20 text-amber-300 font-bold px-2 py-0.5 rounded" data-field="conference.abstractDate">30th June 2026</span>
                             </div>
                             <div class="flex justify-between items-center py-1 border-y border-slate-800/80">
                                 <span class="text-slate-400 font-medium">Acceptance Notification</span>
-                                <span class="font-bold text-slate-200">15th Feb 2025</span>
+                                <span class="font-bold text-slate-200" data-field="conference.acceptanceDate">15th July 2026</span>
                             </div>
                             <div class="flex justify-between items-center py-1">
                                 <span class="text-slate-400 font-medium">Full Paper Deadline</span>
-                                <span class="font-bold text-slate-200">15th Mar 2025</span>
+                                <span class="font-bold text-slate-200" data-field="conference.paperDate">15th August 2026</span>
                             </div>
                             <div class="flex justify-between items-center py-2 border-t border-slate-800 text-sm">
                                 <span class="text-amber-400 font-bold">Conference Date</span>
-                                <span class="bg-brandBlue text-white font-bold px-2.5 py-1 rounded">13th April 2025</span>
+                                <span class="bg-brandBlue text-white font-bold px-2.5 py-1 rounded" data-field="conference.eventDate">18th Sept 2026</span>
                             </div>
                         </div>
                     </div>
@@ -494,8 +505,8 @@
                             </li>
                         </ul>
                         <div class="mt-6 pt-4 border-t border-slate-100">
-                            <a href="#contact" class="block text-center bg-brandBlue hover:bg-brandBlue/90 text-white font-bold py-3 rounded text-xs uppercase tracking-wider">
-                                Contact Organizer Desk
+                            <a data-field="announcements.abstractLink" href="#contact" class="block text-center bg-brandBlue hover:bg-brandBlue/90 text-white font-bold py-3 rounded text-xs uppercase tracking-wider">
+                                Submit Abstract Form
                             </a>
                         </div>
                     </div>
@@ -504,75 +515,88 @@
         </div>
     </section>
 
-    <!-- Section: Events & Previous Campaigns -->
+    <!-- Section: Events Timeline -->
     <section id="events" class="py-20 md:py-24 bg-slate-50 border-b border-slate-200/60">
         <div class="max-w-7xl mx-auto px-6">
             <div class="max-w-3xl mb-16 space-y-4">
-                <span class="text-xs font-bold tracking-widest text-brandBlue uppercase">Social Campaigns</span>
-                <h2 class="font-display text-3xl md:text-4xl font-black tracking-tight text-slate-900">Events & Previous Drives</h2>
+                <span class="text-xs font-bold tracking-widest text-brandBlue uppercase">Schedule of Events</span>
+                <h2 class="font-display text-3xl md:text-4xl font-black tracking-tight text-slate-900">Vishwa Leader London Summit 2026</h2>
                 <p class="text-slate-500 leading-relaxed text-sm">
-                    Review the civic consciousness campaigns, social justice programs, and international award functions conducted by Vishwa Leader.
+                    Three days of academic discourse, global business networking, and celebration of socio-cultural leadership in the heart of London, UK.
                 </p>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <!-- Event 1 -->
-                <div class="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
+            <!-- Timeline / Cards Layout -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Day 1 Card -->
+                <div class="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-md hover:border-brandBlue/30 transition-all flex flex-col justify-between group">
                     <div>
-                        <div class="h-48 overflow-hidden bg-slate-200">
-                            <img src="wp-content/uploads/2025/02/IMG_0079.png" alt="Cleanliness Awareness Drive" class="w-full h-full object-cover" />
+                        <div class="p-6 bg-brandDark text-white flex justify-between items-center">
+                            <span class="text-xs font-black tracking-widest text-amber-400 uppercase">DAY 1</span>
+                            <span class="bg-brandBlue text-white text-[10px] font-bold px-2 py-0.5 rounded" data-field="events.event1_date">18 Sept 2026</span>
                         </div>
-                        <div class="p-6 space-y-3">
-                            <span class="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 shadow-sm inline-block">Civic Campaign</span>
-                            <h3 class="font-display font-bold text-slate-800 text-base uppercase">Cleanliness Awareness Drive</h3>
-                            <p class="text-xs text-slate-500 leading-relaxed">
-                                Launched on 6th Dec 2011 to mark the Mahaparinirvan Diwas, rallying over 5,000 volunteers and municipal leaders to sweep public squares, clear local parks, and educate wards on sanitation.
+                        <div class="p-6 space-y-4">
+                            <h3 class="font-display font-black text-slate-800 text-lg uppercase leading-tight" data-field="events.event1_name">International Academic Conference</h3>
+                            <div class="flex items-center gap-2 text-xs text-brandBlue font-bold">
+                                <i class="fa-solid fa-location-dot"></i> <span data-field="events.event1_venue">SOAS University of London</span>
+                            </div>
+                            <p class="text-xs text-slate-500 leading-relaxed" data-field="events.event1_focus">
+                                "Reimagining Equality and Justice: Dr. B. R. Ambedkar's Vision in the 21st Century". Featuring research papers, scholar panels, and human rights discourse.
                             </p>
                         </div>
                     </div>
-                    <div class="px-6 pb-6 border-t border-slate-100 pt-4 flex justify-between items-center text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                        <span><i class="fa-solid fa-calendar mr-1"></i> 6 Dec 2011</span>
-                        <span><i class="fa-solid fa-location-dot mr-1"></i> Maharashtra</span>
+                    <div class="p-6 pt-0">
+                        <a data-field="announcements.abstractLink" href="#conference" target="_blank" class="block text-center border border-slate-250 text-slate-700 bg-slate-50 hover:bg-brandBlue hover:text-white hover:border-brandBlue font-bold py-3 rounded text-xs uppercase tracking-wider transition-all">
+                            Submit Abstract
+                        </a>
                     </div>
                 </div>
 
-                <!-- Event 2 -->
-                <div class="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
+                <!-- Day 2 Card -->
+                <div class="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-md hover:border-brandBlue/30 transition-all flex flex-col justify-between group">
                     <div>
-                        <div class="h-48 overflow-hidden bg-slate-200">
-                            <img src="wp-content/uploads/2026/06/Vishwa-Leader-DR-B.R.-AMBEDKAR-International-AWARDS-2026-LONDON-UK.jpg" alt="Ambedkarite Transnational Summit London" class="w-full h-full object-cover" />
+                        <div class="p-6 bg-brandDark text-white flex justify-between items-center">
+                            <span class="text-xs font-black tracking-widest text-amber-400 uppercase">DAY 2</span>
+                            <span class="bg-brandBlue text-white text-[10px] font-bold px-2 py-0.5 rounded" data-field="events.event2_date">19 Sept 2026</span>
                         </div>
-                        <div class="p-6 space-y-3">
-                            <span class="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded bg-brandBlue/15 text-brandBlue shadow-sm inline-block">International Summit</span>
-                            <h3 class="font-display font-bold text-slate-800 text-base uppercase">Transnational London Summit</h3>
-                            <p class="text-xs text-slate-500 leading-relaxed">
-                                Organized delegations at the British Parliament (House of Lords) and the London School of Economics (LSE) to present the 1st Vishwa Leader Dr. B. R. Ambedkar International Awards.
+                        <div class="p-6 space-y-4">
+                            <h3 class="font-display font-black text-slate-800 text-lg uppercase leading-tight" data-field="events.event2_name">International Business Summit</h3>
+                            <div class="flex items-center gap-2 text-xs text-brandBlue font-bold">
+                                <i class="fa-solid fa-location-dot"></i> <span data-field="events.event2_venue">London, UK</span>
+                            </div>
+                            <p class="text-xs text-slate-500 leading-relaxed" data-field="events.event2_focus">
+                                Connecting global diaspora entrepreneurs, business leaders, and investors. Promoting inclusive trade partnerships and economic empowerment.
                             </p>
                         </div>
                     </div>
-                    <div class="px-6 pb-6 border-t border-slate-100 pt-4 flex justify-between items-center text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                        <span><i class="fa-solid fa-calendar mr-1"></i> Annual Summit</span>
-                        <span><i class="fa-solid fa-location-dot mr-1"></i> London, UK</span>
+                    <div class="p-6 pt-0">
+                        <a data-field="announcements.businessLink" href="#contact" target="_blank" class="block text-center border border-slate-250 text-slate-700 bg-slate-50 hover:bg-brandBlue hover:text-white hover:border-brandBlue font-bold py-3 rounded text-xs uppercase tracking-wider transition-all">
+                            Register for Summit
+                        </a>
                     </div>
                 </div>
 
-                <!-- Event 3 -->
-                <div class="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
+                <!-- Day 3 Card -->
+                <div class="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-md hover:border-brandBlue/30 transition-all flex flex-col justify-between group">
                     <div>
-                        <div class="h-48 overflow-hidden bg-slate-200">
-                            <img src="wp-content/uploads/2025/02/Bhimrao-Ambedkar-and-Bandu-Pandit-scaled.jpg" alt="Social Reform Lectures" class="w-full h-full object-cover" />
+                        <div class="p-6 bg-brandDark text-white flex justify-between items-center">
+                            <span class="text-xs font-black tracking-widest text-amber-400 uppercase">DAY 3</span>
+                            <span class="bg-brandBlue text-white text-[10px] font-bold px-2 py-0.5 rounded" data-field="events.event3_date">20 Sept 2026</span>
                         </div>
-                        <div class="p-6 space-y-3">
-                            <span class="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded bg-amber-100 text-amber-800 shadow-sm inline-block">Philosophy Forum</span>
-                            <h3 class="font-display font-bold text-slate-800 text-base uppercase">Ambedkar Memorial Lecture Series</h3>
-                            <p class="text-xs text-slate-500 leading-relaxed">
-                                Monthly socio-cultural lectures and philosopher forums sponsored at Siddharth College and Sanghakaya Foundation, promoting intellectual discourse and equality.
+                        <div class="p-6 space-y-4">
+                            <h3 class="font-display font-black text-slate-800 text-lg uppercase leading-tight" data-field="events.event3_name">International Award & Cultural Ceremony</h3>
+                            <div class="flex items-center gap-2 text-xs text-brandBlue font-bold">
+                                <i class="fa-solid fa-location-dot"></i> <span data-field="events.event3_venue">London, UK</span>
+                            </div>
+                            <p class="text-xs text-slate-500 leading-relaxed" data-field="events.event3_focus">
+                                Presentation of the prestigious Dr. Ambedkar International Awards 2026. Followed by cultural performances, networking banquet, and celebratory dinner.
                             </p>
                         </div>
                     </div>
-                    <div class="px-6 pb-6 border-t border-slate-100 pt-4 flex justify-between items-center text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                        <span><i class="fa-solid fa-calendar mr-1"></i> Monthly Series</span>
-                        <span><i class="fa-solid fa-location-dot mr-1"></i> Mumbai, India</span>
+                    <div class="p-6 pt-0">
+                        <a data-field="announcements.awardLink" href="#contact" target="_blank" class="block text-center border border-slate-250 text-slate-700 bg-slate-50 hover:bg-brandBlue hover:text-white hover:border-brandBlue font-bold py-3 rounded text-xs uppercase tracking-wider transition-all">
+                            Nominate / Attend
+                        </a>
                     </div>
                 </div>
             </div>
@@ -641,10 +665,10 @@
     <section id="networks" class="py-20 md:py-24 bg-slate-50 border-b border-slate-200/60">
         <div class="max-w-7xl mx-auto px-6">
             <div class="max-w-3xl mb-16 space-y-4">
-                <span class="text-xs font-bold tracking-widest text-brandBlue uppercase">Alliances & Coalitions</span>
-                <h2 class="font-display text-3xl md:text-4xl font-black tracking-tight text-slate-900">Geopolitical Alliances & Buddhist Networks</h2>
-                <p class="text-slate-500 leading-relaxed font-normal">
-                    The international expansion of the Vishwa Leader platform relies on working alliances with Buddhist institutions and political representatives globally.
+                <span class="text-xs font-bold tracking-widest text-brandBlue uppercase">Global Reach</span>
+                <h2 class="font-display text-3xl md:text-4xl font-black tracking-tight text-slate-900">Transnational Advocacy Networks</h2>
+                <p class="text-slate-500 leading-relaxed text-sm">
+                    Connecting grassroots leadership, academic institutions, and governance platforms to establish advocacy frameworks.
                 </p>
             </div>
 
@@ -668,15 +692,15 @@
                 <!-- Card 2 -->
                 <div class="border border-slate-200 rounded-2xl p-8 bg-white flex flex-col justify-between hover:shadow-md transition-all">
                     <div class="space-y-4">
-                        <span class="text-[9px] font-bold tracking-widest text-slate-400 uppercase">Delegations</span>
-                        <h3 class="font-display font-bold text-slate-800 text-base uppercase">State Advocacy Tour</h3>
+                        <span class="text-[9px] font-bold tracking-widest text-slate-400 uppercase">Publications</span>
+                        <h3 class="font-display font-bold text-slate-800 text-base uppercase">International Souvenir Volume</h3>
                         <p class="text-xs text-slate-500 leading-relaxed">
-                            Coordinated visits of Tibetan Parliamentary representatives with state ministers, including Maharashtra Deputy CM Ajit Pawar and social leaders, in January 2025.
+                            A commemorative conference Souvenir PDF and Print book will be released during the London ceremony, featuring selected academic papers, profiles of socio-cultural achievements, and sponsor listings.
                         </p>
                     </div>
                     <div class="border-t border-slate-100 pt-4 mt-6">
-                        <a href="https://tibet.net/tibetan-parliamentary-delegation-calls-on-deputy-cm-and-ministers-of-maharashtra-talks-on-tibet-in-institutes/" target="_blank" class="text-xs font-bold text-brandBlue hover:underline uppercase tracking-wider">
-                            Advocacy Logs <i class="fa-solid fa-arrow-up-right text-[9px] ml-0.5"></i>
+                        <a href="#advertisers" class="text-xs font-bold text-brandBlue hover:underline uppercase tracking-wider">
+                            Get Details <i class="fa-solid fa-arrow-right text-[9px] ml-0.5"></i>
                         </a>
                     </div>
                 </div>
@@ -685,13 +709,15 @@
                 <div class="border border-slate-200 rounded-2xl p-8 bg-white flex flex-col justify-between hover:shadow-md transition-all">
                     <div class="space-y-4">
                         <span class="text-[9px] font-bold tracking-widest text-slate-400 uppercase">Academia</span>
-                        <h3 class="font-display font-bold text-slate-800 text-base uppercase">Siddharth College Lectures</h3>
+                        <h3 class="font-display font-bold text-slate-800 text-base uppercase">SOAS Academic Collaboration</h3>
                         <p class="text-xs text-slate-500 leading-relaxed">
-                            Sponsored philosophical and academic seminars at Siddharth College Mumbai (founded by Dr. Ambedkar) to promote human rights, coordinated in partnership with Sanghakaya Foundation.
+                            Partnering with scholars, universities, and diaspora collectives internationally to host and coordinate the 2026 conference panels on social justice and constitutional advocacy.
                         </p>
                     </div>
                     <div class="border-t border-slate-100 pt-4 mt-6">
-                        <span class="text-[10px] font-bold text-slate-400 uppercase">Buddhist Education Linkage</span>
+                        <a href="#conference" class="text-xs font-bold text-brandBlue hover:underline uppercase tracking-wider">
+                            Submit Articles <i class="fa-solid fa-arrow-right text-[9px] ml-0.5"></i>
+                        </a>
                     </div>
                 </div>
             </div>
@@ -715,7 +741,7 @@
                 <div class="lg:col-span-6 border border-slate-200 rounded-2xl p-8 bg-slate-50/50 flex flex-col justify-between">
                     <div>
                         <h3 class="font-display text-lg font-bold text-slate-900 mb-6 uppercase tracking-tight">Print & Digital Ad Packages</h3>
-                        <div class="space-y-4 text-xs">
+                        <div id="souvenir-rates-container" class="space-y-4 text-xs">
                             <div class="flex justify-between items-center p-3.5 bg-white border border-slate-200/60 rounded-xl hover:shadow-sm transition-all">
                                 <div>
                                     <h4 class="font-bold text-slate-800">Print: Full Page Color Ad</h4>
@@ -848,7 +874,7 @@
                     <div>
                         <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Administrative Scope</span>
                         <p class="text-xs md:text-sm text-slate-600 leading-relaxed font-normal">
-                            Authorizes events, publishing schedules, and coordinates national and international representations (such as the LSE Academic Seminars and Dr. Ambedkar Awards).
+                            Authorizes events, publishing schedules, and coordinates national and international representations (such as the SOAS Academic Conferences and Dr. Ambedkar Awards).
                         </p>
                     </div>
                 </div>
@@ -868,7 +894,7 @@
                         <span class="text-xs font-bold tracking-widest text-brandBlue uppercase">Inquiries</span>
                         <h2 class="font-display text-3xl md:text-4xl font-black tracking-tight text-slate-900 mt-2">Get in Touch</h2>
                         <p class="text-slate-550 mt-4 text-sm leading-relaxed">
-                            For any inquiries regarding the LSE 2025 seminar paper submissions, magazine subscriptions, or corporate collaborations.
+                            For any inquiries regarding the SOAS 2026 conference paper submissions, magazine subscriptions, or corporate collaborations.
                         </p>
                     </div>
 
@@ -888,9 +914,8 @@
                             <span class="w-9 h-9 rounded bg-white border border-slate-200 flex items-center justify-center text-brandBlue shrink-0"><i class="fa-solid fa-phone"></i></span>
                             <div>
                                 <h4 class="font-bold text-slate-950 uppercase tracking-wide">Hotlines & Coordinator</h4>
-                                <p class="text-slate-500 mt-1">
-                                    Primary Phone: +91 9969688928 <br>
-                                    Administration Desk: +91 22 25006697
+                                <p class="text-slate-500 mt-1" data-field="contact.phone">
+                                    Primary Phone: +91 9969688928
                                 </p>
                             </div>
                         </div>
@@ -925,7 +950,7 @@
                         <div class="space-y-1">
                             <label class="font-bold uppercase tracking-wider text-slate-500">Inquiry Category</label>
                             <select name="category" class="w-full bg-slate-50 border border-slate-200 rounded px-4 py-3 text-slate-800 focus:outline-none focus:border-brandBlue focus:ring-1 focus:ring-brandBlue text-xs">
-                                <option>LSE Conference 2025 - Article Submission</option>
+                                <option>SOAS Conference 2026 - Article Submission</option>
                                 <option>Dr. Ambedkar Awards - Attendee Registration</option>
                                 <option>Vishwa Leader Magazine - Subscriptions & Print Ads</option>
                                 <option>General Information Inquiry</option>
@@ -1377,8 +1402,6 @@
                 if (i === index) {
                     thumb.classList.add('ring-4', 'ring-brandBlue', 'ring-offset-2', 'opacity-100');
                     thumb.classList.remove('opacity-60');
-                    // Auto scroll thumb into view
-                    thumb.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
                 } else {
                     thumb.classList.remove('ring-4', 'ring-brandBlue', 'ring-offset-2', 'opacity-100');
                     thumb.classList.add('opacity-60');
@@ -1616,6 +1639,104 @@
             loadWordPressMedia();
             renderTicker();
         });
+
+        // Firebase Configuration (matching ebooklabs project)
+        const firebaseConfig = {
+            apiKey: "AIzaSyDn57R2oX8KINPOnwI2TTG2wpMGxdurY4o",
+            authDomain: "ebooklabs.firebaseapp.com",
+            projectId: "ebooklabs",
+            storageBucket: "ebooklabs.firebasestorage.app",
+            messagingSenderId: "872644278150",
+            appId: "1:872644278150:web:cdbc149ebac592a05fde07",
+            measurementId: "G-66VFZ22PKV"
+        };
+
+        // Initialize Firebase safely
+        try {
+            firebase.initializeApp(firebaseConfig);
+            const db = firebase.firestore();
+
+            // Load overrides from Firestore collection 'vishwaleader_config', document 'settings'
+            db.collection('vishwaleader_config').doc('settings').onSnapshot((doc) => {
+                if (doc.exists) {
+                    const data = doc.data();
+                    applyFirestoreOverrides(data);
+                }
+            }, (error) => {
+                console.warn("Firestore snapshot listener failed. Using static HTML defaults.", error);
+            });
+        } catch (e) {
+            console.error("Firebase init failed:", e);
+        }
+
+        // Helper function to dynamically update DOM elements based on Firestore data
+        function applyFirestoreOverrides(data) {
+            if (!data) return;
+
+            // 1. Update text fields marked with data-field attribute
+            const textFields = document.querySelectorAll('[data-field]');
+            textFields.forEach(el => {
+                const path = el.getAttribute('data-field');
+                const val = getObjectValueByPath(data, path);
+                if (val !== undefined && val !== null && val !== '') {
+                    // If it is a link/href, update the href attribute instead of innerHTML
+                    if (path.startsWith('announcements.') || path.includes('Link')) {
+                        el.href = val;
+                    } else if (path === 'contact.phone') {
+                        el.innerHTML = `Primary Phone: ${val}`;
+                    } else {
+                        el.textContent = val;
+                    }
+                }
+            });
+
+            // 2. Update Souvenir Rates if present
+            if (data.souvenir && Array.isArray(data.souvenir.rates)) {
+                const ratesContainer = document.getElementById('souvenir-rates-container');
+                if (ratesContainer) {
+                    ratesContainer.innerHTML = data.souvenir.rates.map(rate => `
+                        <div class="flex justify-between items-center p-3.5 bg-white border border-slate-200/60 rounded-xl hover:shadow-sm transition-all">
+                            <div>
+                                <h4 class="font-bold text-slate-800">${rate.name}</h4>
+                                <p class="text-slate-400 mt-0.5">${rate.description || 'Vishwa Leader Monthly Print Magazine'}</p>
+                            </div>
+                            <span class="bg-brandBlue/15 text-brandBlue font-bold px-3 py-1 rounded text-[11px]">${rate.price}</span>
+                        </div>
+                    `).join('');
+                }
+
+                // Update Estimator select options dynamically to match the database rates
+                const typeSelect = document.getElementById('ad-type');
+                if (typeSelect) {
+                    typeSelect.innerHTML = data.souvenir.rates.map(rate => {
+                        // Extract numerical value for estimation calculations (e.g. INR 25,000 -> 25000)
+                        let numericValue = 0;
+                        if (rate.price) {
+                            const numbersOnly = rate.price.replace(/[^0-9]/g, '');
+                            numericValue = parseInt(numbersOnly) || 0;
+                            // Check if price was specified in dollars (e.g. $300) but we have INR fallback
+                            if (rate.price.includes('INR')) {
+                                const inrMatch = rate.price.match(/INR\s*([\d,]+)/i);
+                                if (inrMatch) {
+                                    numericValue = parseInt(inrMatch[1].replace(/,/g, '')) || numericValue;
+                                }
+                            }
+                        }
+                        return `<option value="${numericValue}">${rate.name} (${rate.price})</option>`;
+                    }).join('');
+
+                    // Trigger cost recalculation
+                    if (typeof calculateAdCost === 'function') {
+                        calculateAdCost();
+                    }
+                }
+            }
+        }
+
+        // Helper to resolve nested object path (e.g., 'announcements.abstractLink' -> data.announcements.abstractLink)
+        function getObjectValueByPath(obj, path) {
+            return path.split('.').reduce((acc, part) => acc && acc[part], obj);
+        }
     </script>
 </body>
 

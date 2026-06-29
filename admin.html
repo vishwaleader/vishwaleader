@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vishwa Leader | Admin Panel</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brandBlue: '#2563eb',
+                        brandDark: '#0f172a',
+                        cardDark: '#1e293b'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Outfit', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Firebase Compat SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+</head>
+<body class="bg-brandDark text-slate-100 min-h-screen antialiased flex flex-col font-sans">
+
+    <!-- Top header navigation bar -->
+    <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <img src="wp-content/uploads/2025/02/Vishwa_Leader_Logo-removebg-preview-e1738584466936.png" 
+                     alt="Vishwa Leader Logo" 
+                     class="h-10 w-auto object-contain" 
+                     onerror="this.src='https://i0.wp.com/vishwaleader.com/wp-content/uploads/2025/02/Vishwa_Leader_Logo-removebg-preview-e1738584466936.png?fit=250%2C142&ssl=1'" />
+                <span class="text-xs font-bold uppercase tracking-widest text-brandBlue px-2 py-0.5 rounded bg-brandBlue/10 border border-brandBlue/20">Admin Management</span>
+            </div>
+            
+            <div id="user-info-section" class="hidden flex items-center gap-4">
+                <span id="user-display-name" class="text-xs font-medium text-slate-300">Loading profile...</span>
+                <button onclick="handleSignOut()" class="text-xs bg-slate-800 border border-slate-700 hover:bg-slate-700 px-3.5 py-1.5 rounded-lg font-bold transition-all text-amber-500 uppercase tracking-wider flex items-center gap-1.5">
+                    <i class="fa-solid fa-sign-out-alt"></i> Sign Out
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-6 py-10 flex flex-col items-center justify-center">
+        <!-- Loader during authentication check -->
+        <div id="auth-check-spinner" class="flex flex-col items-center gap-4 py-20">
+            <i class="fa-solid fa-circle-notch animate-spin text-4xl text-brandBlue"></i>
+            <p class="text-xs text-slate-400 font-medium tracking-wide">Securing connection to database...</p>
+        </div>
+
+        <!-- Auth Login Screen (Hidden by default) -->
+        <div id="login-container" class="hidden max-w-md w-full bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl text-center space-y-6">
+            <div class="w-16 h-16 rounded-full bg-brandBlue/10 border border-brandBlue/20 flex items-center justify-center text-brandBlue text-2xl mx-auto">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <div class="space-y-2">
+                <h2 class="font-display text-2xl font-black tracking-tight text-white uppercase">Vishwa Leader Admin</h2>
+                <p class="text-xs text-slate-400 leading-relaxed">Sign in with authorized Google Credentials to manage settings, pricing rates, event timelines, and links.</p>
+            </div>
+            
+            <button onclick="handleGoogleSignIn()" class="w-full bg-white hover:bg-slate-100 text-slate-900 font-bold py-4 rounded-xl transition-all shadow-md flex items-center justify-center gap-3 text-sm">
+                <svg class="w-5 h-5" viewBox="0 0 24 24">
+                    <path fill="#EA4335" d="M12 5.04c1.67 0 3.2.58 4.38 1.69l3.27-3.27C17.67 1.54 15.02 1 12 1 7.35 1 3.4 3.65 1.5 7.5l3.86 3C6.31 7.37 9 5.04 12 5.04z"/>
+                    <path fill="#4285F4" d="M23.49 12.27c0-.81-.07-1.59-.2-2.36H12v4.51h6.46c-.29 1.48-1.14 2.73-2.42 3.57v2.96h3.9c2.28-2.1 3.55-5.19 3.55-8.68z"/>
+                    <path fill="#FBBC05" d="M5.36 14.5c-.24-.72-.38-1.49-.38-2.3s.14-1.58.38-2.3L1.5 6.9C.55 8.79 0 10.9 0 13.1c0 2.2.55 4.31 1.5 6.2l3.86-2.8z"/>
+                    <path fill="#34A853" d="M12 23c3.24 0 5.97-1.07 7.96-2.91l-3.9-2.96c-1.08.72-2.47 1.16-4.06 1.16-3 0-5.69-2.33-6.64-5.46L1.5 15.69C3.4 19.54 7.35 23 12 23z"/>
+                </svg>
+                Sign In with Google
+            </button>
+        </div>
+
+        <!-- Dashboard Panel Form (Hidden by default) -->
+        <form id="admin-dashboard" onsubmit="handleSaveSettings(event)" class="hidden w-full space-y-8">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-6">
+                <div>
+                    <h1 class="font-display text-3xl font-black text-white uppercase tracking-tight">Configuration Console</h1>
+                    <p class="text-xs text-slate-400 mt-1">Make changes below and press Save. Updates propagate to the main website immediately.</p>
+                </div>
+                <button type="submit" class="bg-brandBlue hover:bg-brandBlue/90 text-white font-bold px-8 py-3.5 rounded-xl transition-all shadow-md text-xs uppercase tracking-wider flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-floppy-disk"></i> Save All Changes
+                </button>
+            </div>
+
+            <!-- Grid Layout for Settings Cards -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                
+                <!-- Left Column (8 cols): Announcements, Hero, Conference, Events -->
+                <div class="lg:col-span-8 space-y-8">
+                    
+                    <!-- Card: Main Calls & Link URLs -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+                        <div class="flex items-center gap-2.5 border-b border-slate-800 pb-3 mb-2">
+                            <i class="fa-solid fa-link text-brandBlue text-sm"></i>
+                            <h3 class="font-display text-sm font-bold text-white uppercase tracking-wide">Call-to-Action Link Overrides</h3>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div class="space-y-1.5">
+                                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Call for Abstracts Href</label>
+                                <input type="text" id="announcements-abstract" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-200 focus:outline-none focus:border-brandBlue transition-colors" placeholder="#conference">
+                            </div>
+                            <div class="space-y-1.5">
+                                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Call for Nominations Href</label>
+                                <input type="text" id="announcements-award" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-200 focus:outline-none focus:border-brandBlue transition-colors" placeholder="#contact">
+                            </div>
+                            <div class="space-y-1.5">
+                                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Business Participation Href</label>
+                                <input type="text" id="announcements-business" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-200 focus:outline-none focus:border-brandBlue transition-colors" placeholder="#contact">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card: Hero Banner Override -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+                        <div class="flex items-center gap-2.5 border-b border-slate-800 pb-3 mb-2">
+                            <i class="fa-solid fa-fire text-amber-500 text-sm"></i>
+                            <h3 class="font-display text-sm font-bold text-white uppercase tracking-wide">Hero Section (Main Banner)</h3>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="space-y-1.5">
+                                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Hero Display Title</label>
+                                <input type="text" id="hero-title" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-200 focus:outline-none focus:border-brandBlue transition-colors" required>
+                            </div>
+                            <div class="space-y-1.5">
+                                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Hero Location Label</label>
+                                <input type="text" id="hero-location" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-200 focus:outline-none focus:border-brandBlue transition-colors" required>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-1.5">
+                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Hero Description Paragraph</label>
+                            <textarea id="hero-description" rows="3" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-200 focus:outline-none focus:border-brandBlue transition-colors" required></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Card: Conference Details & Dates -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+                        <div class="flex items-center gap-2.5 border-b border-slate-800 pb-3 mb-2">
+                            <i class="fa-solid fa-graduation-cap text-indigo-400 text-sm"></i>
+                            <h3 class="font-display text-sm font-bold text-white uppercase tracking-wide">Academic Conference Details</h3>
+                        </div>
+                        
+                        <div class="space-y-1.5">
+                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Primary Theme Statement</label>
+                            <input type="text" id="conference-theme" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-200 focus:outline-none focus:border-brandBlue transition-colors" required>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div class="space-y-1.5">
+                                <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Abstract Deadline</label>
+                                <input type="text" id="conference-abstract" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brandBlue transition-colors" required>
+                            </div>
+                            <div class="space-y-1.5">
+                                <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Acceptance Date</label>
+                                <input type="text" id="conference-acceptance" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brandBlue transition-colors" required>
+                            </div>
+                            <div class="space-y-1.5">
+                                <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Full Paper Deadline</label>
+                                <input type="text" id="conference-paper" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brandBlue transition-colors" required>
+                            </div>
+                            <div class="space-y-1.5">
+                                <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Conference Date</label>
+                                <input type="text" id="conference-date" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brandBlue transition-colors" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card: Events Timeline (Day 1, 2, 3) -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-6">
+                        <div class="flex items-center gap-2.5 border-b border-slate-800 pb-3 mb-2">
+                            <i class="fa-solid fa-calendar-days text-emerald-400 text-sm"></i>
+                            <h3 class="font-display text-sm font-bold text-white uppercase tracking-wide">Three-Day Event Schedule</h3>
+                        </div>
+                        
+                        <!-- Day 1 -->
+                        <div class="space-y-4 bg-slate-950/40 p-4 rounded-xl border border-slate-800/60">
+                            <span class="text-[10px] font-extrabold text-brandBlue uppercase tracking-wider bg-brandBlue/10 border border-brandBlue/20 px-2 py-0.5 rounded">Day 1 Segment</span>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+                                <div class="space-y-1.5">
+                                    <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Date label</label>
+                                    <input type="text" id="event1-date" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none" required>
+                                </div>
+                                <div class="space-y-1.5 md:col-span-2">
+                                    <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Event Name</label>
+                                    <input type="text" id="event1-name" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none" required>
+                                </div>
+                            </div>
+                            <div class="space-y-1.5">
+                                <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Venue</label>
+                                <input type="text" id="event1-venue" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none" required>
+                            </div>
+                            <div class="space-y-1.5">
+                                <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Focus/Description</label>
+                                <textarea id="event1-focus" rows="2" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none" required></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Day 2 -->
+                        <div class="space-y-4 bg-slate-950/40 p-4 rounded-xl border border-slate-800/60">
+                            <span class="text-[10px] font-extrabold text-amber-500 uppercase tracking-wider bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded">Day 2 Segment</span>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+                                <div class="space-y-1.5">
+                                    <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Date label</label>
+                                    <input type="text" id="event2-date" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none" required>
+                                </div>
+                                <div class="space-y-1.5 md:col-span-2">
+                                    <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Event Name</label>
+                                    <input type="text" id="event2-name" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none" required>
+                                </div>
+                            </div>
+                            <div class="space-y-1.5">
+                                <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Venue</label>
+                                <input type="text" id="event2-venue" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none" required>
+                            </div>
+                            <div class="space-y-1.5">
+                                <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Focus/Description</label>
+                                <textarea id="event2-focus" rows="2" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none" required></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Day 3 -->
+                        <div class="space-y-4 bg-slate-950/40 p-4 rounded-xl border border-slate-800/60">
+                            <span class="text-[10px] font-extrabold text-purple-400 uppercase tracking-wider bg-purple-550/10 border border-purple-550/20 px-2 py-0.5 rounded">Day 3 Segment</span>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+                                <div class="space-y-1.5">
+                                    <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Date label</label>
+                                    <input type="text" id="event3-date" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none" required>
+                                </div>
+                                <div class="space-y-1.5 md:col-span-2">
+                                    <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Event Name</label>
+                                    <input type="text" id="event3-name" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none" required>
+                                </div>
+                            </div>
+                            <div class="space-y-1.5">
+                                <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Venue</label>
+                                <input type="text" id="event3-venue" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none" required>
+                            </div>
+                            <div class="space-y-1.5">
+                                <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Focus/Description</label>
+                                <textarea id="event3-focus" rows="2" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none" required></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column (4 cols): Souvenir Rates & Coordinator Contact -->
+                <div class="lg:col-span-4 space-y-8">
+                    
+                    <!-- Card: General / Coordinator -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+                        <div class="flex items-center gap-2.5 border-b border-slate-800 pb-3 mb-2">
+                            <i class="fa-solid fa-address-book text-slate-400 text-sm"></i>
+                            <h3 class="font-display text-sm font-bold text-white uppercase tracking-wide">Coordinator Desk</h3>
+                        </div>
+                        <div class="space-y-1.5">
+                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Primary Phone Number</label>
+                            <input type="text" id="contact-phone" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-200 focus:outline-none focus:border-brandBlue transition-colors" required>
+                        </div>
+                    </div>
+
+                    <!-- Card: Souvenir Ads Pricing Rates -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4 flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+                                <div class="flex items-center gap-2.5">
+                                    <i class="fa-solid fa-tags text-rose-500 text-sm"></i>
+                                    <h3 class="font-display text-sm font-bold text-white uppercase tracking-wide">Souvenir Ad Rates</h3>
+                                </div>
+                                <button type="button" onclick="addNewRateRow()" class="text-[10px] bg-brandBlue/10 border border-brandBlue/30 text-brandBlue hover:bg-brandBlue/20 px-2 py-1 rounded font-bold uppercase transition-all flex items-center gap-1">
+                                    <i class="fa-solid fa-plus"></i> Add Rate
+                                </button>
+                            </div>
+                            
+                            <!-- Rates List Container -->
+                            <div id="admin-rates-list" class="space-y-4">
+                                <!-- Dynamic Rates Inputs Rendered Here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Bottom Save Bar -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <span class="text-xs text-slate-400 leading-normal flex items-center gap-2"><i class="fa-solid fa-circle-check text-emerald-500"></i> Auto-saves settings in Firestore for immediate client website sync.</span>
+                <button type="submit" class="w-full sm:w-auto bg-brandBlue hover:bg-brandBlue/90 text-white font-bold px-10 py-4 rounded-xl transition-all shadow-md text-xs uppercase tracking-wider">
+                    Save Configuration
+                </button>
+            </div>
+        </form>
+    </main>
+
+    <!-- Floating status alerts toast -->
+    <div id="toast" class="fixed bottom-6 right-6 z-50 bg-emerald-500 border border-emerald-400 text-white text-xs font-bold px-6 py-3.5 rounded-xl shadow-2xl transition-all duration-300 opacity-0 pointer-events-none translate-y-2 flex items-center gap-2">
+        <i id="toast-icon" class="fa-solid fa-circle-check text-sm"></i>
+        <span id="toast-msg">Settings saved successfully!</span>
+    </div>
+
+    <!-- JS Logic -->
+    <script>
+        // Firebase Configuration (matching ebooklabs project)
+        const firebaseConfig = {
+            apiKey: "AIzaSyDn57R2oX8KINPOnwI2TTG2wpMGxdurY4o",
+            authDomain: "ebooklabs.firebaseapp.com",
+            projectId: "ebooklabs",
+            storageBucket: "ebooklabs.firebasestorage.app",
+            messagingSenderId: "872644278150",
+            appId: "1:872644278150:web:cdbc149ebac592a05fde07",
+            measurementId: "G-66VFZ22PKV"
+        };
+
+        // Initialize Firebase safely
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // State variables
+        let ratesState = [];
+
+        // Auth change listener
+        auth.onAuthStateChanged((user) => {
+            document.getElementById('auth-check-spinner').classList.add('hidden');
+            if (user) {
+                // User is signed in
+                document.getElementById('login-container').classList.add('hidden');
+                document.getElementById('admin-dashboard').classList.remove('hidden');
+                document.getElementById('user-info-section').classList.remove('hidden');
+                document.getElementById('user-display-name').textContent = user.displayName || user.email;
+                loadSettings();
+            } else {
+                // User is not signed in
+                document.getElementById('login-container').classList.remove('hidden');
+                document.getElementById('admin-dashboard').classList.add('hidden');
+                document.getElementById('user-info-section').classList.add('hidden');
+            }
+        });
+
+        // Sign In Flow
+        function handleGoogleSignIn() {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider).catch((error) => {
+                console.error("Sign-in error:", error);
+                showToast("Google Sign-In failed: " + error.message, true);
+            });
+        }
+
+        // Sign Out Flow
+        function handleSignOut() {
+            auth.signOut().then(() => {
+                showToast("Signed out successfully.");
+            }).catch((err) => {
+                console.error("Sign-out error:", err);
+            });
+        }
+
+        // Load Settings from Firestore
+        function loadSettings() {
+            db.collection('vishwaleader_config').doc('settings').get()
+                .then((doc) => {
+                    let settings = {};
+                    if (doc.exists) {
+                        settings = doc.data();
+                    }
+                    populateForm(settings);
+                })
+                .catch((error) => {
+                    console.error("Error loading settings:", error);
+                    showToast("Error reading from Firestore: " + error.message, true);
+                });
+        }
+
+        // Populate Form Fields
+        function populateForm(data) {
+            // Apply fallback/defaults if values not defined
+            const abstractUrl = data.announcements?.abstractLink || "#conference";
+            const awardUrl = data.announcements?.awardLink || "#contact";
+            const businessUrl = data.announcements?.businessLink || "#contact";
+
+            document.getElementById('announcements-abstract').value = abstractUrl;
+            document.getElementById('announcements-award').value = awardUrl;
+            document.getElementById('announcements-business').value = businessUrl;
+
+            document.getElementById('hero-title').value = data.hero?.title || "Vishwa Leader Dr. B. R. Ambedkar International Awards 2026";
+            document.getElementById('hero-location').value = data.hero?.location || "London, UK";
+            document.getElementById('hero-description').value = data.hero?.description || "Vishwa Leader Techmedia Pvt. Ltd. coordinates global advocacy networks, academic research, and media ecosystems to amplify constitutional values and diaspora empowerment.";
+
+            document.getElementById('conference-theme').value = data.conference?.primaryTheme || `"Reimagining Equality and Justice: Dr. B. R. Ambedkar's Vision in the 21st Century"`;
+            document.getElementById('conference-abstract').value = data.conference?.abstractDate || "30th June 2026";
+            document.getElementById('conference-acceptance').value = data.conference?.acceptanceDate || "15th July 2026";
+            document.getElementById('conference-paper').value = data.conference?.paperDate || "15th August 2026";
+            document.getElementById('conference-date').value = data.conference?.eventDate || "18th Sept 2026";
+
+            // Events
+            document.getElementById('event1-date').value = data.events?.event1_date || "18 Sept 2026";
+            document.getElementById('event1-name').value = data.events?.event1_name || "International Academic Conference";
+            document.getElementById('event1-venue').value = data.events?.event1_venue || "SOAS University of London";
+            document.getElementById('event1-focus').value = data.events?.event1_focus || `"Reimagining Equality and Justice: Dr. B. R. Ambedkar's Vision in the 21st Century". Featuring research papers, scholar panels, and human rights discourse.`;
+
+            document.getElementById('event2-date').value = data.events?.event2_date || "19 Sept 2026";
+            document.getElementById('event2-name').value = data.events?.event2_name || "International Business Summit";
+            document.getElementById('event2-venue').value = data.events?.event2_venue || "London, UK";
+            document.getElementById('event2-focus').value = data.events?.event2_focus || "Connecting global diaspora entrepreneurs, business leaders, and investors. Promoting inclusive trade partnerships and economic empowerment.";
+
+            document.getElementById('event3-date').value = data.events?.event3_date || "20 Sept 2026";
+            document.getElementById('event3-name').value = data.events?.event3_name || "International Award & Cultural Ceremony";
+            document.getElementById('event3-venue').value = data.events?.event3_venue || "London, UK";
+            document.getElementById('event3-focus').value = data.events?.event3_focus || "Presentation of the prestigious Dr. Ambedkar International Awards 2026. Followed by cultural performances, networking banquet, and celebratory dinner.";
+
+            document.getElementById('contact-phone').value = data.contact?.phone || "+91 9969688928";
+
+            // Souvenir Pricing Rates
+            ratesState = data.souvenir?.rates || [
+                { name: "Print: Full Page Color Ad", description: "Vishwa Leader Monthly Print Magazine", price: "INR 25,000 / $300" },
+                { name: "Print: Half Page Color Ad", description: "Vishwa Leader Monthly Print Magazine", price: "INR 15,000 / $200" },
+                { name: "Digital: Header Leaderboard (728x90)", description: "Monthly Slot on Digital News Portal", price: "INR 10,000 / $125" },
+                { name: "Digital: Sponsored Press Release", description: "Featured Academic/Social Article Slot", price: "INR 8,000 / $100" }
+            ];
+            renderRates();
+        }
+
+        // Render Rates List Rows
+        function renderRates() {
+            const ratesContainer = document.getElementById('admin-rates-list');
+            ratesContainer.innerHTML = '';
+            
+            ratesState.forEach((rate, index) => {
+                const rowHtml = `
+                    <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3 relative group">
+                        <div class="space-y-1">
+                            <label class="text-[8px] font-bold text-slate-500 uppercase tracking-wider">Item/Package Name</label>
+                            <input type="text" value="${rate.name}" onchange="updateRateItem(${index}, 'name', this.value)" class="w-full bg-slate-900 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none" required>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[8px] font-bold text-slate-500 uppercase tracking-wider">Short Subtitle</label>
+                            <input type="text" value="${rate.description}" onchange="updateRateItem(${index}, 'description', this.value)" class="w-full bg-slate-900 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none" required>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[8px] font-bold text-slate-500 uppercase tracking-wider">Price Tag Label</label>
+                            <input type="text" value="${rate.price}" onchange="updateRateItem(${index}, 'price', this.value)" class="w-full bg-slate-900 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none" placeholder="INR 25,000 / $300" required>
+                        </div>
+                        <button type="button" onclick="deleteRateRow(${index})" class="absolute top-2 right-2 text-rose-500 hover:text-rose-400 text-xs p-1 focus:outline-none" title="Delete Package">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+                ratesContainer.insertAdjacentHTML('beforeend', rowHtml);
+            });
+        }
+
+        // Update single key in rate list state
+        function updateRateItem(index, key, value) {
+            ratesState[index][key] = value;
+        }
+
+        // Delete package row
+        function deleteRateRow(index) {
+            ratesState.splice(index, 1);
+            renderRates();
+        }
+
+        // Add empty row
+        function addNewRateRow() {
+            ratesState.push({ name: '', description: '', price: '' });
+            renderRates();
+        }
+
+        // Save Form settings back to Firebase Firestore
+        function handleSaveSettings(event) {
+            event.preventDefault();
+            const submitBtn = event.target.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner animate-spin mr-2"></i> Saving Settings...';
+
+            const data = {
+                announcements: {
+                    abstractLink: document.getElementById('announcements-abstract').value,
+                    awardLink: document.getElementById('announcements-award').value,
+                    businessLink: document.getElementById('announcements-business').value
+                },
+                hero: {
+                    title: document.getElementById('hero-title').value,
+                    location: document.getElementById('hero-location').value,
+                    description: document.getElementById('hero-description').value
+                },
+                conference: {
+                    primaryTheme: document.getElementById('conference-theme').value,
+                    abstractDate: document.getElementById('conference-abstract').value,
+                    acceptanceDate: document.getElementById('conference-acceptance').value,
+                    paperDate: document.getElementById('conference-paper').value,
+                    eventDate: document.getElementById('conference-date').value
+                },
+                events: {
+                    event1_date: document.getElementById('event1-date').value,
+                    event1_name: document.getElementById('event1-name').value,
+                    event1_venue: document.getElementById('event1-venue').value,
+                    event1_focus: document.getElementById('event1-focus').value,
+                    
+                    event2_date: document.getElementById('event2-date').value,
+                    event2_name: document.getElementById('event2-name').value,
+                    event2_venue: document.getElementById('event2-venue').value,
+                    event2_focus: document.getElementById('event2-focus').value,
+
+                    event3_date: document.getElementById('event3-date').value,
+                    event3_name: document.getElementById('event3-name').value,
+                    event3_venue: document.getElementById('event3-venue').value,
+                    event3_focus: document.getElementById('event3-focus').value
+                },
+                souvenir: {
+                    rates: ratesState.filter(rate => rate.name.trim() !== '')
+                },
+                contact: {
+                    phone: document.getElementById('contact-phone').value
+                }
+            };
+
+            db.collection('vishwaleader_config').doc('settings').set(data)
+                .then(() => {
+                    showToast("Configuration saved successfully!");
+                })
+                .catch((error) => {
+                    console.error("Firestore write failed:", error);
+                    showToast("Error saving changes: " + error.message, true);
+                })
+                .finally(() => {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fa-solid fa-floppy-disk mr-2"></i> Save All Changes';
+                });
+        }
+
+        // Display Toast Notifications
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            const icon = document.getElementById('toast-icon');
+            const msg = document.getElementById('toast-msg');
+
+            msg.textContent = message;
+            if (isError) {
+                toast.className = "fixed bottom-6 right-6 z-50 bg-rose-500 border border-rose-400 text-white text-xs font-bold px-6 py-3.5 rounded-xl shadow-2xl transition-all duration-300 opacity-100 flex items-center gap-2";
+                icon.className = "fa-solid fa-circle-exclamation text-sm";
+            } else {
+                toast.className = "fixed bottom-6 right-6 z-50 bg-emerald-500 border border-emerald-400 text-white text-xs font-bold px-6 py-3.5 rounded-xl shadow-2xl transition-all duration-300 opacity-100 flex items-center gap-2";
+                icon.className = "fa-solid fa-circle-check text-sm";
+            }
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0');
+                toast.classList.remove('opacity-100');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
