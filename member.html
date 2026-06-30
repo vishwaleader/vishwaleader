@@ -81,7 +81,66 @@
 
 <body class="selection:bg-brandBlue/10 selection:text-brandBlue min-h-screen flex flex-col antialiased">
 
-    <!-- Call for Articles Banner -->
+    <!-- ═══════════════════════════════════════ PRELOADER ═══════════════════════════════════════ -->
+    <div id="vl-preloader" style="
+        position: fixed; inset: 0; z-index: 9999;
+        background: #ffffff;
+        display: flex; align-items: center; justify-content: center; flex-direction: column;
+        transition: opacity 0.55s cubic-bezier(0.4,0,0.2,1);
+    ">
+        <style>
+            .vl-logo-container {
+                position: relative;
+                width: 96px; height: 96px;
+                margin-bottom: 4px;
+            }
+            .vl-logo-layer {
+                position: absolute;
+                top: 0; left: 0;
+                width: 100%; height: 100%;
+                object-fit: contain;
+                will-change: opacity, transform;
+            }
+            
+            .vl-layer-base { clip-path: inset(17.6% 0 0 0); }
+            
+            /* The wifi arcs */
+            .vl-layer-arc1 { clip-path: inset(13.6% 0 82.5% 0); animation: vl-wifi-pulse 1.4s ease-in-out infinite; animation-delay: 0s; }
+            .vl-layer-arc2 { clip-path: inset(6.6% 0 86.5% 0); animation: vl-wifi-pulse 1.4s ease-in-out infinite; animation-delay: 0.15s; }
+            .vl-layer-arc3 { clip-path: inset(0 0 93.5% 0); animation: vl-wifi-pulse 1.4s ease-in-out infinite; animation-delay: 0.3s; }
+            
+            @keyframes vl-wifi-pulse {
+                0%   { opacity: 0.15; transform: translateY(1px); }
+                50%  { opacity: 1;    transform: translateY(0); }
+                100% { opacity: 0.15; transform: translateY(1px); }
+            }
+            @keyframes vl-logo-breathe {
+                0%, 100% { transform: scale(1);    }
+                50%       { transform: scale(1.02); }
+            }
+            .vl-logo-container { animation: vl-logo-breathe 2.5s ease-in-out infinite; }
+        </style>
+
+        <!-- Multi-layered Logo for Wifi Animation -->
+        <div class="vl-logo-container">
+            <img class="vl-logo-layer vl-layer-base" src="assets/images/vishwaleader-logo-hd.png" alt="Vishwa Leader" />
+            <img class="vl-logo-layer vl-layer-arc1" src="assets/images/vishwaleader-logo-hd.png" alt="" />
+            <img class="vl-logo-layer vl-layer-arc2" src="assets/images/vishwaleader-logo-hd.png" alt="" />
+            <img class="vl-logo-layer vl-layer-arc3" src="assets/images/vishwaleader-logo-hd.png" alt="" />
+        </div>
+
+        <!-- Brand name -->
+        <p style="margin-top: 18px; font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 15px; letter-spacing: 0.04em; color: #0056CA;">VISHWA LEADER</p>
+        <p style="font-family: 'Inter', sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 0.18em; color: #0056CA; opacity: 0.55; text-transform: uppercase; margin-top: 2px;">Techmedia</p>
+    </div>
+    <script>
+        window.addEventListener('load', () => {
+            const p = document.getElementById('vl-preloader');
+            if (p) { p.style.opacity = '0'; setTimeout(() => { p.style.display = 'none'; }, 600); }
+        });
+    </script>
+    <!-- ═══════════════════════════════════════════════════════════════════════════════════════ -->
+
     <div class="bg-brandBlue text-white py-3 px-4 text-center border-b border-white/10 text-xs tracking-wide font-semibold relative z-50">
         <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6">
             <span class="flex items-center gap-1.5"><i class="fa-solid fa-graduation-cap"></i> SOAS London Conference Profile</span>
