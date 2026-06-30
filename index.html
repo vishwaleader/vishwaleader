@@ -167,11 +167,15 @@
                 <a href="#advertisers" class="hover:text-brandBlue transition-colors">Advertisers</a>
 
                 <!-- Auth State: shown when NOT logged in -->
-                <div id="nav-login-links" class="flex items-center gap-3">
-                    <a href="member.html" class="text-brandBlue hover:text-brandBlue/80 transition-colors flex items-center gap-1"><i class="fa-solid fa-user text-xs"></i> Login as Member</a>
-                    <span class="text-slate-300">|</span>
-                    <a href="admin.html" class="text-indigo-600 hover:text-indigo-500 transition-colors flex items-center gap-1"><i class="fa-solid fa-user-shield text-xs"></i> Login as Team</a>
+                <div id="nav-login-links" class="flex flex-col items-center justify-center leading-tight">
+                    <a href="member.html" class="text-brandBlue hover:text-brandBlue/80 transition-colors font-bold text-sm flex items-center gap-1">
+                        <i class="fa-solid fa-right-to-bracket text-xs"></i> Login/SignIn
+                    </a>
+                    <a href="admin.html" class="text-[10px] text-slate-405 hover:text-indigo-600 transition-colors mt-0.5 font-bold tracking-wide">
+                        login as team
+                    </a>
                 </div>
+
 
                 <!-- Auth State: shown when logged in (hidden by default) -->
                 <div id="nav-user-status" class="hidden relative">
@@ -228,10 +232,15 @@
             <a href="#advertisers" class="block py-2.5 text-sm font-semibold text-slate-700 hover:text-brandBlue border-b border-slate-100">Advertisers</a>
 
             <!-- Mobile: shown when NOT logged in -->
-            <div id="mobile-login-links">
-                <a href="member.html" class="block py-2.5 text-sm font-semibold text-brandBlue hover:text-brandBlue/85 border-b border-slate-100"><i class="fa-solid fa-user text-xs mr-1"></i> Login as Member</a>
-                <a href="admin.html" class="block py-2.5 text-sm font-semibold text-indigo-600 hover:text-indigo-500 border-b border-slate-100"><i class="fa-solid fa-user-shield text-xs mr-1"></i> Login as Team</a>
+            <div id="mobile-login-links" class="py-2.5 border-b border-slate-100 flex flex-col gap-1.5">
+                <a href="member.html" class="text-sm font-semibold text-brandBlue hover:text-brandBlue/85 flex items-center gap-1">
+                    <i class="fa-solid fa-right-to-bracket text-xs"></i> Login/SignIn
+                </a>
+                <a href="admin.html" class="text-[10px] text-slate-405 hover:text-indigo-650 font-bold tracking-wide">
+                    login as team
+                </a>
             </div>
+
 
             <!-- Mobile: shown when logged in (hidden by default) -->
             <div id="mobile-user-status" class="hidden py-3 border-b border-slate-100 space-y-2">
