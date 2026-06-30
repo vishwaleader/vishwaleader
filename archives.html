@@ -15,8 +15,13 @@
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+    <!-- Firebase SDK Compat -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
     <!-- Tailwind CSS Script CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+
     <script>
         tailwind.config = {
             theme: {
@@ -108,10 +113,14 @@
                     </span>
                 </a>
             </div>
-            
-            <a href="index.html" class="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white font-bold px-4 py-2.5 rounded-xl text-xs transition-colors uppercase tracking-wider border border-slate-800">
-                <i class="fa-solid fa-arrow-left-long text-amber-500"></i> Back to Homepage
-            </a>
+            <div class="flex items-center gap-3">
+                <a href="member.html" class="inline-flex items-center gap-2 bg-brandBlue/10 hover:bg-brandBlue/15 text-brandBlue font-bold px-4 py-2.5 rounded-xl text-xs transition-colors uppercase tracking-wider border border-brandBlue/20">
+                    <i class="fa-solid fa-users-rectangle"></i> Member Portal
+                </a>
+                <a href="index.html" class="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white font-bold px-4 py-2.5 rounded-xl text-xs transition-colors uppercase tracking-wider border border-slate-800">
+                    <i class="fa-solid fa-arrow-left-long text-amber-500"></i> Back to Homepage
+                </a>
+            </div>
         </div>
     </header>
 
@@ -273,7 +282,7 @@
     <!-- Script Block -->
     <script>
         // Archive list definitions
-        const pdfDownloadsList = [
+        let pdfDownloadsList = [
             {
                 file: 'awards-circular-2026.pdf',
                 title: 'Dr. Ambedkar International Awards May 2026 Circular',
@@ -330,7 +339,7 @@
             }
         ];
 
-        const magazineCoversList = [
+        let magazineCoversList = [
             { src: 'December Cover 09.jpg', title: 'December 2009 Cover', date: 'Dec 2009' },
             { src: 'Nov cover 09.jpg', title: 'November 2009 Cover', date: 'Nov 2009' },
             { src: 'Oct Issue Cover 09.jpg', title: 'October 2009 Cover', date: 'Oct 2009' },
@@ -353,6 +362,7 @@
             { src: 'Sept  2011 Cover.jpg', title: 'September 2011 Cover', date: 'Sep 2011' },
             { src: 'feb 2012.jpg', title: 'February 2012 Cover', date: 'Feb 2012' }
         ];
+
 
         // Render Bookshelf for PDFs
         function renderPdfsShelf() {
@@ -530,22 +540,67 @@
             }
         });
 
+        // Initialize Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyDn57R2oX8KINPOnwI2TTG2wpMGxdurY4o",
+            authDomain: "ebooklabs.firebaseapp.com",
+            projectId: "ebooklabs",
+            storageBucket: "ebooklabs.firebasestorage.app",
+            messagingSenderId: "872644278150",
+            appId: "1:872644278150:web:cdbc149ebac592a05fde07",
+            measurementId: "G-66VFZ22PKV"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
         // Initialize shelves and handle incoming query deep links
         window.addEventListener('DOMContentLoaded', () => {
-            renderPdfsShelf();
-            renderCoversShelf();
+            // Load custom dynamic archive data from Firestore
+            db.collection('vishwaleader_archives').get()
+                .then(snapshot => {
+                    if (!snapshot.empty) {
+                        const dbPdfs = [];
+                        const dbCovers = [];
+                        snapshot.forEach(doc => {
+                            const data = doc.data();
+                            if (data.type === 'pdf') {
+                                dbPdfs.push({
+                                    file: data.file,
+                                    title: data.title,
+                                    desc: data.desc || data.description || '',
+                                    size: data.size || 'Unknown Size'
+                                });
+                            } else if (data.type === 'cover') {
+                                dbCovers.push({
+                                    src: data.src,
+                                    title: data.title,
+                                    date: data.date
+                                });
+                            }
+                        });
+                        if (dbPdfs.length > 0) pdfDownloadsList = dbPdfs;
+                        if (dbCovers.length > 0) magazineCoversList = dbCovers;
+                    }
+                })
+                .catch(err => console.warn("Firestore archives load failed, using local fallback.", err))
+                .finally(() => {
+                    renderPdfsShelf();
+                    renderCoversShelf();
 
-            // Handle incoming deep link parameters from homepage click events
-            const urlParams = new URLSearchParams(window.location.search);
-            const targetFile = urlParams.get('file');
-            const targetCover = urlParams.get('cover');
+                    // Handle incoming deep link parameters from homepage click events
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const targetFile = urlParams.get('file');
+                    const targetCover = urlParams.get('cover');
 
-            if (targetFile) {
-                openPdf(targetFile);
-            } else if (targetCover) {
-                openCover(targetCover);
-            }
+                    if (targetFile) {
+                        openPdf(targetFile);
+                    } else if (targetCover) {
+                        openCover(targetCover);
+                    }
+                });
         });
+
     </script>
 </body>
 </html>

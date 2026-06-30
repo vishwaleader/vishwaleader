@@ -36,6 +36,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
 </head>
 <body class="bg-brandDark text-slate-100 min-h-screen antialiased flex flex-col font-sans">
 
@@ -70,244 +71,556 @@
         <!-- Auth Login Screen (Hidden by default) -->
         <div id="login-container" class="hidden max-w-md w-full bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl text-center space-y-6">
             <div class="w-16 h-16 rounded-full bg-brandBlue/10 border border-brandBlue/20 flex items-center justify-center text-brandBlue text-2xl mx-auto">
-                <i class="fa-solid fa-shield-halved"></i>
+                <i class="fa-solid fa-lock text-brandBlue"></i>
             </div>
             <div class="space-y-2">
-                <h2 class="font-display text-2xl font-black tracking-tight text-white uppercase">Vishwa Leader Admin</h2>
-                <p class="text-xs text-slate-400 leading-relaxed">Sign in with authorized Google Credentials to manage settings, pricing rates, event timelines, and links.</p>
+                <h2 class="font-display text-2xl font-black tracking-tight text-white uppercase">Vishwa Leader Team</h2>
+                <p class="text-xs text-slate-400 leading-relaxed">Enter secure administrator credentials to manage configurations, gallery photos, and PDF archives.</p>
             </div>
             
-            <button onclick="handleGoogleSignIn()" class="w-full bg-white hover:bg-slate-100 text-slate-900 font-bold py-4 rounded-xl transition-all shadow-md flex items-center justify-center gap-3 text-sm">
-                <svg class="w-5 h-5" viewBox="0 0 24 24">
-                    <path fill="#EA4335" d="M12 5.04c1.67 0 3.2.58 4.38 1.69l3.27-3.27C17.67 1.54 15.02 1 12 1 7.35 1 3.4 3.65 1.5 7.5l3.86 3C6.31 7.37 9 5.04 12 5.04z"/>
-                    <path fill="#4285F4" d="M23.49 12.27c0-.81-.07-1.59-.2-2.36H12v4.51h6.46c-.29 1.48-1.14 2.73-2.42 3.57v2.96h3.9c2.28-2.1 3.55-5.19 3.55-8.68z"/>
-                    <path fill="#FBBC05" d="M5.36 14.5c-.24-.72-.38-1.49-.38-2.3s.14-1.58.38-2.3L1.5 6.9C.55 8.79 0 10.9 0 13.1c0 2.2.55 4.31 1.5 6.2l3.86-2.8z"/>
-                    <path fill="#34A853" d="M12 23c3.24 0 5.97-1.07 7.96-2.91l-3.9-2.96c-1.08.72-2.47 1.16-4.06 1.16-3 0-5.69-2.33-6.64-5.46L1.5 15.69C3.4 19.54 7.35 23 12 23z"/>
-                </svg>
-                Sign In with Google
+            <form onsubmit="handleAdminLogin(event)" class="space-y-4 text-left">
+                <div class="space-y-1.5">
+                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Username</label>
+                    <input type="text" id="admin-username-input" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-200 focus:outline-none focus:border-brandBlue transition-colors" placeholder="e.g. admin" required>
+                </div>
+                <div class="space-y-1.5">
+                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Password</label>
+                    <input type="password" id="admin-password-input" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-200 focus:outline-none focus:border-brandBlue transition-colors" placeholder="••••••••" required>
+                </div>
+                <button type="submit" id="admin-login-btn" class="w-full bg-brandBlue hover:bg-brandBlue/90 text-white font-bold py-3.5 rounded-xl transition-all shadow-md text-xs uppercase tracking-wider">
+                    Sign In to Dashboard
+                </button>
+            </form>
+        </div>
+
+        <!-- Tabs Navigation -->
+        <div id="admin-tabs-nav" class="hidden w-full flex border-b border-slate-850 gap-4 mb-6">
+            <button onclick="switchAdminTab('settings')" id="admin-tab-settings" class="px-5 py-3 border-b-2 border-brandBlue font-bold text-xs uppercase tracking-wider text-white transition-all flex items-center gap-1.5">
+                <i class="fa-solid fa-gears"></i> Site Settings
+            </button>
+            <button onclick="switchAdminTab('gallery')" id="admin-tab-gallery" class="px-5 py-3 border-b-2 border-transparent font-bold text-xs uppercase tracking-wider text-slate-400 hover:text-white transition-all flex items-center gap-1.5">
+                <i class="fa-solid fa-images"></i> Photo Gallery
+            </button>
+            <button onclick="switchAdminTab('archives')" id="admin-tab-archives" class="px-5 py-3 border-b-2 border-transparent font-bold text-xs uppercase tracking-wider text-slate-400 hover:text-white transition-all flex items-center gap-1.5">
+                <i class="fa-solid fa-file-pdf"></i> Document Archives
             </button>
         </div>
 
-        <!-- Dashboard Panel Form (Hidden by default) -->
-        <form id="admin-dashboard" onsubmit="handleSaveSettings(event)" class="hidden w-full space-y-8">
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-6">
-                <div>
-                    <h1 class="font-display text-3xl font-black text-white uppercase tracking-tight">Configuration Console</h1>
-                    <p class="text-xs text-slate-400 mt-1">Make changes below and press Save. Updates propagate to the main website immediately.</p>
-                </div>
-                <button type="submit" class="bg-brandBlue hover:bg-brandBlue/90 text-white font-bold px-8 py-3.5 rounded-xl transition-all shadow-md text-xs uppercase tracking-wider flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-floppy-disk"></i> Save All Changes
-                </button>
-            </div>
-
-            <!-- Grid Layout for Settings Cards -->
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                
-                <!-- Left Column (8 cols): Announcements, Hero, Conference, Events -->
-                <div class="lg:col-span-8 space-y-8">
-                    
-                    <!-- Card: Main Calls & Link URLs -->
-                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
-                        <div class="flex items-center gap-2.5 border-b border-slate-800 pb-3 mb-2">
-                            <i class="fa-solid fa-link text-brandBlue text-sm"></i>
-                            <h3 class="font-display text-sm font-bold text-white uppercase tracking-wide">Call-to-Action Link Overrides</h3>
-                        </div>
-                        
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div class="space-y-1.5">
-                                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Call for Abstracts Href</label>
-                                <input type="text" id="announcements-abstract" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-200 focus:outline-none focus:border-brandBlue transition-colors" placeholder="#conference">
-                            </div>
-                            <div class="space-y-1.5">
-                                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Call for Nominations Href</label>
-                                <input type="text" id="announcements-award" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-200 focus:outline-none focus:border-brandBlue transition-colors" placeholder="#contact">
-                            </div>
-                            <div class="space-y-1.5">
-                                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Business Participation Href</label>
-                                <input type="text" id="announcements-business" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-200 focus:outline-none focus:border-brandBlue transition-colors" placeholder="#contact">
-                            </div>
-                        </div>
+        <!-- Dashboard Panel Content (Hidden by default until auth) -->
+        <div id="admin-dashboard" class="hidden w-full space-y-8">
+            
+            <!-- Tab 1: Settings Wrapper -->
+            <div id="admin-tab-content-settings" class="space-y-8">
+                <form onsubmit="handleSaveSettings(event)" class="space-y-8">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-6">
+                    <div>
+                        <h1 class="font-display text-3xl font-black text-white uppercase tracking-tight">Configuration Console</h1>
+                        <p class="text-xs text-slate-400 mt-1">Make changes below and press Save. Updates propagate to the main website immediately.</p>
                     </div>
-
-                    <!-- Card: Hero Banner Override -->
-                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
-                        <div class="flex items-center gap-2.5 border-b border-slate-800 pb-3 mb-2">
-                            <i class="fa-solid fa-fire text-amber-500 text-sm"></i>
-                            <h3 class="font-display text-sm font-bold text-white uppercase tracking-wide">Hero Section (Main Banner)</h3>
-                        </div>
-                        
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div class="space-y-1.5">
-                                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Hero Display Title</label>
-                                <input type="text" id="hero-title" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-200 focus:outline-none focus:border-brandBlue transition-colors" required>
-                            </div>
-                            <div class="space-y-1.5">
-                                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Hero Location Label</label>
-                                <input type="text" id="hero-location" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-200 focus:outline-none focus:border-brandBlue transition-colors" required>
-                            </div>
-                        </div>
-                        
-                        <div class="space-y-1.5">
-                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Hero Description Paragraph</label>
-                            <textarea id="hero-description" rows="3" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-200 focus:outline-none focus:border-brandBlue transition-colors" required></textarea>
-                        </div>
-                    </div>
-
-                    <!-- Card: Conference Details & Dates -->
-                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
-                        <div class="flex items-center gap-2.5 border-b border-slate-800 pb-3 mb-2">
-                            <i class="fa-solid fa-graduation-cap text-indigo-400 text-sm"></i>
-                            <h3 class="font-display text-sm font-bold text-white uppercase tracking-wide">Academic Conference Details</h3>
-                        </div>
-                        
-                        <div class="space-y-1.5">
-                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Primary Theme Statement</label>
-                            <input type="text" id="conference-theme" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-200 focus:outline-none focus:border-brandBlue transition-colors" required>
-                        </div>
-                        
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <div class="space-y-1.5">
-                                <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Abstract Deadline</label>
-                                <input type="text" id="conference-abstract" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brandBlue transition-colors" required>
-                            </div>
-                            <div class="space-y-1.5">
-                                <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Acceptance Date</label>
-                                <input type="text" id="conference-acceptance" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brandBlue transition-colors" required>
-                            </div>
-                            <div class="space-y-1.5">
-                                <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Full Paper Deadline</label>
-                                <input type="text" id="conference-paper" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brandBlue transition-colors" required>
-                            </div>
-                            <div class="space-y-1.5">
-                                <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Conference Date</label>
-                                <input type="text" id="conference-date" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brandBlue transition-colors" required>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Card: Events Timeline (Day 1, 2, 3) -->
-                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-6">
-                        <div class="flex items-center gap-2.5 border-b border-slate-800 pb-3 mb-2">
-                            <i class="fa-solid fa-calendar-days text-emerald-400 text-sm"></i>
-                            <h3 class="font-display text-sm font-bold text-white uppercase tracking-wide">Three-Day Event Schedule</h3>
-                        </div>
-                        
-                        <!-- Day 1 -->
-                        <div class="space-y-4 bg-slate-950/40 p-4 rounded-xl border border-slate-800/60">
-                            <span class="text-[10px] font-extrabold text-brandBlue uppercase tracking-wider bg-brandBlue/10 border border-brandBlue/20 px-2 py-0.5 rounded">Day 1 Segment</span>
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
-                                <div class="space-y-1.5">
-                                    <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Date label</label>
-                                    <input type="text" id="event1-date" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none" required>
-                                </div>
-                                <div class="space-y-1.5 md:col-span-2">
-                                    <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Event Name</label>
-                                    <input type="text" id="event1-name" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none" required>
-                                </div>
-                            </div>
-                            <div class="space-y-1.5">
-                                <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Venue</label>
-                                <input type="text" id="event1-venue" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none" required>
-                            </div>
-                            <div class="space-y-1.5">
-                                <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Focus/Description</label>
-                                <textarea id="event1-focus" rows="2" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none" required></textarea>
-                            </div>
-                        </div>
-
-                        <!-- Day 2 -->
-                        <div class="space-y-4 bg-slate-950/40 p-4 rounded-xl border border-slate-800/60">
-                            <span class="text-[10px] font-extrabold text-amber-500 uppercase tracking-wider bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded">Day 2 Segment</span>
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
-                                <div class="space-y-1.5">
-                                    <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Date label</label>
-                                    <input type="text" id="event2-date" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none" required>
-                                </div>
-                                <div class="space-y-1.5 md:col-span-2">
-                                    <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Event Name</label>
-                                    <input type="text" id="event2-name" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none" required>
-                                </div>
-                            </div>
-                            <div class="space-y-1.5">
-                                <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Venue</label>
-                                <input type="text" id="event2-venue" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none" required>
-                            </div>
-                            <div class="space-y-1.5">
-                                <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Focus/Description</label>
-                                <textarea id="event2-focus" rows="2" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none" required></textarea>
-                            </div>
-                        </div>
-
-                        <!-- Day 3 -->
-                        <div class="space-y-4 bg-slate-950/40 p-4 rounded-xl border border-slate-800/60">
-                            <span class="text-[10px] font-extrabold text-purple-400 uppercase tracking-wider bg-purple-550/10 border border-purple-550/20 px-2 py-0.5 rounded">Day 3 Segment</span>
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
-                                <div class="space-y-1.5">
-                                    <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Date label</label>
-                                    <input type="text" id="event3-date" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none" required>
-                                </div>
-                                <div class="space-y-1.5 md:col-span-2">
-                                    <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Event Name</label>
-                                    <input type="text" id="event3-name" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none" required>
-                                </div>
-                            </div>
-                            <div class="space-y-1.5">
-                                <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Venue</label>
-                                <input type="text" id="event3-venue" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none" required>
-                            </div>
-                            <div class="space-y-1.5">
-                                <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Focus/Description</label>
-                                <textarea id="event3-focus" rows="2" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none" required></textarea>
-                            </div>
-                        </div>
-                    </div>
+                    <button type="submit" class="bg-brandBlue hover:bg-brandBlue/90 text-white font-bold px-8 py-3.5 rounded-xl transition-all shadow-md text-xs uppercase tracking-wider flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-floppy-disk"></i> Save All Changes
+                    </button>
                 </div>
 
-                <!-- Right Column (4 cols): Souvenir Rates & Coordinator Contact -->
-                <div class="lg:col-span-4 space-y-8">
-                    
-                    <!-- Card: General / Coordinator -->
-                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
-                        <div class="flex items-center gap-2.5 border-b border-slate-800 pb-3 mb-2">
-                            <i class="fa-solid fa-address-book text-slate-400 text-sm"></i>
-                            <h3 class="font-display text-sm font-bold text-white uppercase tracking-wide">Coordinator Desk</h3>
-                        </div>
-                        <div class="space-y-1.5">
-                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Primary Phone Number</label>
-                            <input type="text" id="contact-phone" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-200 focus:outline-none focus:border-brandBlue transition-colors" required>
-                        </div>
-                    </div>
-
-                    <!-- Card: Souvenir Ads Pricing Rates -->
-                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4 flex flex-col justify-between">
-                        <div>
-                            <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
-                                <div class="flex items-center gap-2.5">
-                                    <i class="fa-solid fa-tags text-rose-500 text-sm"></i>
-                                    <h3 class="font-display text-sm font-bold text-white uppercase tracking-wide">Souvenir Ad Rates</h3>
-                                </div>
-                                <button type="button" onclick="addNewRateRow()" class="text-[10px] bg-brandBlue/10 border border-brandBlue/30 text-brandBlue hover:bg-brandBlue/20 px-2 py-1 rounded font-bold uppercase transition-all flex items-center gap-1">
-                                    <i class="fa-solid fa-plus"></i> Add Rate
-                                </button>
+                <!-- Grid Layout for Settings Cards -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                    <!-- Left Column (8 cols): Announcements, Hero, Conference, Events -->
+                    <div class="lg:col-span-8 space-y-8">
+                        
+                        <!-- Card: Main Calls & Link URLs -->
+                        <div class="bg-slate-900/60 border border-slate-800/80 backdrop-blur-md rounded-2xl p-6 space-y-4">
+                            <div class="flex items-center gap-2.5 border-b border-slate-800 pb-3 mb-2">
+                                <i class="fa-solid fa-link text-brandBlue text-sm"></i>
+                                <h3 class="font-display text-sm font-bold text-white uppercase tracking-wide">Call-to-Action Link Overrides</h3>
                             </div>
                             
-                            <!-- Rates List Container -->
-                            <div id="admin-rates-list" class="space-y-4">
-                                <!-- Dynamic Rates Inputs Rendered Here -->
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div class="space-y-1.5">
+                                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Call for Abstracts Href</label>
+                                    <input type="text" id="announcements-abstract" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-200 focus:outline-none focus:border-brandBlue transition-colors" placeholder="#conference">
+                                </div>
+                                <div class="space-y-1.5">
+                                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Call for Nominations Href</label>
+                                    <input type="text" id="announcements-award" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-200 focus:outline-none focus:border-brandBlue transition-colors" placeholder="#contact">
+                                </div>
+                                <div class="space-y-1.5">
+                                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Business Participation Href</label>
+                                    <input type="text" id="announcements-business" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-200 focus:outline-none focus:border-brandBlue transition-colors" placeholder="#contact">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card: Hero Banner Override -->
+                        <div class="bg-slate-900/60 border border-slate-800/80 backdrop-blur-md rounded-2xl p-6 space-y-4">
+                            <div class="flex items-center gap-2.5 border-b border-slate-800 pb-3 mb-2">
+                                <i class="fa-solid fa-fire text-amber-500 text-sm"></i>
+                                <h3 class="font-display text-sm font-bold text-white uppercase tracking-wide">Hero Section (Main Banner)</h3>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="space-y-1.5">
+                                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Hero Display Title</label>
+                                    <input type="text" id="hero-title" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-200 focus:outline-none focus:border-brandBlue transition-colors" required>
+                                </div>
+                                <div class="space-y-1.5">
+                                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Hero Location Label</label>
+                                    <input type="text" id="hero-location" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-200 focus:outline-none focus:border-brandBlue transition-colors" required>
+                                </div>
+                            </div>
+                            
+                            <div class="space-y-1.5">
+                                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Hero Description Paragraph</label>
+                                <textarea id="hero-description" rows="3" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-200 focus:outline-none focus:border-brandBlue transition-colors" required></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Card: Conference Details & Dates -->
+                        <div class="bg-slate-900/60 border border-slate-800/80 backdrop-blur-md rounded-2xl p-6 space-y-4">
+                            <div class="flex items-center gap-2.5 border-b border-slate-800 pb-3 mb-2">
+                                <i class="fa-solid fa-graduation-cap text-indigo-400 text-sm"></i>
+                                <h3 class="font-display text-sm font-bold text-white uppercase tracking-wide">Academic Conference Details</h3>
+                            </div>
+                            
+                            <div class="space-y-1.5">
+                                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Primary Theme Statement</label>
+                                <input type="text" id="conference-theme" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-200 focus:outline-none focus:border-brandBlue transition-colors" required>
+                            </div>
+                            
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <div class="space-y-1.5">
+                                    <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Abstract Deadline</label>
+                                    <input type="text" id="conference-abstract" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brandBlue transition-colors" required>
+                                </div>
+                                <div class="space-y-1.5">
+                                    <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Acceptance Date</label>
+                                    <input type="text" id="conference-acceptance" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brandBlue transition-colors" required>
+                                </div>
+                                <div class="space-y-1.5">
+                                    <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Full Paper Deadline</label>
+                                    <input type="text" id="conference-paper" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brandBlue transition-colors" required>
+                                </div>
+                                <div class="space-y-1.5">
+                                    <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Conference Date</label>
+                                    <input type="text" id="conference-date" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brandBlue transition-colors" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card: Events Timeline (Day 1, 2, 3) -->
+                        <div class="bg-slate-900/60 border border-slate-800/80 backdrop-blur-md rounded-2xl p-6 space-y-6">
+                            <div class="flex items-center gap-2.5 border-b border-slate-800 pb-3 mb-2">
+                                <i class="fa-solid fa-calendar-days text-emerald-400 text-sm"></i>
+                                <h3 class="font-display text-sm font-bold text-white uppercase tracking-wide">Three-Day Event Schedule</h3>
+                            </div>
+                            
+                            <!-- Day 1 -->
+                            <div class="space-y-4 bg-slate-950/40 p-4 rounded-xl border border-slate-800/60">
+                                <span class="text-[10px] font-extrabold text-brandBlue uppercase tracking-wider bg-brandBlue/10 border border-brandBlue/20 px-2 py-0.5 rounded">Day 1 Segment</span>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+                                    <div class="space-y-1.5">
+                                        <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Date label</label>
+                                        <input type="text" id="event1-date" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none" required>
+                                    </div>
+                                    <div class="space-y-1.5 md:col-span-2">
+                                        <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Event Name</label>
+                                        <input type="text" id="event1-name" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none" required>
+                                    </div>
+                                </div>
+                                <div class="space-y-1.5">
+                                    <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Venue</label>
+                                    <input type="text" id="event1-venue" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none" required>
+                                </div>
+                                <div class="space-y-1.5">
+                                    <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Focus/Description</label>
+                                    <textarea id="event1-focus" rows="2" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none" required></textarea>
+                                </div>
+                            </div>
+
+                            <!-- Day 2 -->
+                            <div class="space-y-4 bg-slate-950/40 p-4 rounded-xl border border-slate-800/60">
+                                <span class="text-[10px] font-extrabold text-amber-500 uppercase tracking-wider bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded">Day 2 Segment</span>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+                                    <div class="space-y-1.5">
+                                        <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Date label</label>
+                                        <input type="text" id="event2-date" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none" required>
+                                    </div>
+                                    <div class="space-y-1.5 md:col-span-2">
+                                        <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Event Name</label>
+                                        <input type="text" id="event2-name" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none" required>
+                                    </div>
+                                </div>
+                                <div class="space-y-1.5">
+                                    <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Venue</label>
+                                    <input type="text" id="event2-venue" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none" required>
+                                </div>
+                                <div class="space-y-1.5">
+                                    <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Focus/Description</label>
+                                    <textarea id="event2-focus" rows="2" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none" required></textarea>
+                                </div>
+                            </div>
+
+                            <!-- Day 3 -->
+                            <div class="space-y-4 bg-slate-950/40 p-4 rounded-xl border border-slate-800/60">
+                                <span class="text-[10px] font-extrabold text-purple-400 uppercase tracking-wider bg-purple-550/10 border border-purple-550/20 px-2 py-0.5 rounded">Day 3 Segment</span>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+                                    <div class="space-y-1.5">
+                                        <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Date label</label>
+                                        <input type="text" id="event3-date" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none" required>
+                                    </div>
+                                    <div class="space-y-1.5 md:col-span-2">
+                                        <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Event Name</label>
+                                        <input type="text" id="event3-name" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none" required>
+                                    </div>
+                                </div>
+                                <div class="space-y-1.5">
+                                    <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Venue</label>
+                                    <input type="text" id="event3-venue" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none" required>
+                                </div>
+                                <div class="space-y-1.5">
+                                    <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Focus/Description</label>
+                                    <textarea id="event3-focus" rows="2" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none" required></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column (4 cols): Souvenir Rates & Coordinator Contact -->
+                    <div class="lg:col-span-4 space-y-8">
+                        
+                        <!-- Card: General / Coordinator -->
+                        <div class="bg-slate-900/60 border border-slate-800/80 backdrop-blur-md rounded-2xl p-6 space-y-4">
+                            <div class="flex items-center gap-2.5 border-b border-slate-800 pb-3 mb-2">
+                                <i class="fa-solid fa-address-book text-slate-400 text-sm"></i>
+                                <h3 class="font-display text-sm font-bold text-white uppercase tracking-wide">Coordinator Desk</h3>
+                            </div>
+                            <div class="space-y-1.5">
+                                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Primary Phone Number</label>
+                                <input type="text" id="contact-phone" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-200 focus:outline-none focus:border-brandBlue transition-colors" required>
+                            </div>
+                        </div>
+
+                        <!-- Card: Souvenir Ads Pricing Rates -->
+                        <div class="bg-slate-900/60 border border-slate-800/80 backdrop-blur-md rounded-2xl p-6 space-y-4 flex flex-col justify-between">
+                            <div>
+                                <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+                                    <div class="flex items-center gap-2.5">
+                                        <i class="fa-solid fa-tags text-rose-500 text-sm"></i>
+                                        <h3 class="font-display text-sm font-bold text-white uppercase tracking-wide">Souvenir Ad Rates</h3>
+                                    </div>
+                                    <button type="button" onclick="addNewRateRow()" class="text-[10px] bg-brandBlue/10 border border-brandBlue/30 text-brandBlue hover:bg-brandBlue/20 px-2 py-1 rounded font-bold uppercase transition-all flex items-center gap-1">
+                                        <i class="fa-solid fa-plus"></i> Add Rate
+                                    </button>
+                                </div>
+                                
+                                <!-- Rates List Container -->
+                                <div id="admin-rates-list" class="space-y-4">
+                                    <!-- Dynamic Rates Inputs Rendered Here -->
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
+                
+                <!-- Bottom Save Bar -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <span class="text-xs text-slate-400 leading-normal flex items-center gap-2"><i class="fa-solid fa-circle-check text-emerald-500"></i> Auto-saves settings in Firestore for immediate client website sync.</span>
+                    <button type="submit" class="w-full sm:w-auto bg-brandBlue hover:bg-brandBlue/90 text-white font-bold px-10 py-4 rounded-xl transition-all shadow-md text-xs uppercase tracking-wider">
+                        Save Configuration
+                    </button>
+                </div>
+            </form>
+
+            <!-- Section: Administrator Account Credentials -->
+            <div id="admin-security-section" class="bg-slate-900 border border-slate-800 rounded-3xl p-8 space-y-6 mt-8">
+                <div class="flex items-center gap-3 border-b border-slate-800 pb-4">
+                    <i class="fa-solid fa-key text-brandBlue text-lg"></i>
+                    <div>
+                        <h3 class="font-display text-sm font-bold text-white uppercase tracking-wide">Administrator Credentials</h3>
+                        <p class="text-[10px] text-slate-400">Change your secure login password for the vishwaleader-team panel.</p>
+                    </div>
+                </div>
+                
+                <form onsubmit="handleChangeAdminPassword(event)" class="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
+                    <div class="space-y-1.5 col-span-1">
+                        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Current Password</label>
+                        <input type="password" id="admin-current-password" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brandBlue" required>
+                    </div>
+                    <div class="space-y-1.5 col-span-1">
+                        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">New Password</label>
+                        <input type="password" id="admin-new-password" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brandBlue" required>
+                    </div>
+                    <div class="col-span-1">
+                        <button type="submit" id="admin-change-pwd-btn" class="w-full bg-slate-850 hover:bg-slate-800 text-white font-bold py-3 px-6 rounded-xl transition-all border border-slate-800 hover:border-slate-700 text-xs uppercase tracking-wider">
+                            Update Password
+                        </button>
+                    </div>
+                </form>
             </div>
-            
-            <!-- Bottom Save Bar -->
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-                <span class="text-xs text-slate-400 leading-normal flex items-center gap-2"><i class="fa-solid fa-circle-check text-emerald-500"></i> Auto-saves settings in Firestore for immediate client website sync.</span>
-                <button type="submit" class="w-full sm:w-auto bg-brandBlue hover:bg-brandBlue/90 text-white font-bold px-10 py-4 rounded-xl transition-all shadow-md text-xs uppercase tracking-wider">
-                    Save Configuration
-                </button>
+        </div>
+
+            <!-- Tab 2: Gallery Manager -->
+            <div id="admin-tab-content-gallery" class="hidden w-full grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <!-- Left: Add Photo Form -->
+                <div class="lg:col-span-4 bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4 h-fit">
+                    <div class="flex items-center gap-2 border-b border-slate-800 pb-3 mb-2">
+                        <i class="fa-solid fa-plus text-brandBlue text-sm"></i>
+                        <h3 id="gallery-form-title" class="font-display text-sm font-bold text-white uppercase tracking-wide">Add New Photo</h3>
+                    </div>
+                    <form id="gallery-form" onsubmit="handleSavePhoto(event)" class="space-y-4">
+                        <input type="hidden" id="gallery-edit-id" value="">
+                        
+                        <div class="space-y-1.5">
+                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Photo Title</label>
+                            <input type="text" id="gallery-title" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brandBlue transition-colors" required>
+                        </div>
+
+                        <div class="space-y-1.5">
+                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Description</label>
+                            <textarea id="gallery-description" rows="3" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brandBlue transition-colors" required></textarea>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="space-y-1.5">
+                                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Date</label>
+                                <input type="text" id="gallery-date" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brandBlue" placeholder="e.g. Jun 18, 2026" required>
+                            </div>
+                            <div class="space-y-1.5">
+                                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Location</label>
+                                <input type="text" id="gallery-location" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brandBlue" placeholder="e.g. London, UK" required>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="space-y-1.5">
+                                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Category</label>
+                                <select id="gallery-category" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brandBlue" onchange="updateGalleryBadgeDefaults()">
+                                    <option value="events">Social Events</option>
+                                    <option value="london">London Summit</option>
+                                    <option value="dignitaries">Dignitaries</option>
+                                    <option value="covers">Magazine Covers</option>
+                                </select>
+                            </div>
+                            <div class="space-y-1.5">
+                                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Badge Text</label>
+                                <input type="text" id="gallery-badgetext" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brandBlue" placeholder="e.g. Photo" required>
+                            </div>
+                        </div>
+
+                        <div class="space-y-1.5">
+                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Image Source</label>
+                            <div class="flex gap-4 mb-2">
+                                <label class="inline-flex items-center text-xs text-slate-350 cursor-pointer">
+                                    <input type="radio" name="gallery-src-type" value="file" checked onchange="toggleGallerySrcType()" class="mr-1.5 accent-brandBlue"> Upload File
+                                </label>
+                                <label class="inline-flex items-center text-xs text-slate-350 cursor-pointer">
+                                    <input type="radio" name="gallery-src-type" value="url" onchange="toggleGallerySrcType()" class="mr-1.5 accent-brandBlue"> Input URL / Path
+                                </label>
+                            </div>
+                            
+                            <div id="gallery-file-container">
+                                <input type="file" id="gallery-file" accept="image/*" class="w-full text-xs text-slate-400 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-950 file:text-slate-300 file:hover:bg-slate-850 cursor-pointer bg-slate-950/40 p-2.5 border border-slate-800 rounded-xl">
+                            </div>
+                            
+                            <div id="gallery-url-container" class="hidden">
+                                <input type="text" id="gallery-url" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brandBlue" placeholder="e.g. wp-content/uploads/2026/06/my-image.jpg">
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-6 pt-2">
+                            <label class="inline-flex items-center text-xs text-slate-300 cursor-pointer">
+                                <input type="checkbox" id="gallery-featured" class="mr-2 rounded border-slate-800 bg-slate-950 text-brandBlue focus:ring-brandBlue accent-brandBlue"> Featured
+                            </label>
+                            <label class="inline-flex items-center text-xs text-slate-300 cursor-pointer">
+                                <input type="checkbox" id="gallery-popular" class="mr-2 rounded border-slate-800 bg-slate-950 text-brandBlue focus:ring-brandBlue accent-brandBlue"> Popular
+                            </label>
+                        </div>
+
+                        <div class="flex gap-3 pt-4 border-t border-slate-850">
+                            <button type="submit" id="gallery-submit-btn" class="flex-1 bg-brandBlue hover:bg-brandBlue/90 text-white font-bold py-3 px-4 rounded-xl text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-cloud-arrow-up"></i> Save Photo
+                            </button>
+                            <button type="button" onclick="resetGalleryForm()" class="bg-slate-850 hover:bg-slate-800 text-slate-400 font-bold py-3 px-4 rounded-xl text-xs uppercase tracking-wider transition-all">
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Right: Photo List -->
+                <div class="lg:col-span-8 bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-3 mb-2">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-images text-brandBlue text-sm"></i>
+                            <h3 class="font-display text-sm font-bold text-white uppercase tracking-wide">Photo Catalog</h3>
+                        </div>
+                        
+                        <div class="relative w-full sm:w-64">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-500 text-xs"></i>
+                            <input type="text" id="gallery-search" oninput="renderGalleryList()" class="w-full bg-slate-950 border border-slate-800 rounded-full pl-9 pr-4 py-2 text-xs text-slate-200 focus:outline-none focus:border-brandBlue" placeholder="Search photos...">
+                        </div>
+                    </div>
+
+                    <!-- Gallery Table List -->
+                    <div class="overflow-x-auto min-h-[300px] max-h-[600px] overflow-y-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead>
+                                <tr class="border-b border-slate-800 text-slate-500 uppercase tracking-widest text-[9px] font-bold">
+                                    <th class="pb-3 w-16">Preview</th>
+                                    <th class="pb-3 pl-4">Title / Info</th>
+                                    <th class="pb-3 w-28">Category</th>
+                                    <th class="pb-3 w-28">Status</th>
+                                    <th class="pb-3 text-right w-24">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="gallery-list-body" class="divide-y divide-slate-850">
+                                <!-- Rendered dynamically -->
+                            </tbody>
+                        </table>
+                        
+                        <div id="gallery-empty-state" class="hidden text-center py-16 space-y-2">
+                            <i class="fa-solid fa-image-slash text-2xl text-slate-700"></i>
+                            <p class="text-xs text-slate-500 font-bold uppercase tracking-wider">No photos found in database</p>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </form>
+
+            <!-- Tab 3: Archives Manager -->
+            <div id="admin-tab-content-archives" class="hidden w-full grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <!-- Left: Add Document Form -->
+                <div class="lg:col-span-4 bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4 h-fit">
+                    <div class="flex items-center gap-2 border-b border-slate-800 pb-3 mb-2">
+                        <i class="fa-solid fa-plus text-brandBlue text-sm"></i>
+                        <h3 id="archives-form-title" class="font-display text-sm font-bold text-white uppercase tracking-wide">Add Archive Item</h3>
+                    </div>
+                    <form id="archives-form" onsubmit="handleSaveArchive(event)" class="space-y-4">
+                        <input type="hidden" id="archives-edit-id" value="">
+                        
+                        <div class="space-y-1.5">
+                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Archive Item Type</label>
+                            <select id="archives-type" onchange="toggleArchiveFields()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brandBlue">
+                                <option value="pdf">PDF Circular / Document</option>
+                                <option value="cover">Magazine Print Cover</option>
+                            </select>
+                        </div>
+
+                        <div class="space-y-1.5">
+                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Title</label>
+                            <input type="text" id="archives-title" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brandBlue" required>
+                        </div>
+
+                        <!-- PDF Only fields -->
+                        <div id="archives-pdf-fields" class="space-y-4">
+                            <div class="space-y-1.5">
+                                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Description</label>
+                                <textarea id="archives-desc" rows="3" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brandBlue" placeholder="e.g. Official circular detailing awards ceremony guidelines..."></textarea>
+                            </div>
+                            
+                            <div class="space-y-1.5">
+                                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">File Size Label</label>
+                                <input type="text" id="archives-size" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brandBlue" placeholder="e.g. 2.4 MB">
+                            </div>
+
+                            <div class="space-y-1.5">
+                                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">PDF File Source</label>
+                                <div class="flex gap-4 mb-2">
+                                    <label class="inline-flex items-center text-xs text-slate-350 cursor-pointer">
+                                        <input type="radio" name="pdf-src-type" value="file" checked onchange="togglePdfSrcType()" class="mr-1.5 accent-brandBlue"> Upload PDF File
+                                    </label>
+                                    <label class="inline-flex items-center text-xs text-slate-350 cursor-pointer">
+                                        <input type="radio" name="pdf-src-type" value="url" onchange="togglePdfSrcType()" class="mr-1.5 accent-brandBlue"> File Name / URL
+                                    </label>
+                                </div>
+                                
+                                <div id="pdf-file-container">
+                                    <input type="file" id="pdf-file" accept="application/pdf" class="w-full text-xs text-slate-400 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-950 file:text-slate-300 file:hover:bg-slate-850 cursor-pointer bg-slate-950/40 p-2.5 border border-slate-800 rounded-xl">
+                                </div>
+                                
+                                <div id="pdf-url-container" class="hidden">
+                                    <input type="text" id="pdf-url" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none" placeholder="e.g. awards-circular-2026.pdf">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Cover Only fields -->
+                        <div id="archives-cover-fields" class="hidden space-y-4">
+                            <div class="space-y-1.5">
+                                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Date Tag</label>
+                                <input type="text" id="archives-date" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brandBlue" placeholder="e.g. Dec 2009">
+                            </div>
+
+                            <div class="space-y-1.5">
+                                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Cover Image Source</label>
+                                <div class="flex gap-4 mb-2">
+                                    <label class="inline-flex items-center text-xs text-slate-350 cursor-pointer">
+                                        <input type="radio" name="cover-src-type" value="file" checked onchange="toggleCoverSrcType()" class="mr-1.5 accent-brandBlue"> Upload Cover Image
+                                    </label>
+                                    <label class="inline-flex items-center text-xs text-slate-350 cursor-pointer">
+                                        <input type="radio" name="cover-src-type" value="url" onchange="toggleCoverSrcType()" class="mr-1.5 accent-brandBlue"> Image File Name / URL
+                                    </label>
+                                </div>
+                                
+                                <div id="cover-file-container">
+                                    <input type="file" id="cover-file" accept="image/*" class="w-full text-xs text-slate-400 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-950 file:text-slate-300 file:hover:bg-slate-850 cursor-pointer bg-slate-950/40 p-2.5 border border-slate-800 rounded-xl">
+                                </div>
+                                
+                                <div id="cover-url-container" class="hidden">
+                                    <input type="text" id="cover-url" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none" placeholder="e.g. December Cover 09.jpg">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-3 pt-4 border-t border-slate-850">
+                            <button type="submit" id="archives-submit-btn" class="flex-1 bg-brandBlue hover:bg-brandBlue/90 text-white font-bold py-3 px-4 rounded-xl text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-cloud-arrow-up"></i> Save Archive
+                            </button>
+                            <button type="button" onclick="resetArchivesForm()" class="bg-slate-850 hover:bg-slate-800 text-slate-400 font-bold py-3 px-4 rounded-xl text-xs uppercase tracking-wider transition-all">
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Right: Archive List -->
+                <div class="lg:col-span-8 bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-3 mb-2">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-file-invoice text-brandBlue text-sm"></i>
+                            <h3 class="font-display text-sm font-bold text-white uppercase tracking-wide">Archive Items</h3>
+                        </div>
+                        
+                        <div class="relative w-full sm:w-64">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-500 text-xs"></i>
+                            <input type="text" id="archives-search" oninput="renderArchivesList()" class="w-full bg-slate-950 border border-slate-800 rounded-full pl-9 pr-4 py-2 text-xs text-slate-200 focus:outline-none focus:border-brandBlue" placeholder="Search archives...">
+                        </div>
+                    </div>
+
+                    <!-- Archives Table List -->
+                    <div class="overflow-x-auto min-h-[300px] max-h-[600px] overflow-y-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead>
+                                <tr class="border-b border-slate-800 text-slate-500 uppercase tracking-widest text-[9px] font-bold">
+                                    <th class="pb-3 w-28">Type</th>
+                                    <th class="pb-3 pl-4">Title</th>
+                                    <th class="pb-3 pl-4">File Name / Path / Date</th>
+                                    <th class="pb-3 w-24">Size/Details</th>
+                                    <th class="pb-3 text-right w-24">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="archives-list-body" class="divide-y divide-slate-850">
+                                <!-- Rendered dynamically -->
+                            </tbody>
+                        </table>
+                        
+                        <div id="archives-empty-state" class="hidden text-center py-16 space-y-2">
+                            <i class="fa-solid fa-file-signature text-2xl text-slate-700"></i>
+                            <p class="text-xs text-slate-500 font-bold uppercase tracking-wider">No archive items found in database</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </main>
 
     <!-- Floating status alerts toast -->
@@ -333,35 +646,131 @@
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
+        const storage = firebase.storage();
 
         // State variables
         let ratesState = [];
+        let galleryData = [];
+        let archivesData = [];
+        let currentTab = 'settings';
 
         // Auth change listener
         auth.onAuthStateChanged((user) => {
             document.getElementById('auth-check-spinner').classList.add('hidden');
             if (user) {
-                // User is signed in
-                document.getElementById('login-container').classList.add('hidden');
-                document.getElementById('admin-dashboard').classList.remove('hidden');
-                document.getElementById('user-info-section').classList.remove('hidden');
-                document.getElementById('user-display-name').textContent = user.displayName || user.email;
-                loadSettings();
+                // Ensure they are a vl-team member (admin account)
+                if (user.email && user.email.endsWith('@vishwaleader.com')) {
+                    // Authorized Admin
+                    document.getElementById('login-container').classList.add('hidden');
+                    document.getElementById('admin-tabs-nav').classList.remove('hidden');
+                    document.getElementById('admin-dashboard').classList.remove('hidden');
+                    document.getElementById('user-info-section').classList.remove('hidden');
+                    
+                    // Show username cleanly (without the @vishwaleader.com)
+                    const displayUser = user.email.split('@')[0];
+                    document.getElementById('user-display-name').textContent = "Team: " + displayUser;
+                    
+                    loadSettings();
+                    loadGallery();
+                    loadArchives();
+                } else {
+                    // Unauthorized member trying to access admin
+                    showToast("Access Denied: This area is restricted to vl-team administrators.", true);
+                    auth.signOut();
+                }
             } else {
                 // User is not signed in
                 document.getElementById('login-container').classList.remove('hidden');
+                document.getElementById('admin-tabs-nav').classList.add('hidden');
                 document.getElementById('admin-dashboard').classList.add('hidden');
                 document.getElementById('user-info-section').classList.add('hidden');
             }
         });
 
-        // Sign In Flow
-        function handleGoogleSignIn() {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            auth.signInWithPopup(provider).catch((error) => {
-                console.error("Sign-in error:", error);
-                showToast("Google Sign-In failed: " + error.message, true);
-            });
+        // Username / Password Login Flow for vl-team
+        function handleAdminLogin(event) {
+            event.preventDefault();
+            const usernameInput = document.getElementById('admin-username-input').value.trim();
+            const passwordInput = document.getElementById('admin-password-input').value;
+            const loginBtn = document.getElementById('admin-login-btn');
+
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = '<i class="fa-solid fa-spinner animate-spin mr-2"></i> Authenticating...';
+
+            // Convert username to email
+            const email = usernameInput.includes('@') ? usernameInput : `${usernameInput}@vishwaleader.com`;
+
+            auth.signInWithEmailAndPassword(email, passwordInput)
+                .then((userCredential) => {
+                    showToast("Successfully signed in!");
+                })
+                .catch((error) => {
+                    console.error("Auth error:", error);
+                    // Check if default admin account needs initialization
+                    if (error.code === 'auth/user-not-found' && usernameInput === 'admin' && passwordInput === 'vishwaleader-team-2026') {
+                        // Create the default user!
+                        auth.createUserWithEmailAndPassword(email, passwordInput)
+                            .then((userCredential) => {
+                                showToast("Default admin account initialized and signed in!");
+                            })
+                            .catch((createErr) => {
+                                console.error("Initial creation failed:", createErr);
+                                showToast("Initialization failed: " + createErr.message, true);
+                            });
+                    } else if (error.code === 'auth/wrong-password') {
+                        showToast("Incorrect password. Please try again.", true);
+                    } else if (error.code === 'auth/user-not-found') {
+                        showToast("Admin username not found.", true);
+                    } else {
+                        showToast("Login failed: " + error.message, true);
+                    }
+                })
+                .finally(() => {
+                    loginBtn.disabled = false;
+                    loginBtn.innerHTML = 'Sign In to Dashboard';
+                });
+        }
+
+        // Change Password Flow for Current Admin
+        function handleChangeAdminPassword(event) {
+            event.preventDefault();
+            const currentPwd = document.getElementById('admin-current-password').value;
+            const newPwd = document.getElementById('admin-new-password').value;
+            const btn = document.getElementById('admin-change-pwd-btn');
+
+            if (newPwd.length < 6) {
+                showToast("Password must be at least 6 characters.", true);
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> Updating...';
+
+            const user = auth.currentUser;
+            const credential = firebase.auth.EmailAuthProvider.credential(user.email, currentPwd);
+
+            // Re-authenticate user before updating password (standard Firebase safety requirement)
+            user.reauthenticateWithCredential(credential)
+                .then(() => {
+                    user.updatePassword(newPwd)
+                        .then(() => {
+                            showToast("Administrator password updated successfully!");
+                            document.getElementById('admin-current-password').value = '';
+                            document.getElementById('admin-new-password').value = '';
+                        })
+                        .catch((error) => {
+                            console.error("Password update failed:", error);
+                            showToast("Update failed: " + error.message, true);
+                        });
+                })
+                .catch((error) => {
+                    console.error("Re-authentication failed:", error);
+                    showToast("Current password incorrect.", true);
+                })
+                .finally(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = 'Update Password';
+                });
         }
 
         // Sign Out Flow
@@ -373,7 +782,28 @@
             });
         }
 
-        // Load Settings from Firestore
+        // Tab Switching Logic
+        function switchAdminTab(tabName) {
+            currentTab = tabName;
+            
+            // Toggle nav button highlighting
+            const tabs = ['settings', 'gallery', 'archives'];
+            tabs.forEach(t => {
+                const btn = document.getElementById(`admin-tab-${t}`);
+                const content = document.getElementById(`admin-tab-content-${t}`);
+                if (t === tabName) {
+                    btn.className = "px-5 py-3 border-b-2 border-brandBlue font-bold text-xs uppercase tracking-wider text-white transition-all flex items-center gap-1.5";
+                    if (content) content.classList.remove('hidden');
+                } else {
+                    btn.className = "px-5 py-3 border-b-2 border-transparent font-bold text-xs uppercase tracking-wider text-slate-400 hover:text-white transition-all flex items-center gap-1.5";
+                    if (content) content.classList.add('hidden');
+                }
+            });
+        }
+
+        // ----------------------------------------------------
+        // TAB 1: SITE CONFIGURATION / SETTINGS
+        // ----------------------------------------------------
         function loadSettings() {
             db.collection('vishwaleader_config').doc('settings').get()
                 .then((doc) => {
@@ -385,13 +815,11 @@
                 })
                 .catch((error) => {
                     console.error("Error loading settings:", error);
-                    showToast("Error reading from Firestore: " + error.message, true);
+                    showToast("Error reading settings: " + error.message, true);
                 });
         }
 
-        // Populate Form Fields
         function populateForm(data) {
-            // Apply fallback/defaults if values not defined
             const abstractUrl = data.announcements?.abstractLink || "#conference";
             const awardUrl = data.announcements?.awardLink || "#contact";
             const businessUrl = data.announcements?.businessLink || "#contact";
@@ -428,7 +856,7 @@
 
             document.getElementById('contact-phone').value = data.contact?.phone || "+91 9969688928";
 
-            // Souvenir Pricing Rates
+            // Souvenir Rates
             ratesState = data.souvenir?.rates || [
                 { name: "Print: Full Page Color Ad", description: "Vishwa Leader Monthly Print Magazine", price: "INR 25,000 / $300" },
                 { name: "Print: Half Page Color Ad", description: "Vishwa Leader Monthly Print Magazine", price: "INR 15,000 / $200" },
@@ -438,7 +866,6 @@
             renderRates();
         }
 
-        // Render Rates List Rows
         function renderRates() {
             const ratesContainer = document.getElementById('admin-rates-list');
             ratesContainer.innerHTML = '';
@@ -467,24 +894,20 @@
             });
         }
 
-        // Update single key in rate list state
         function updateRateItem(index, key, value) {
             ratesState[index][key] = value;
         }
 
-        // Delete package row
         function deleteRateRow(index) {
             ratesState.splice(index, 1);
             renderRates();
         }
 
-        // Add empty row
         function addNewRateRow() {
             ratesState.push({ name: '', description: '', price: '' });
             renderRates();
         }
 
-        // Save Form settings back to Firebase Firestore
         function handleSaveSettings(event) {
             event.preventDefault();
             const submitBtn = event.target.querySelector('button[type="submit"]');
@@ -547,7 +970,530 @@
                 });
         }
 
-        // Display Toast Notifications
+
+        // ----------------------------------------------------
+        // FILE UPLOADER TO FIREBASE STORAGE
+        // ----------------------------------------------------
+        function uploadFilePromise(file, path) {
+            return new Promise((resolve, reject) => {
+                const fileRef = storage.ref().child(path);
+                const uploadTask = fileRef.put(file);
+                
+                uploadTask.on('state_changed', 
+                    (snapshot) => {
+                        // Track upload progress if needed
+                    }, 
+                    (error) => {
+                        reject(error);
+                    }, 
+                    () => {
+                        uploadTask.snapshot.ref.getDownloadURL()
+                            .then(resolve)
+                            .catch(reject);
+                    }
+                );
+            });
+        }
+
+
+        // ----------------------------------------------------
+        // TAB 2: PHOTO GALLERY MANAGER
+        // ----------------------------------------------------
+        function toggleGallerySrcType() {
+            const val = document.querySelector('input[name="gallery-src-type"]:checked').value;
+            if (val === 'file') {
+                document.getElementById('gallery-file-container').classList.remove('hidden');
+                document.getElementById('gallery-url-container').classList.add('hidden');
+                document.getElementById('gallery-url').required = false;
+            } else {
+                document.getElementById('gallery-file-container').classList.add('hidden');
+                document.getElementById('gallery-url-container').classList.remove('hidden');
+                document.getElementById('gallery-url').required = true;
+            }
+        }
+
+        function updateGalleryBadgeDefaults() {
+            const cat = document.getElementById('gallery-category').value;
+            const badgeInput = document.getElementById('gallery-badgetext');
+            
+            // Pre-fill smart defaults for badges based on category selection
+            if (cat === 'events') badgeInput.value = 'Event';
+            else if (cat === 'london') badgeInput.value = 'London 2026';
+            else if (cat === 'dignitaries') badgeInput.value = 'Dignitary';
+            else if (cat === 'covers') badgeInput.value = 'Magazine';
+        }
+
+        function loadGallery() {
+            db.collection('vishwaleader_gallery')
+                .orderBy('createdAt', 'desc')
+                .get()
+                .then((snapshot) => {
+                    galleryData = [];
+                    snapshot.forEach((doc) => {
+                        galleryData.push({
+                            id: doc.id,
+                            ...doc.data()
+                        });
+                    });
+                    renderGalleryList();
+                })
+                .catch((err) => {
+                    console.error("Error loading gallery:", err);
+                });
+        }
+
+        function renderGalleryList() {
+            const searchVal = document.getElementById('gallery-search').value.toLowerCase().trim();
+            const body = document.getElementById('gallery-list-body');
+            body.innerHTML = '';
+
+            const filtered = galleryData.filter(item => {
+                return item.title.toLowerCase().includes(searchVal) || 
+                       item.description.toLowerCase().includes(searchVal) ||
+                       item.category.toLowerCase().includes(searchVal);
+            });
+
+            if (filtered.length === 0) {
+                document.getElementById('gallery-empty-state').classList.remove('hidden');
+                return;
+            } else {
+                document.getElementById('gallery-empty-state').classList.add('hidden');
+            }
+
+            filtered.forEach(item => {
+                // Category badge colors
+                let catClass = 'bg-slate-800 text-slate-300';
+                if (item.category === 'london') catClass = 'bg-indigo-900/40 text-indigo-400 border border-indigo-800/40';
+                else if (item.category === 'events') catClass = 'bg-emerald-900/40 text-emerald-400 border border-emerald-800/40';
+                else if (item.category === 'dignitaries') catClass = 'bg-amber-900/40 text-amber-400 border border-amber-800/40';
+                else if (item.category === 'covers') catClass = 'bg-rose-900/40 text-rose-400 border border-rose-800/40';
+
+                // Badges for featured/popular
+                let statusBadges = '';
+                if (item.featured) statusBadges += `<span class="bg-brandBlue/10 text-brandBlue border border-brandBlue/20 text-[9px] font-bold px-1.5 py-0.5 rounded mr-1">Featured</span>`;
+                if (item.popular) statusBadges += `<span class="bg-amber-500/10 text-amber-500 border border-amber-500/20 text-[9px] font-bold px-1.5 py-0.5 rounded">Popular</span>`;
+                if (!statusBadges) statusBadges = '<span class="text-slate-500 text-[10px]">-</span>';
+
+                const tr = document.createElement('tr');
+                tr.className = "border-b border-slate-850 hover:bg-slate-950/45 transition-colors";
+                tr.innerHTML = `
+                    <td class="py-4">
+                        <img src="${item.src}" alt="${item.title}" class="h-10 w-14 object-cover rounded-lg border border-slate-800 bg-slate-950" onerror="this.src='https://placehold.co/120x80/0f172a/ffffff?text=Image'">
+                    </td>
+                    <td class="py-4 pl-4 pr-2">
+                        <div class="font-bold text-slate-100 truncate max-w-xs">${item.title}</div>
+                        <div class="text-[10px] text-slate-500 flex items-center gap-1.5 mt-0.5">
+                            <span><i class="fa-solid fa-calendar-day mr-0.5"></i> ${item.date || '-'}</span>
+                            <span>&bull;</span>
+                            <span><i class="fa-solid fa-location-dot mr-0.5"></i> ${item.location || '-'}</span>
+                        </div>
+                    </td>
+                    <td class="py-4">
+                        <span class="text-[9px] font-extrabold uppercase tracking-wide px-2 py-0.5 rounded-full ${catClass}">${item.category}</span>
+                    </td>
+                    <td class="py-4">
+                        <div class="flex items-center">${statusBadges}</div>
+                    </td>
+                    <td class="py-4 text-right">
+                        <div class="flex justify-end gap-2">
+                            <button onclick="editPhoto('${item.id}')" class="text-brandBlue hover:text-blue-400 p-1 px-2 border border-slate-800 hover:border-brandBlue/30 bg-slate-950/40 rounded-lg transition-all" title="Edit details">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </button>
+                            <button onclick="deletePhoto('${item.id}')" class="text-rose-500 hover:text-rose-450 p-1 px-2 border border-slate-800 hover:border-rose-900/30 bg-slate-950/40 rounded-lg transition-all" title="Delete photo">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                body.appendChild(tr);
+            });
+        }
+
+        async function handleSavePhoto(event) {
+            event.preventDefault();
+            const submitBtn = document.getElementById('gallery-submit-btn');
+            const editId = document.getElementById('gallery-edit-id').value;
+            
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> Saving...';
+
+            try {
+                let imgUrl = '';
+                const srcType = document.querySelector('input[name="gallery-src-type"]:checked').value;
+                
+                if (srcType === 'file') {
+                    const fileInput = document.getElementById('gallery-file');
+                    if (fileInput.files.length > 0) {
+                        const file = fileInput.files[0];
+                        const path = `gallery_photos/${Date.now()}_${file.name}`;
+                        imgUrl = await uploadFilePromise(file, path);
+                    } else if (editId) {
+                        // Keep current URL if editing
+                        const existing = galleryData.find(x => x.id === editId);
+                        imgUrl = existing ? existing.src : '';
+                    } else {
+                        throw new Error("Please select an image file to upload.");
+                    }
+                } else {
+                    imgUrl = document.getElementById('gallery-url').value.trim();
+                    if (!imgUrl) throw new Error("Please enter an image path or URL.");
+                }
+
+                // Determine badge class dynamically based on category
+                const cat = document.getElementById('gallery-category').value;
+                let badgeClass = 'badge bg-primary';
+                if (cat === 'london') badgeClass = 'badge bg-info';
+                else if (cat === 'events') badgeClass = 'badge bg-success';
+                else if (cat === 'dignitaries') badgeClass = 'badge bg-warning text-dark';
+                else if (cat === 'covers') badgeClass = 'badge bg-danger';
+
+                const photoData = {
+                    title: document.getElementById('gallery-title').value.trim(),
+                    description: document.getElementById('gallery-description').value.trim(),
+                    date: document.getElementById('gallery-date').value.trim(),
+                    location: document.getElementById('gallery-location').value.trim(),
+                    category: cat,
+                    badgetext: document.getElementById('gallery-badgetext').value.trim(),
+                    badgeclass: badgeClass,
+                    src: imgUrl,
+                    featured: document.getElementById('gallery-featured').checked,
+                    popular: document.getElementById('gallery-popular').checked,
+                    createdAt: editId ? (galleryData.find(x => x.id === editId)?.createdAt || firebase.firestore.FieldValue.serverTimestamp()) : firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                if (editId) {
+                    await db.collection('vishwaleader_gallery').doc(editId).set(photoData);
+                    showToast("Photo updated successfully!");
+                } else {
+                    await db.collection('vishwaleader_gallery').add(photoData);
+                    showToast("Photo uploaded and added to gallery catalog!");
+                }
+
+                resetGalleryForm();
+                loadGallery();
+            } catch (err) {
+                console.error("Save photo error:", err);
+                showToast("Failed to save photo: " + err.message, true);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Save Photo';
+            }
+        }
+
+        function editPhoto(id) {
+            const photo = galleryData.find(item => item.id === id);
+            if (!photo) return;
+
+            // Switch form header
+            document.getElementById('gallery-form-title').innerText = "Edit Photo Details";
+            document.getElementById('gallery-edit-id').value = photo.id;
+
+            // Fill text fields
+            document.getElementById('gallery-title').value = photo.title;
+            document.getElementById('gallery-description').value = photo.description;
+            document.getElementById('gallery-date').value = photo.date;
+            document.getElementById('gallery-location').value = photo.location;
+            document.getElementById('gallery-category').value = photo.category;
+            document.getElementById('gallery-badgetext').value = photo.badgetext;
+
+            // Toggle source type radio & text input
+            document.querySelector('input[name="gallery-src-type"][value="url"]').checked = true;
+            toggleGallerySrcType();
+            document.getElementById('gallery-url').value = photo.src;
+
+            // Checkboxes
+            document.getElementById('gallery-featured').checked = photo.featured || false;
+            document.getElementById('gallery-popular').checked = photo.popular || false;
+
+            // Scroll form into view if responsive
+            document.getElementById('gallery-form').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function deletePhoto(id) {
+            if (!confirm("Are you sure you want to delete this photo from the gallery? This action is permanent.")) return;
+            
+            db.collection('vishwaleader_gallery').doc(id).delete()
+                .then(() => {
+                    showToast("Photo deleted successfully.");
+                    loadGallery();
+                })
+                .catch((err) => {
+                    console.error("Delete photo error:", err);
+                    showToast("Failed to delete photo: " + err.message, true);
+                });
+        }
+
+        function resetGalleryForm() {
+            document.getElementById('gallery-form-title').innerText = "Add New Photo";
+            document.getElementById('gallery-edit-id').value = '';
+            document.getElementById('gallery-form').reset();
+            document.querySelector('input[name="gallery-src-type"][value="file"]').checked = true;
+            toggleGallerySrcType();
+        }
+
+
+        // ----------------------------------------------------
+        // TAB 3: PDF DOCUMENT & COVER ARCHIVES MANAGER
+        // ----------------------------------------------------
+        function toggleArchiveFields() {
+            const type = document.getElementById('archives-type').value;
+            if (type === 'pdf') {
+                document.getElementById('archives-pdf-fields').classList.remove('hidden');
+                document.getElementById('archives-cover-fields').classList.add('hidden');
+            } else {
+                document.getElementById('archives-pdf-fields').classList.add('hidden');
+                document.getElementById('archives-cover-fields').classList.remove('hidden');
+            }
+        }
+
+        function togglePdfSrcType() {
+            const val = document.querySelector('input[name="pdf-src-type"]:checked').value;
+            if (val === 'file') {
+                document.getElementById('pdf-file-container').classList.remove('hidden');
+                document.getElementById('pdf-url-container').classList.add('hidden');
+                document.getElementById('pdf-url').required = false;
+            } else {
+                document.getElementById('pdf-file-container').classList.add('hidden');
+                document.getElementById('pdf-url-container').classList.remove('hidden');
+                document.getElementById('pdf-url').required = true;
+            }
+        }
+
+        function toggleCoverSrcType() {
+            const val = document.querySelector('input[name="cover-src-type"]:checked').value;
+            if (val === 'file') {
+                document.getElementById('cover-file-container').classList.remove('hidden');
+                document.getElementById('cover-url-container').classList.add('hidden');
+                document.getElementById('cover-url').required = false;
+            } else {
+                document.getElementById('cover-file-container').classList.add('hidden');
+                document.getElementById('cover-url-container').classList.remove('hidden');
+                document.getElementById('cover-url').required = true;
+            }
+        }
+
+        function loadArchives() {
+            db.collection('vishwaleader_archives')
+                .orderBy('createdAt', 'desc')
+                .get()
+                .then((snapshot) => {
+                    archivesData = [];
+                    snapshot.forEach((doc) => {
+                        archivesData.push({
+                            id: doc.id,
+                            ...doc.data()
+                        });
+                    });
+                    renderArchivesList();
+                })
+                .catch((err) => {
+                    console.error("Error loading archives:", err);
+                });
+        }
+
+        function renderArchivesList() {
+            const searchVal = document.getElementById('archives-search').value.toLowerCase().trim();
+            const body = document.getElementById('archives-list-body');
+            body.innerHTML = '';
+
+            const filtered = archivesData.filter(item => {
+                return item.title.toLowerCase().includes(searchVal) || 
+                       (item.desc || '').toLowerCase().includes(searchVal) ||
+                       item.type.toLowerCase().includes(searchVal);
+            });
+
+            if (filtered.length === 0) {
+                document.getElementById('archives-empty-state').classList.remove('hidden');
+                return;
+            } else {
+                document.getElementById('archives-empty-state').classList.add('hidden');
+            }
+
+            filtered.forEach(item => {
+                const isPdf = item.type === 'pdf';
+                const typeLabel = isPdf ? 
+                    `<span class="text-[9px] font-extrabold uppercase tracking-wide px-2 py-0.5 rounded-full bg-rose-900/40 text-rose-400 border border-rose-800/40"><i class="fa-solid fa-file-pdf mr-1"></i>PDF Doc</span>` : 
+                    `<span class="text-[9px] font-extrabold uppercase tracking-wide px-2 py-0.5 rounded-full bg-indigo-900/40 text-indigo-400 border border-indigo-800/40"><i class="fa-solid fa-book-open mr-1"></i>Cover</span>`;
+
+                const fileInfo = isPdf ? (item.file || '-') : (item.src || '-');
+                const detailsLabel = isPdf ? (item.size || '-') : (item.desc || '-');
+
+                const tr = document.createElement('tr');
+                tr.className = "border-b border-slate-855 hover:bg-slate-950/45 transition-colors";
+                tr.innerHTML = `
+                    <td class="py-4">
+                        ${typeLabel}
+                    </td>
+                    <td class="py-4 pl-4 pr-2">
+                        <div class="font-bold text-slate-100 truncate max-w-xs">${item.title}</div>
+                    </td>
+                    <td class="py-4 pl-4 pr-2">
+                        <div class="text-[10px] text-slate-400 font-mono truncate max-w-[200px]">${fileInfo}</div>
+                    </td>
+                    <td class="py-4">
+                        <span class="text-slate-300 font-medium">${detailsLabel}</span>
+                    </td>
+                    <td class="py-4 text-right">
+                        <div class="flex justify-end gap-2">
+                            <button onclick="editArchive('${item.id}')" class="text-brandBlue hover:text-blue-400 p-1 px-2 border border-slate-800 hover:border-brandBlue/30 bg-slate-950/40 rounded-lg transition-all" title="Edit archive details">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </button>
+                            <button onclick="deleteArchive('${item.id}')" class="text-rose-500 hover:text-rose-455 p-1 px-2 border border-slate-800 hover:border-rose-900/30 bg-slate-950/40 rounded-lg transition-all" title="Delete item">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                body.appendChild(tr);
+            });
+        }
+
+        async function handleSaveArchive(event) {
+            event.preventDefault();
+            const submitBtn = document.getElementById('archives-submit-btn');
+            const editId = document.getElementById('archives-edit-id').value;
+            const type = document.getElementById('archives-type').value;
+            
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> Saving...';
+
+            try {
+                const archiveData = {
+                    type: type,
+                    title: document.getElementById('archives-title').value.trim(),
+                    createdAt: editId ? (archivesData.find(x => x.id === editId)?.createdAt || firebase.firestore.FieldValue.serverTimestamp()) : firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                if (type === 'pdf') {
+                    let pdfPath = '';
+                    const srcType = document.querySelector('input[name="pdf-src-type"]:checked').value;
+
+                    if (srcType === 'file') {
+                        const fileInput = document.getElementById('pdf-file');
+                        if (fileInput.files.length > 0) {
+                            const file = fileInput.files[0];
+                            const path = `archive_pdfs/${Date.now()}_${file.name}`;
+                            pdfPath = await uploadFilePromise(file, path);
+                        } else if (editId) {
+                            const existing = archivesData.find(x => x.id === editId);
+                            pdfPath = existing ? existing.file : '';
+                        } else {
+                            throw new Error("Please select a PDF file to upload.");
+                        }
+                    } else {
+                        pdfPath = document.getElementById('pdf-url').value.trim();
+                        if (!pdfPath) throw new Error("Please enter a file name or path.");
+                    }
+
+                    archiveData.file = pdfPath;
+                    archiveData.desc = document.getElementById('archives-desc').value.trim();
+                    archiveData.size = document.getElementById('archives-size').value.trim() || 'N/A';
+                } else {
+                    // magazine cover
+                    let coverPath = '';
+                    const srcType = document.querySelector('input[name="cover-src-type"]:checked').value;
+
+                    if (srcType === 'file') {
+                        const fileInput = document.getElementById('cover-file');
+                        if (fileInput.files.length > 0) {
+                            const file = fileInput.files[0];
+                            const path = `magazine_covers/${Date.now()}_${file.name}`;
+                            coverPath = await uploadFilePromise(file, path);
+                        } else if (editId) {
+                            const existing = archivesData.find(x => x.id === editId);
+                            coverPath = existing ? existing.src : '';
+                        } else {
+                            throw new Error("Please select an image file for the magazine cover.");
+                        }
+                    } else {
+                        coverPath = document.getElementById('cover-url').value.trim();
+                        if (!coverPath) throw new Error("Please enter a cover image filename or URL.");
+                    }
+
+                    archiveData.src = coverPath;
+                    // For magazine covers, the design expects description to store the issue date text (e.g. Dec 2009)
+                    archiveData.desc = document.getElementById('archives-date').value.trim();
+                }
+
+                if (editId) {
+                    await db.collection('vishwaleader_archives').doc(editId).set(archiveData);
+                    showToast("Archive item updated successfully!");
+                } else {
+                    await db.collection('vishwaleader_archives').add(archiveData);
+                    showToast("Archive item added to database!");
+                }
+
+                resetArchivesForm();
+                loadArchives();
+            } catch (err) {
+                console.error("Save archive error:", err);
+                showToast("Failed to save archive item: " + err.message, true);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Save Archive';
+            }
+        }
+
+        function editArchive(id) {
+            const item = archivesData.find(x => x.id === id);
+            if (!item) return;
+
+            document.getElementById('archives-form-title').innerText = "Edit Archive Details";
+            document.getElementById('archives-edit-id').value = item.id;
+            document.getElementById('archives-title').value = item.title;
+            
+            document.getElementById('archives-type').value = item.type;
+            toggleArchiveFields();
+
+            if (item.type === 'pdf') {
+                document.getElementById('archives-desc').value = item.desc || '';
+                document.getElementById('archives-size').value = item.size || '';
+                
+                document.querySelector('input[name="pdf-src-type"][value="url"]').checked = true;
+                togglePdfSrcType();
+                document.getElementById('pdf-url').value = item.file || '';
+            } else {
+                document.getElementById('archives-date').value = item.desc || ''; // date stores in desc field
+                
+                document.querySelector('input[name="cover-src-type"][value="url"]').checked = true;
+                toggleCoverSrcType();
+                document.getElementById('cover-url').value = item.src || '';
+            }
+
+            document.getElementById('archives-form').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function deleteArchive(id) {
+            if (!confirm("Are you sure you want to delete this archive item? This action is permanent.")) return;
+
+            db.collection('vishwaleader_archives').doc(id).delete()
+                .then(() => {
+                    showToast("Archive item deleted.");
+                    loadArchives();
+                })
+                .catch((err) => {
+                    console.error("Delete archive error:", err);
+                    showToast("Failed to delete archive item: " + err.message, true);
+                });
+        }
+
+        function resetArchivesForm() {
+            document.getElementById('archives-form-title').innerText = "Add Archive Item";
+            document.getElementById('archives-edit-id').value = '';
+            document.getElementById('archives-form').reset();
+            
+            document.querySelector('input[name="pdf-src-type"][value="file"]').checked = true;
+            togglePdfSrcType();
+            
+            document.querySelector('input[name="cover-src-type"][value="file"]').checked = true;
+            toggleCoverSrcType();
+            
+            toggleArchiveFields();
+        }
+
+        // ----------------------------------------------------
+        // TOAST ALERTS
+        // ----------------------------------------------------
         function showToast(message, isError = false) {
             const toast = document.getElementById('toast');
             const icon = document.getElementById('toast-icon');
@@ -555,7 +1501,7 @@
 
             msg.textContent = message;
             if (isError) {
-                toast.className = "fixed bottom-6 right-6 z-50 bg-rose-500 border border-rose-400 text-white text-xs font-bold px-6 py-3.5 rounded-xl shadow-2xl transition-all duration-300 opacity-100 flex items-center gap-2";
+                toast.className = "fixed bottom-6 right-6 z-50 bg-rose-500 border border-rose-450 text-white text-xs font-bold px-6 py-3.5 rounded-xl shadow-2xl transition-all duration-300 opacity-100 flex items-center gap-2";
                 icon.className = "fa-solid fa-circle-exclamation text-sm";
             } else {
                 toast.className = "fixed bottom-6 right-6 z-50 bg-emerald-500 border border-emerald-400 text-white text-xs font-bold px-6 py-3.5 rounded-xl shadow-2xl transition-all duration-300 opacity-100 flex items-center gap-2";
@@ -565,7 +1511,7 @@
             setTimeout(() => {
                 toast.classList.add('opacity-0');
                 toast.classList.remove('opacity-100');
-            }, 3000);
+            }, 3500);
         }
     </script>
 </body>

@@ -123,11 +123,12 @@
                 <a href="index.html#conference" class="hover:text-white transition-colors">SOAS Conference</a>
                 <a href="index.html#events" class="hover:text-white transition-colors">Events</a>
                 <a href="archives.html" class="hover:text-white transition-colors">Archive</a>
+                <a href="member.html" class="text-brandBlue hover:text-brandBlue/80 transition-colors flex items-center gap-1"><i class="fa-solid fa-users-rectangle text-xs"></i> Member Portal</a>
             </nav>
 
             <!-- Search bar (Right) -->
             <div class="relative w-44 sm:w-60 shrink-0">
-                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-450">
+                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-455">
                     <i class="fa-solid fa-magnifying-glass text-xs"></i>
                 </span>
                 <input type="text" id="gallery-search" oninput="searchGrid()" placeholder="Search archives..." class="w-full bg-slate-900/60 border border-borderDark focus:border-brandBlue focus:ring-1 focus:ring-brandBlue text-xs rounded-full pl-9 pr-4 py-2 outline-none text-slate-200 transition-all placeholder:text-slate-500">
@@ -145,6 +146,7 @@
             <a href="index.html#conference" class="block py-2 text-sm font-semibold text-slate-400 hover:text-white">SOAS Conference</a>
             <a href="index.html#events" class="block py-2 text-sm font-semibold text-slate-400 hover:text-white">Events</a>
             <a href="archives.html" class="block py-2 text-sm font-semibold text-slate-400 hover:text-white">Archive</a>
+            <a href="member.html" class="block py-2 text-sm font-semibold text-brandBlue hover:text-brandBlue/85"><i class="fa-solid fa-users-rectangle text-xs mr-1"></i> Member Portal</a>
             <a href="index.html#contact" class="block py-2 text-sm font-semibold text-slate-400 hover:text-white">Contact Us</a>
         </div>
     </header>
@@ -306,9 +308,23 @@
 
     <!-- JS Functionality -->
     <script>
+        // Initialize Firebase (for sync configurations)
+        const firebaseConfig = {
+            apiKey: "AIzaSyDn57R2oX8KINPOnwI2TTG2wpMGxdurY4o",
+            authDomain: "ebooklabs.firebaseapp.com",
+            projectId: "ebooklabs",
+            storageBucket: "ebooklabs.firebasestorage.app",
+            messagingSenderId: "872644278150",
+            appId: "1:872644278150:web:cdbc149ebac592a05fde07",
+            measurementId: "G-66VFZ22PKV"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
         // Mobile Navigation Toggle
         const menuBtn = document.getElementById('menuBtn');
         const mobileMenu = document.getElementById('mobileMenu');
+
 
         menuBtn.addEventListener('click', () => {
             const isOpen = !mobileMenu.classList.contains('max-h-0');
@@ -904,29 +920,45 @@
                 }
             } catch (err) {
                 console.warn('WordPress API failed. Using local fallback items.', err);
-            } finally {
-                if (loader) loader.classList.add('hidden');
-                
-                // Initialize default tab ('recent')
-                switchTab('recent');
             }
+
+            // Fetch dynamic uploads from Firestore
+            try {
+                const fsSnapshot = await db.collection('vishwaleader_gallery').get();
+                if (!fsSnapshot.empty) {
+                    const fsMedia = [];
+                    fsSnapshot.forEach(doc => {
+                        const data = doc.data();
+                        fsMedia.push({
+                            src: data.src,
+                            alt: data.alt || data.title,
+                            title: data.title,
+                            description: data.description || data.desc || '',
+                            date: data.date || '',
+                            location: data.location || '',
+                            category: data.category || 'events',
+                            badgeClass: data.badgeClass || (data.category === 'london' ? 'bg-brandBlue' : (data.category === 'covers' ? 'bg-purple-600' : 'bg-emerald-600')),
+                            badgeText: data.badgeText || (data.category === 'london' ? 'London Summit' : (data.category === 'covers' ? 'Cover' : 'Photo')),
+                            featured: data.featured || false,
+                            popular: data.popular || false
+                        });
+                    });
+                    if (fsMedia.length > 0) {
+                        // Prepend custom photos so they show first
+                        allMediaCatalog = [...fsMedia, ...allMediaCatalog];
+                    }
+                }
+            } catch (fsErr) {
+                console.warn("Firestore gallery load failed, using other sources only:", fsErr);
+            }
+
+            if (loader) loader.classList.add('hidden');
+            // Initialize default tab ('recent')
+            switchTab('recent');
         }
 
-        // Initialize Firebase (for sync configurations)
-        const firebaseConfig = {
-            apiKey: "AIzaSyDn57R2oX8KINPOnwI2TTG2wpMGxdurY4o",
-            authDomain: "ebooklabs.firebaseapp.com",
-            projectId: "ebooklabs",
-            storageBucket: "ebooklabs.firebasestorage.app",
-            messagingSenderId: "872644278150",
-            appId: "1:872644278150:web:cdbc149ebac592a05fde07",
-            measurementId: "G-66VFZ22PKV"
-        };
 
         try {
-            firebase.initializeApp(firebaseConfig);
-            const db = firebase.firestore();
-
             db.collection('vishwaleader_config').doc('settings').onSnapshot((doc) => {
                 if (doc.exists) {
                     const data = doc.data();

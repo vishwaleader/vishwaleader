@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Member Portal | Vishwa Leader</title>
+    <meta name="description" content="Official portal of Vishwa Leader Member Network - connect with diaspora, download publications, and register papers for the SOAS London Summit.">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;950&family=Outfit:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <!-- FontAwesome Iconography -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Firebase SDK Compat -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brandBlue: '#0056CA',     // Ambedkar Blue
+                        brandDark: '#0A1E4B',     // Deep Navy
+                        accentGold: '#D4AF37',    // Gold
+                        bgGray: '#F8FAFC'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Outfit', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F8FAFC;
+        }
+        .font-display {
+            font-family: 'Outfit', sans-serif;
+        }
+        /* Custom Premium Glows */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+        .glow-card {
+            box-shadow: 0 0 40px -10px rgba(0, 86, 202, 0.15);
+        }
+    </style>
+</head>
+
+<body class="selection:bg-brandBlue/10 selection:text-brandBlue min-h-screen flex flex-col antialiased">
+
+    <!-- Call for Articles Banner -->
+    <div class="bg-brandBlue text-white py-3 px-4 text-center border-b border-white/10 text-xs tracking-wide font-semibold relative z-50">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6">
+            <span class="flex items-center gap-1.5"><i class="fa-solid fa-graduation-cap"></i> SOAS London Conference Member Portal</span>
+            <span class="hidden sm:inline text-white/30">|</span>
+            <span class="flex items-center gap-1.5 text-amber-300"><i class="fa-solid fa-crown text-xs"></i> Join Global Ambedkarite Networks</span>
+        </div>
+    </div>
+
+    <!-- Navigation Header -->
+    <header class="bg-white/80 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <a href="index.html" class="group flex items-center gap-3">
+                    <img src="wp-content/uploads/2025/02/Vishwa_Leader_Logo-removebg-preview-e1738584466936.png" 
+                         alt="Vishwa Leader Logo" 
+                         class="h-12 w-auto object-contain transition-transform group-hover:scale-105" 
+                         onerror="this.src='https://i0.wp.com/vishwaleader.com/wp-content/uploads/2025/02/Vishwa_Leader_Logo-removebg-preview-e1738584466936.png?fit=250%2C142&ssl=1'" />
+                    <span class="text-[10px] font-black tracking-widest text-brandBlue uppercase border border-brandBlue/20 px-2 py-0.5 rounded bg-brandBlue/5">
+                        Techmedia
+                    </span>
+                </a>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-600">
+                <a href="index.html" class="hover:text-brandBlue transition-colors">Home</a>
+                <a href="gallery.html" class="hover:text-brandBlue transition-colors">Gallery</a>
+                <a href="archives.html" class="hover:text-brandBlue transition-colors">Archive</a>
+                <div id="header-user-badge" class="hidden flex items-center gap-3 border-l border-slate-200 pl-6">
+                    <span id="header-username" class="text-xs font-bold text-slate-700">Member</span>
+                    <button onclick="handleSignOut()" class="text-xs bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg text-rose-500 font-bold transition-all uppercase tracking-wider flex items-center gap-1.5">
+                        <i class="fa-solid fa-sign-out-alt"></i> Out
+                    </button>
+                </div>
+            </nav>
+
+            <!-- Mobile Hamburger Menu Button -->
+            <button id="menuBtn" class="md:hidden text-slate-800 hover:text-brandBlue text-xl focus:outline-none" aria-label="Toggle Menu">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+        </div>
+
+        <!-- Mobile Navigation Menu -->
+        <div id="mobileMenu" class="md:hidden max-h-0 opacity-0 overflow-hidden transition-all duration-300 ease-in-out bg-white border-t border-slate-200 px-6 space-y-3 shadow-inner">
+            <a href="index.html" class="block py-2 text-sm font-semibold text-slate-700 hover:text-brandBlue">Home</a>
+            <a href="gallery.html" class="block py-2 text-sm font-semibold text-slate-700 hover:text-brandBlue">Gallery</a>
+            <a href="archives.html" class="block py-2 text-sm font-semibold text-slate-700 hover:text-brandBlue">Archive</a>
+            <div id="mobile-user-badge" class="hidden border-t border-slate-100 pt-3 pb-2 space-y-2">
+                <div class="text-xs font-bold text-slate-800" id="mobile-username">Member</div>
+                <button onclick="handleSignOut()" class="w-full text-center bg-rose-500 text-white py-2 rounded text-xs font-bold tracking-wide uppercase">Sign Out</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-7xl w-full mx-auto px-6 py-12 flex flex-col justify-center items-center">
+        <!-- Auth Loader -->
+        <div id="auth-spinner" class="flex flex-col items-center gap-4 py-20">
+            <i class="fa-solid fa-circle-notch animate-spin text-4xl text-brandBlue"></i>
+            <p class="text-xs text-slate-500 font-bold uppercase tracking-wider">Verifying Membership Session...</p>
+        </div>
+
+        <!-- Unauthenticated View: Sign In / Registration Options -->
+        <div id="login-card" class="hidden max-w-lg w-full bg-white border border-slate-200/80 rounded-3xl p-8 md:p-10 shadow-xl glow-card text-center space-y-8">
+            <div class="w-20 h-20 rounded-full bg-brandBlue/5 border border-brandBlue/10 flex items-center justify-center text-brandBlue text-3xl mx-auto shadow-inner">
+                <i class="fa-solid fa-users-rectangle"></i>
+            </div>
+            
+            <div class="space-y-2.5">
+                <span class="text-[9px] font-extrabold uppercase tracking-widest text-brandBlue border border-brandBlue/20 px-3 py-1 rounded-full bg-brandBlue/5">
+                    Vishwa Leader Network
+                </span>
+                <h2 class="font-display text-2xl font-black text-slate-900 uppercase tracking-tight">Become a Digital Member</h2>
+                <p class="text-xs text-slate-500 leading-relaxed max-w-sm mx-auto">Access direct downloads of Vishwa Leader publications, manage your attendee profile for the SOAS London Summit, and submit academic paper drafts.</p>
+            </div>
+
+            <!-- Login tabs -->
+            <div class="flex border-b border-slate-200 justify-center gap-6">
+                <button onclick="switchLoginTab('google')" id="tab-btn-google" class="pb-2 text-xs font-extrabold uppercase tracking-wider text-brandBlue border-b-2 border-brandBlue transition-all">Google Sign-in</button>
+                <button onclick="switchLoginTab('email')" id="tab-btn-email" class="pb-2 text-xs font-bold uppercase tracking-wider text-slate-400 border-b-2 border-transparent transition-all">Email Account</button>
+            </div>
+
+            <!-- Google Authentication Option -->
+            <div id="login-google-section" class="space-y-4">
+                <button onclick="handleGoogleSignIn()" class="w-full bg-slate-950 hover:bg-slate-900 text-white font-bold py-4 rounded-xl transition-all shadow-md flex items-center justify-center gap-3 text-xs uppercase tracking-wider">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24">
+                        <path fill="#EA4335" d="M12 5.04c1.67 0 3.2.58 4.38 1.69l3.27-3.27C17.67 1.54 15.02 1 12 1 7.35 1 3.4 3.65 1.5 7.5l3.86 3C6.31 7.37 9 5.04 12 5.04z"/>
+                        <path fill="#4285F4" d="M23.49 12.27c0-.81-.07-1.59-.2-2.36H12v4.51h6.46c-.29 1.48-1.14 2.73-2.42 3.57v2.96h3.9c2.28-2.1 3.55-5.19 3.55-8.68z"/>
+                        <path fill="#FBBC05" d="M5.36 14.5c-.24-.72-.38-1.49-.38-2.3s.14-1.58.38-2.3L1.5 6.9C.55 8.79 0 10.9 0 13.1c0 2.2.55 4.31 1.5 6.2l3.86-2.8z"/>
+                        <path fill="#34A853" d="M12 23c3.24 0 5.97-1.07 7.96-2.91l-3.9-2.96c-1.08.72-2.47 1.16-4.06 1.16-3 0-5.69-2.33-6.64-5.46L1.5 15.69C3.4 19.54 7.35 23 12 23z"/>
+                    </svg>
+                    Continue with Google
+                </button>
+                <div class="text-[10px] text-slate-400">Recommended for instant, passwordless setup.</div>
+            </div>
+
+            <!-- Email Registration & Sign-in Option -->
+            <form id="login-email-section" onsubmit="handleEmailAuth(event)" class="hidden space-y-4 text-left">
+                <div class="space-y-1.5">
+                    <label class="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Email Address</label>
+                    <input type="email" id="member-email" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-brandBlue focus:bg-white transition-all" required>
+                </div>
+                <div class="space-y-1.5">
+                    <label class="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Password</label>
+                    <input type="password" id="member-password" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-brandBlue focus:bg-white transition-all" placeholder="At least 6 characters" required>
+                </div>
+                
+                <div class="flex items-center gap-4 text-xs font-bold uppercase tracking-wider pt-2">
+                    <button type="submit" id="email-submit-btn" class="flex-grow bg-brandBlue hover:bg-brandBlue/90 text-white py-3 rounded-xl transition-all shadow-md text-[10px]">
+                        Sign In / Register
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Authenticated View: Member Dashboard -->
+        <div id="member-dashboard" class="hidden w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            
+            <!-- Left Panel: Profile and ID Card (4 cols) -->
+            <div class="lg:col-span-4 space-y-8">
+                
+                <!-- Premium Member ID Card Widget -->
+                <div class="relative overflow-hidden bg-brandDark text-white rounded-3xl p-6 shadow-2xl border border-slate-900 aspect-[1.586/1] w-full flex flex-col justify-between group select-none">
+                    <!-- Subtle ambient glows -->
+                    <div class="absolute -top-24 -left-24 w-48 h-48 rounded-full bg-brandBlue/20 blur-3xl pointer-events-none transition-all group-hover:scale-125"></div>
+                    <div class="absolute -bottom-24 -right-24 w-48 h-48 rounded-full bg-amber-500/10 blur-3xl pointer-events-none transition-all group-hover:scale-125"></div>
+                    <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-white/[0.04] via-transparent to-transparent"></div>
+
+                    <!-- Card Header -->
+                    <div class="flex items-center justify-between border-b border-white/10 pb-4 relative z-10">
+                        <div class="flex items-center gap-2.5">
+                            <img src="wp-content/uploads/2025/02/Vishwa_Leader_Logo-removebg-preview-e1738584466936.png" class="h-6 w-auto brightness-0 invert" alt="Logo">
+                            <span class="text-[9px] font-black uppercase tracking-widest text-slate-350">Vishwa Leader</span>
+                        </div>
+                        <span class="text-[8px] font-black uppercase tracking-widest text-accentGold border border-accentGold/20 px-2 py-0.5 rounded bg-accentGold/5">
+                            Member Card
+                        </span>
+                    </div>
+
+                    <!-- Card Body -->
+                    <div class="flex gap-4 items-center my-4 relative z-10">
+                        <div class="relative">
+                            <img id="card-photo" src="https://placehold.co/150x150/0a1e4b/ffffff?text=User" class="w-16 h-16 rounded-xl object-cover border border-white/20 shadow-md bg-slate-900" alt="Profile">
+                            <div class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-emerald-500 border-2 border-brandDark flex items-center justify-center" title="Online Member"></div>
+                        </div>
+                        <div class="flex-grow space-y-1 overflow-hidden">
+                            <h3 id="card-name" class="font-display text-base font-extrabold leading-tight truncate">Full Name</h3>
+                            <p id="card-title" class="text-[10px] text-slate-300 font-medium truncate">Professional Title</p>
+                            <p id="card-country" class="text-[9px] text-slate-450 leading-none"><i class="fa-solid fa-earth-americas mr-0.5"></i> Country</p>
+                        </div>
+                    </div>
+
+                    <!-- Card Footer -->
+                    <div class="flex items-end justify-between border-t border-white/10 pt-4 relative z-10">
+                        <div class="space-y-0.5">
+                            <div class="text-[7px] font-bold text-slate-500 uppercase tracking-wider">Member Reference</div>
+                            <div id="card-id" class="text-[10px] font-mono font-bold text-accentGold">VL-2026-XXXX</div>
+                        </div>
+                        <div class="space-y-0.5 text-right">
+                            <div class="text-[7px] font-bold text-slate-500 uppercase tracking-wider">Member Since</div>
+                            <div id="card-since" class="text-[10px] font-mono font-bold text-slate-300">Jun 30, 2026</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Profile Information Card -->
+                <div class="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-md space-y-4">
+                    <div class="flex items-center gap-2 border-b border-slate-100 pb-3 mb-2">
+                        <i class="fa-solid fa-id-card text-brandBlue text-sm"></i>
+                        <h3 class="font-display text-xs font-bold text-slate-800 uppercase tracking-wider">Membership Profile</h3>
+                    </div>
+                    
+                    <form id="profile-form" onsubmit="handleSaveProfile(event)" class="space-y-4">
+                        <!-- Profile Pic -->
+                        <div class="space-y-1.5">
+                            <label class="text-[9px] font-bold text-slate-500 uppercase tracking-wider block">Avatar Photo</label>
+                            <div class="flex items-center gap-3">
+                                <input type="file" id="profile-file-input" accept="image/*" class="hidden" onchange="previewAvatar(event)">
+                                <button type="button" onclick="document.getElementById('profile-file-input').click()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-4 py-2 rounded-lg border border-slate-200 transition-colors">
+                                    Choose Photo
+                                </button>
+                                <span id="profile-file-status" class="text-[10px] text-slate-400 italic">No file chosen</span>
+                            </div>
+                        </div>
+
+                        <!-- Designation / Title -->
+                        <div class="space-y-1.5">
+                            <label class="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Designation / Profession</label>
+                            <input type="text" id="profile-designation" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-brandBlue focus:bg-white" placeholder="e.g. Research Fellow" required>
+                        </div>
+
+                        <!-- Company / Organization -->
+                        <div class="space-y-1.5">
+                            <label class="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Organization / University</label>
+                            <input type="text" id="profile-organization" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-brandBlue focus:bg-white" placeholder="e.g. SOAS University of London" required>
+                        </div>
+
+                        <!-- Country & Phone -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="space-y-1.5">
+                                <label class="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Country</label>
+                                <input type="text" id="profile-country" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-brandBlue focus:bg-white" placeholder="e.g. United Kingdom" required>
+                            </div>
+                            <div class="space-y-1.5">
+                                <label class="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Phone</label>
+                                <input type="text" id="profile-phone" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-brandBlue focus:bg-white" placeholder="e.g. +44 7911 123456" required>
+                            </div>
+                        </div>
+
+                        <!-- Bio -->
+                        <div class="space-y-1.5">
+                            <label class="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Short Bio</label>
+                            <textarea id="profile-bio" rows="2" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-brandBlue focus:bg-white" placeholder="Introduce yourself to the global member registry..."></textarea>
+                        </div>
+
+                        <button type="submit" id="profile-save-btn" class="w-full bg-brandBlue hover:bg-brandBlue/90 text-white font-bold py-3 rounded-xl transition-all shadow text-xs uppercase tracking-wider">
+                            Save Profile Settings
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Right Panel: Publications, Summit Registration, Paper Submissions (8 cols) -->
+            <div class="lg:col-span-8 space-y-8">
+                
+                <!-- Section 1: Member Downloads (Publications & PDF Archives) -->
+                <div class="bg-white border border-slate-200/80 rounded-3xl p-6 md:p-8 shadow-md space-y-6">
+                    <div class="flex items-center gap-3 border-b border-slate-100 pb-4">
+                        <i class="fa-solid fa-cloud-arrow-down text-brandBlue text-lg"></i>
+                        <div>
+                            <h3 class="font-display text-sm font-bold text-slate-800 uppercase tracking-wide">Member Publications Vault</h3>
+                            <p class="text-[10px] text-slate-400">Access exclusive digital magazines, research books, and PDFs published by Vishwa Leader.</p>
+                        </div>
+                    </div>
+
+                    <!-- Grid of publication items -->
+                    <div id="publications-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Dynamic publication files loaded here -->
+                    </div>
+
+                    <!-- Empty state -->
+                    <div id="publications-empty" class="hidden text-center py-8 space-y-2">
+                        <i class="fa-solid fa-file-pdf text-xl text-slate-300"></i>
+                        <p class="text-[10px] text-slate-450 uppercase tracking-wider font-bold">No member publications currently in vault</p>
+                    </div>
+                </div>
+
+                <!-- Section 2: SOAS London Conference Submission Portal -->
+                <div class="bg-white border border-slate-200/80 rounded-3xl p-6 md:p-8 shadow-md space-y-6">
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+                        <div class="flex items-center gap-3">
+                            <i class="fa-solid fa-file-signature text-brandBlue text-lg"></i>
+                            <div>
+                                <h3 class="font-display text-sm font-bold text-slate-800 uppercase tracking-wide">SOAS Conference Submissions</h3>
+                                <p class="text-[10px] text-slate-400">Register abstracts, co-authors, and human rights papers for the upcoming London Summit.</p>
+                            </div>
+                        </div>
+                        <button onclick="toggleSubmissionForm()" id="new-sub-btn" class="bg-brandBlue/10 hover:bg-brandBlue/15 text-brandBlue font-bold px-4 py-2 rounded-xl transition-all text-[10px] uppercase tracking-wider flex items-center gap-1">
+                            <i class="fa-solid fa-plus"></i> New Draft
+                        </button>
+                    </div>
+
+                    <!-- Submission Form (Collapsed by default) -->
+                    <form id="submission-form" onsubmit="handleSaveSubmission(event)" class="hidden bg-slate-50 border border-slate-200 p-6 rounded-2xl space-y-4">
+                        <input type="hidden" id="submission-id" value="">
+                        
+                        <div class="space-y-1.5">
+                            <label class="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Paper / Abstract Title</label>
+                            <input type="text" id="sub-title" class="w-full bg-white border border-slate-250 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-brandBlue" placeholder="e.g. Reevaluating Constitutional Protections for Marginalized Communities" required>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="space-y-1.5">
+                                <label class="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Co-Authors (If Any)</label>
+                                <input type="text" id="sub-authors" class="w-full bg-white border border-slate-250 rounded-xl px-3 py-2.5 text-xs text-slate-800 focus:outline-none" placeholder="e.g. Prof. Jane Doe, Dr. Alice Smith">
+                            </div>
+                            <div class="space-y-1.5">
+                                <label class="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Conference Theme</label>
+                                <select id="sub-theme" class="w-full bg-white border border-slate-250 rounded-xl px-3 py-2.5 text-xs text-slate-800 focus:outline-none">
+                                    <option value="equality">Reimagining Equality and Justice</option>
+                                    <option value="empowerment">Diaspora Empowerment & Global Alliances</option>
+                                    <option value="constitutionalism">Constitutional Values & Human Rights</option>
+                                    <option value="representation">Inclusive Development & Economic Partnerships</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="space-y-1.5">
+                            <label class="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Abstract Description (Max 500 words)</label>
+                            <textarea id="sub-abstract" rows="4" class="w-full bg-white border border-slate-250 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-brandBlue" placeholder="Outline the thesis statement, research methods, and findings of your proposed presentation..." required></textarea>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+                            <div class="space-y-1.5">
+                                <label class="text-[9px] font-bold text-slate-500 uppercase tracking-wider block">Draft File (.pdf, .doc, .docx)</label>
+                                <div class="flex items-center gap-3">
+                                    <input type="file" id="sub-file-input" accept=".pdf,.doc,.docx" class="hidden" onchange="previewSubFile(event)">
+                                    <button type="button" onclick="document.getElementById('sub-file-input').click()" class="text-xs bg-white hover:bg-slate-50 text-slate-700 font-bold px-4 py-2.5 rounded-lg border border-slate-250 transition-colors">
+                                        Select File
+                                    </button>
+                                    <span id="sub-file-status" class="text-[10px] text-slate-405 italic truncate max-w-[150px]">No file selected</span>
+                                </div>
+                            </div>
+                            <div class="flex gap-2">
+                                <button type="submit" id="sub-save-btn" class="flex-grow bg-brandBlue hover:bg-brandBlue/90 text-white font-bold py-2.5 rounded-xl transition-all shadow text-[10px] uppercase tracking-wider">
+                                    Submit Registration
+                                </button>
+                                <button type="button" onclick="toggleSubmissionForm()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-4 py-2.5 rounded-xl transition-all text-[10px] uppercase tracking-wider">
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <!-- Active Submissions Table -->
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead>
+                                <tr class="border-b border-slate-100 text-slate-400 font-bold uppercase tracking-wider text-[9px]">
+                                    <th class="pb-3">Abstract Title</th>
+                                    <th class="pb-3 pl-4">Theme</th>
+                                    <th class="pb-3">Draft File</th>
+                                    <th class="pb-3">Status</th>
+                                    <th class="pb-3 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="submissions-list-body" class="divide-y divide-slate-100">
+                                <!-- Dynamic submissions loaded here -->
+                            </tbody>
+                        </table>
+
+                        <!-- Empty state -->
+                        <div id="submissions-empty" class="hidden text-center py-12 space-y-2">
+                            <i class="fa-solid fa-file-lines text-2xl text-slate-200"></i>
+                            <p class="text-[10px] text-slate-450 uppercase tracking-wider font-bold">No conference registrations submitted yet</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Floating status alerts toast -->
+    <div id="toast" class="fixed bottom-6 right-6 z-50 bg-emerald-500 border border-emerald-400 text-white text-xs font-bold px-6 py-3.5 rounded-xl shadow-2xl transition-all duration-300 opacity-0 pointer-events-none translate-y-2 flex items-center gap-2">
+        <i id="toast-icon" class="fa-solid fa-circle-check text-sm"></i>
+        <span id="toast-msg">Success!</span>
+    </div>
+
+    <!-- Corporate Footer -->
+    <footer class="bg-brandDark text-slate-400 py-12 border-t border-slate-900">
+        <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-12 gap-8 text-xs mb-8">
+            <div class="md:col-span-4 space-y-4">
+                <div class="flex items-center gap-3">
+                    <img src="wp-content/uploads/2025/02/Vishwa_Leader_Logo-removebg-preview-e1738584466936.png" class="h-10 w-auto brightness-0 invert" alt="Logo">
+                    <span class="text-[10px] font-black tracking-widest text-white uppercase border border-white/20 px-2 py-0.5 rounded bg-white/5">Member</span>
+                </div>
+                <p class="leading-relaxed text-slate-500">Connecting Ambedkarite intellectuals, entrepreneurs, and networks on a unified corporate and social platform.</p>
+            </div>
+
+            <div class="md:col-span-4 space-y-3">
+                <h4 class="font-display font-bold border-b border-slate-800 pb-2 text-[10px] text-slate-400 uppercase tracking-widest">
+                    Verification Registers
+                </h4>
+                <ul class="space-y-2.5">
+                    <li>
+                        <a href="https://prgi.gov.in" target="_blank" class="text-slate-400 hover:text-white transition-colors flex items-center gap-1">
+                            Press Registrar General of India Registry <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://tracxn.com/d/legal-entities/india/vishwa-leader-techmedia-private-limited/__jDthDz58Owry-yAaHPhKSuhVYScE1DyjR4IGLp2Bhz8" target="_blank" class="text-slate-400 hover:text-white transition-colors flex items-center gap-1">
+                            Ministry of Corporate Affairs Profile <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="md:col-span-4 space-y-3">
+                <h4 class="font-display font-bold border-b border-slate-800 pb-2 text-[10px] text-slate-400 uppercase tracking-widest">
+                    Registration Metadata
+                </h4>
+                <div class="bg-brandDark/50 border border-slate-800 p-4 rounded-xl space-y-2 text-[10px] font-mono text-slate-400">
+                    <p><span class="text-slate-600">CIN:</span> U74999MH2016PTC273606</p>
+                    <p><span class="text-slate-600">REG DATE:</span> February 29, 2016</p>
+                    <p><span class="text-slate-600">RNI REG:</span> MAHMAR/2009/34832</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="max-w-7xl mx-auto px-6 border-t border-slate-800 pt-8 text-center text-[10px] text-slate-500 font-normal">
+            <p>© 2026 Vishwa Leader Techmedia Private Limited. All Rights Reserved. Compiled under RNI & MCA guidelines.</p>
+        </div>
+    </footer>
+
+    <!-- Script Block -->
+    <script>
+        // Firebase Configuration (matching ebooklabs project)
+        const firebaseConfig = {
+            apiKey: "AIzaSyDn57R2oX8KINPOnwI2TTG2wpMGxdurY4o",
+            authDomain: "ebooklabs.firebaseapp.com",
+            projectId: "ebooklabs",
+            storageBucket: "ebooklabs.firebasestorage.app",
+            messagingSenderId: "872644278150",
+            appId: "1:872644278150:web:cdbc149ebac592a05fde07",
+            measurementId: "G-66VFZ22PKV"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        const storage = firebase.storage();
+
+        // State Variables
+        let memberData = null;
+        let publicationsList = [];
+        let submissionsList = [];
+        let currentAuthTab = 'google';
+        let subFileToUpload = null;
+        let avatarFileToUpload = null;
+
+        // Mobile Nav Hamburger Toggle
+        const menuBtn = document.getElementById('menuBtn');
+        const mobileMenu = document.getElementById('mobileMenu');
+        menuBtn.addEventListener('click', () => {
+            const isOpen = !mobileMenu.classList.contains('max-h-0');
+            if (isOpen) {
+                mobileMenu.classList.add('max-h-0', 'opacity-0');
+                mobileMenu.classList.remove('max-h-96', 'opacity-100', 'py-4');
+            } else {
+                mobileMenu.classList.remove('max-h-0', 'opacity-0');
+                mobileMenu.classList.add('max-h-96', 'opacity-100', 'py-4');
+            }
+        });
+
+        // Listen for Auth changes
+        auth.onAuthStateChanged((user) => {
+            document.getElementById('auth-spinner').classList.add('hidden');
+            if (user) {
+                // Show header badges
+                document.getElementById('header-user-badge').classList.remove('hidden');
+                document.getElementById('mobile-user-badge').classList.remove('hidden');
+                
+                const shortName = user.displayName || user.email.split('@')[0];
+                document.getElementById('header-username').textContent = shortName;
+                document.getElementById('mobile-username').textContent = shortName;
+
+                // Load Dashboard & Member profile
+                document.getElementById('login-card').classList.add('hidden');
+                document.getElementById('member-dashboard').classList.remove('hidden');
+                
+                loadMemberProfile(user);
+                loadPublications();
+                loadSubmissions(user);
+            } else {
+                // Hide header badges
+                document.getElementById('header-user-badge').classList.add('hidden');
+                document.getElementById('mobile-user-badge').classList.add('hidden');
+
+                // Show Login Screen
+                document.getElementById('login-card').classList.remove('hidden');
+                document.getElementById('member-dashboard').classList.add('hidden');
+            }
+        });
+
+        // Login Tabs Toggle
+        function switchLoginTab(tab) {
+            currentAuthTab = tab;
+            if (tab === 'google') {
+                document.getElementById('tab-btn-google').className = "pb-2 text-xs font-extrabold uppercase tracking-wider text-brandBlue border-b-2 border-brandBlue transition-all";
+                document.getElementById('tab-btn-email').className = "pb-2 text-xs font-bold uppercase tracking-wider text-slate-400 border-b-2 border-transparent transition-all";
+                document.getElementById('login-google-section').classList.remove('hidden');
+                document.getElementById('login-email-section').classList.add('hidden');
+            } else {
+                document.getElementById('tab-btn-google').className = "pb-2 text-xs font-bold uppercase tracking-wider text-slate-400 border-b-2 border-transparent transition-all";
+                document.getElementById('tab-btn-email').className = "pb-2 text-xs font-extrabold uppercase tracking-wider text-brandBlue border-b-2 border-brandBlue transition-all";
+                document.getElementById('login-google-section').classList.add('hidden');
+                document.getElementById('login-email-section').classList.remove('hidden');
+            }
+        }
+
+        // Authentication Handlers
+        function handleGoogleSignIn() {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider)
+                .then(() => showToast("Welcome back!"))
+                .catch(err => showToast(err.message, true));
+        }
+
+        function handleEmailAuth(event) {
+            event.preventDefault();
+            const email = document.getElementById('member-email').value.trim();
+            const password = document.getElementById('member-password').value;
+            const submitBtn = document.getElementById('email-submit-btn');
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner animate-spin mr-1"></i> Syncing...';
+
+            // Attempt login. If user not found, automatically register them!
+            auth.signInWithEmailAndPassword(email, password)
+                .then(() => {
+                    showToast("Successfully signed in!");
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = 'Sign In / Register';
+                })
+                .catch(err => {
+                    if (err.code === 'auth/user-not-found') {
+                        // Create Account
+                        auth.createUserWithEmailAndPassword(email, password)
+                            .then(() => {
+                                showToast("Account registered successfully!");
+                            })
+                            .catch(createErr => showToast(createErr.message, true))
+                            .finally(() => {
+                                submitBtn.disabled = false;
+                                submitBtn.innerHTML = 'Sign In / Register';
+                            });
+                    } else {
+                        showToast(err.message, true);
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = 'Sign In / Register';
+                    }
+                });
+        }
+
+        function handleSignOut() {
+            auth.signOut().then(() => {
+                showToast("Signed out successfully.");
+            });
+        }
+
+        // Member Profile Fetching & Synchronizing
+        function loadMemberProfile(user) {
+            const ref = db.collection('vishwaleader_members').doc(user.uid);
+            ref.get().then((doc) => {
+                let pData = {
+                    name: user.displayName || user.email.split('@')[0],
+                    email: user.email,
+                    designation: 'Premium Member',
+                    organization: 'Vishwa Leader Network',
+                    country: 'International',
+                    phone: '',
+                    bio: '',
+                    photoURL: user.photoURL || '',
+                    memberSince: new Date(user.metadata.creationTime).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }),
+                    memberId: 'VL-' + Math.floor(1000 + Math.random() * 9000)
+                };
+
+                if (doc.exists) {
+                    pData = { ...pData, ...doc.data() };
+                } else {
+                    // Set initial template
+                    ref.set(pData);
+                }
+
+                memberData = pData;
+                updateDashboardUI();
+            });
+        }
+
+        function updateDashboardUI() {
+            if (!memberData) return;
+
+            // Update ID Card Text
+            document.getElementById('card-name').textContent = memberData.name;
+            document.getElementById('card-title').textContent = memberData.designation;
+            document.getElementById('card-country').innerHTML = `<i class="fa-solid fa-earth-americas mr-0.5"></i> ${memberData.country}`;
+            document.getElementById('card-id').textContent = memberData.memberId;
+            document.getElementById('card-since').textContent = memberData.memberSince;
+
+            if (memberData.photoURL) {
+                document.getElementById('card-photo').src = memberData.photoURL;
+            }
+
+            // Update Profile Form Fields
+            document.getElementById('profile-designation').value = memberData.designation || '';
+            document.getElementById('profile-organization').value = memberData.organization || '';
+            document.getElementById('profile-country').value = memberData.country || '';
+            document.getElementById('profile-phone').value = memberData.phone || '';
+            document.getElementById('profile-bio').value = memberData.bio || '';
+        }
+
+        // Preview local avatar file before upload
+        function previewAvatar(e) {
+            const file = e.target.files[0];
+            if (file) {
+                avatarFileToUpload = file;
+                document.getElementById('profile-file-status').textContent = file.name;
+                
+                // Locally preview image
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    document.getElementById('card-photo').src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        async function handleSaveProfile(event) {
+            event.preventDefault();
+            const btn = document.getElementById('profile-save-btn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> Saving...';
+
+            try {
+                const user = auth.currentUser;
+                let finalPhotoUrl = memberData.photoURL || '';
+
+                if (avatarFileToUpload) {
+                    const storageRef = storage.ref().child(`member_avatars/${user.uid}_${Date.now()}_${avatarFileToUpload.name}`);
+                    const uploadTask = await storageRef.put(avatarFileToUpload);
+                    finalPhotoUrl = await uploadTask.ref.getDownloadURL();
+                }
+
+                const updated = {
+                    designation: document.getElementById('profile-designation').value.trim(),
+                    organization: document.getElementById('profile-organization').value.trim(),
+                    country: document.getElementById('profile-country').value.trim(),
+                    phone: document.getElementById('profile-phone').value.trim(),
+                    bio: document.getElementById('profile-bio').value.trim(),
+                    photoURL: finalPhotoUrl
+                };
+
+                await db.collection('vishwaleader_members').doc(user.uid).update(updated);
+                
+                memberData = { ...memberData, ...updated };
+                updateDashboardUI();
+                showToast("Profile settings saved!");
+            } catch (err) {
+                console.error(err);
+                showToast("Error updating profile: " + err.message, true);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Save Profile Settings';
+            }
+        }
+
+        // Load PDF Publications from Firestore archives
+        function loadPublications() {
+            db.collection('vishwaleader_archives')
+                .orderBy('createdAt', 'desc')
+                .get()
+                .then((snapshot) => {
+                    publicationsList = [];
+                    snapshot.forEach((doc) => {
+                        publicationsList.push({
+                            id: doc.id,
+                            ...doc.data()
+                        });
+                    });
+                    renderPublications();
+                })
+                .catch((err) => {
+                    console.error("Error loading publications:", err);
+                });
+        }
+
+        function renderPublications() {
+            const grid = document.getElementById('publications-grid');
+            grid.innerHTML = '';
+            
+            // Filter to show PDF files for download
+            const pdfs = publicationsList.filter(item => item.type === 'pdf');
+
+            if (pdfs.length === 0) {
+                document.getElementById('publications-empty').classList.remove('hidden');
+                return;
+            } else {
+                document.getElementById('publications-empty').classList.add('hidden');
+            }
+
+            pdfs.forEach(item => {
+                const col = document.createElement('div');
+                col.className = "bg-slate-50 border border-slate-200/80 rounded-2xl p-4 flex justify-between items-center gap-4 hover:border-slate-300 transition-colors";
+                col.innerHTML = `
+                    <div class="flex items-center gap-3 min-w-0">
+                        <div class="w-10 h-10 bg-rose-500/10 border border-rose-500/20 text-rose-500 rounded-xl flex items-center justify-center flex-shrink-0 text-lg">
+                            <i class="fa-solid fa-file-pdf"></i>
+                        </div>
+                        <div class="min-w-0">
+                            <h4 class="font-bold text-slate-800 text-xs truncate" title="${item.title}">${item.title}</h4>
+                            <p class="text-[9px] text-slate-450 mt-0.5 font-medium">${item.desc || 'Publications Archive'} &bull; ${item.size || 'N/A'}</p>
+                        </div>
+                    </div>
+                    <a href="${item.file}" target="_blank" class="bg-brandBlue hover:bg-brandBlue/90 text-white font-bold px-3.5 py-2 rounded-xl transition-all text-[9px] uppercase tracking-wider flex items-center gap-1.5 whitespace-nowrap shadow-sm">
+                        <i class="fa-solid fa-download"></i> View / Download
+                    </a>
+                `;
+                grid.appendChild(col);
+            });
+        }
+
+        // SOAS Submission Draft File Picker
+        function previewSubFile(e) {
+            const file = e.target.files[0];
+            if (file) {
+                subFileToUpload = file;
+                document.getElementById('sub-file-status').textContent = file.name;
+            }
+        }
+
+        function toggleSubmissionForm() {
+            const form = document.getElementById('submission-form');
+            if (form.classList.contains('hidden')) {
+                form.classList.remove('hidden');
+                document.getElementById('sub-title').focus();
+            } else {
+                form.classList.add('hidden');
+                form.reset();
+                document.getElementById('submission-id').value = '';
+                document.getElementById('sub-file-status').textContent = "No file selected";
+                subFileToUpload = null;
+            }
+        }
+
+        // Submit registration & paper abstract
+        async function handleSaveSubmission(event) {
+            event.preventDefault();
+            const saveBtn = document.getElementById('sub-save-btn');
+            const editId = document.getElementById('submission-id').value;
+            const user = auth.currentUser;
+
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> Submitting...';
+
+            try {
+                let filePath = '';
+                if (subFileToUpload) {
+                    const ref = storage.ref().child(`submissions/${user.uid}_${Date.now()}_${subFileToUpload.name}`);
+                    const uploadTask = await ref.put(subFileToUpload);
+                    filePath = await uploadTask.ref.getDownloadURL();
+                } else if (editId) {
+                    const existing = submissionsList.find(x => x.id === editId);
+                    filePath = existing ? existing.file : '';
+                }
+
+                const submissionData = {
+                    userId: user.uid,
+                    memberName: memberData.name,
+                    title: document.getElementById('sub-title').value.trim(),
+                    coAuthors: document.getElementById('sub-authors').value.trim() || 'None',
+                    theme: document.getElementById('sub-theme').value,
+                    abstract: document.getElementById('sub-abstract').value.trim(),
+                    file: filePath,
+                    fileName: subFileToUpload ? subFileToUpload.name : (editId ? (submissionsList.find(x => x.id === editId)?.fileName || '') : ''),
+                    status: editId ? (submissionsList.find(x => x.id === editId)?.status || 'Pending Review') : 'Pending Review',
+                    createdAt: editId ? (submissionsList.find(x => x.id === editId)?.createdAt || firebase.firestore.FieldValue.serverTimestamp()) : firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                if (editId) {
+                    await db.collection('vishwaleader_submissions').doc(editId).set(submissionData);
+                    showToast("Abstract draft updated successfully!");
+                } else {
+                    await db.collection('vishwaleader_submissions').add(submissionData);
+                    showToast("SOAS Registration Submitted!");
+                }
+
+                toggleSubmissionForm();
+                loadSubmissions(user);
+            } catch (err) {
+                console.error(err);
+                showToast("Submission failed: " + err.message, true);
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = 'Submit Registration';
+            }
+        }
+
+        function loadSubmissions(user) {
+            db.collection('vishwaleader_submissions')
+                .where('userId', '==', user.uid)
+                .orderBy('createdAt', 'desc')
+                .get()
+                .then((snapshot) => {
+                    submissionsList = [];
+                    snapshot.forEach((doc) => {
+                        submissionsList.push({
+                            id: doc.id,
+                            ...doc.data()
+                        });
+                    });
+                    renderSubmissions();
+                })
+                .catch((err) => {
+                    console.error("Error loading submissions:", err);
+                });
+        }
+
+        function renderSubmissions() {
+            const body = document.getElementById('submissions-list-body');
+            body.innerHTML = '';
+
+            if (submissionsList.length === 0) {
+                document.getElementById('submissions-empty').classList.remove('hidden');
+                return;
+            } else {
+                document.getElementById('submissions-empty').classList.add('hidden');
+            }
+
+            submissionsList.forEach(item => {
+                let statusBadge = `<span class="bg-amber-100 text-amber-800 border border-amber-200 px-2 py-0.5 rounded text-[9px] font-bold">Pending Review</span>`;
+                if (item.status === 'Accepted') {
+                    statusBadge = `<span class="bg-emerald-100 text-emerald-800 border border-emerald-250 px-2 py-0.5 rounded text-[9px] font-bold">Accepted</span>`;
+                } else if (item.status === 'Declined') {
+                    statusBadge = `<span class="bg-rose-100 text-rose-800 border border-rose-250 px-2 py-0.5 rounded text-[9px] font-bold">Declined</span>`;
+                }
+
+                const fileLink = item.file ? `<a href="${item.file}" target="_blank" class="text-brandBlue hover:underline flex items-center gap-1 font-mono text-[9px]"><i class="fa-solid fa-file-pdf"></i> Draft Link</a>` : '<span class="text-slate-400 font-mono text-[10px]">No Draft Attached</span>';
+
+                const tr = document.createElement('tr');
+                tr.className = "border-b border-slate-100 hover:bg-slate-50 transition-colors";
+                tr.innerHTML = `
+                    <td class="py-3 font-bold text-slate-800 max-w-[200px] truncate" title="${item.title}">${item.title}</td>
+                    <td class="py-3 pl-4 pr-2 capitalize text-slate-500 font-medium">${item.theme}</td>
+                    <td class="py-3">${fileLink}</td>
+                    <td class="py-3">${statusBadge}</td>
+                    <td class="py-3 text-right">
+                        <div class="flex justify-end gap-2">
+                            <button onclick="editSubmission('${item.id}')" class="text-brandBlue hover:text-blue-600 p-1" title="Edit draft">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </button>
+                            <button onclick="deleteSubmission('${item.id}')" class="text-rose-500 hover:text-rose-600 p-1" title="Withdraw Paper">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                body.appendChild(tr);
+            });
+        }
+
+        function editSubmission(id) {
+            const sub = submissionsList.find(x => x.id === id);
+            if (!sub) return;
+
+            document.getElementById('submission-id').value = sub.id;
+            document.getElementById('sub-title').value = sub.title;
+            document.getElementById('sub-authors').value = sub.coAuthors || '';
+            document.getElementById('sub-theme').value = sub.theme;
+            document.getElementById('sub-abstract').value = sub.abstract;
+
+            if (sub.fileName) {
+                document.getElementById('sub-file-status').textContent = sub.fileName;
+            } else {
+                document.getElementById('sub-file-status').textContent = "No file selected";
+            }
+
+            const form = document.getElementById('submission-form');
+            form.classList.remove('hidden');
+            form.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function deleteSubmission(id) {
+            if (!confirm("Are you sure you want to withdraw this registration and delete the abstract proposal? This action is permanent.")) return;
+
+            db.collection('vishwaleader_submissions').doc(id).delete()
+                .then(() => {
+                    showToast("Submission successfully withdrawn.");
+                    loadSubmissions(auth.currentUser);
+                })
+                .catch(err => showToast(err.message, true));
+        }
+
+        // Floating Toast Banner
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            const icon = document.getElementById('toast-icon');
+            const msg = document.getElementById('toast-msg');
+
+            msg.textContent = message;
+            if (isError) {
+                toast.className = "fixed bottom-6 right-6 z-50 bg-rose-600 border border-rose-500 text-white text-xs font-bold px-6 py-3.5 rounded-xl shadow-2xl transition-all duration-300 opacity-100 flex items-center gap-2";
+                icon.className = "fa-solid fa-circle-exclamation text-sm";
+            } else {
+                toast.className = "fixed bottom-6 right-6 z-50 bg-emerald-500 border border-emerald-400 text-white text-xs font-bold px-6 py-3.5 rounded-xl shadow-2xl transition-all duration-300 opacity-100 flex items-center gap-2";
+                icon.className = "fa-solid fa-circle-check text-sm";
+            }
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0');
+                toast.classList.remove('opacity-100');
+            }, 3000);
+        }
+    </script>
+</body>
+
+</html>
