@@ -61,6 +61,9 @@
         .glow-card {
             box-shadow: 0 0 40px -10px rgba(0, 86, 202, 0.15);
         }
+        /* ── Mobile safety: prevent horizontal overflow ── */
+        html, body { overflow-x: hidden; max-width: 100%; }
+        img { max-width: 100%; }
     </style>
 </head>
 
@@ -77,14 +80,14 @@
 
     <!-- Navigation Header -->
     <header class="bg-white/80 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-40">
-        <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-            <div class="flex items-center gap-4">
-                <a href="index.html" class="group flex items-center gap-3">
-                    <img src="wp-content/uploads/2025/02/Vishwa_Leader_Logo-removebg-preview-e1738584466936.png" 
+        <div class="max-w-7xl mx-auto px-4 md:px-6 h-16 md:h-20 flex items-center justify-between">
+            <div class="flex items-center gap-3 md:gap-4">
+                <a href="index.html" class="group flex items-center gap-2 md:gap-3">
+                    <img src="wp-content/uploads/2025/02/vishwaleader-logo-latest.png" 
                          alt="Vishwa Leader Logo" 
-                         class="h-12 w-auto object-contain transition-transform group-hover:scale-105" 
-                         onerror="this.src='https://i0.wp.com/vishwaleader.com/wp-content/uploads/2025/02/Vishwa_Leader_Logo-removebg-preview-e1738584466936.png?fit=250%2C142&ssl=1'" />
-                    <span class="text-[10px] font-black tracking-widest text-brandBlue uppercase border border-brandBlue/20 px-2 py-0.5 rounded bg-brandBlue/5">
+                         class="h-9 md:h-12 w-auto object-contain transition-transform group-hover:scale-105" 
+                         onerror="this.src='wp-content/uploads/2025/02/vishwaleader-logo-latest.png'" />
+                    <span class="hidden sm:inline text-[10px] font-black tracking-widest text-brandBlue uppercase border border-brandBlue/20 px-2 py-0.5 rounded bg-brandBlue/5">
                         Techmedia
                     </span>
                 </a>
@@ -95,6 +98,7 @@
                 <a href="index.html" class="hover:text-brandBlue transition-colors">Home</a>
                 <a href="gallery.html" class="hover:text-brandBlue transition-colors">Gallery</a>
                 <a href="archives.html" class="hover:text-brandBlue transition-colors">Archive</a>
+                <a href="admin.html" class="text-indigo-650 hover:text-indigo-500 transition-colors flex items-center gap-1"><i class="fa-solid fa-user-shield text-xs"></i> Login as Team</a>
                 <div id="header-user-badge" class="hidden flex items-center gap-3 border-l border-slate-200 pl-6">
                     <span id="header-username" class="text-xs font-bold text-slate-700">Member</span>
                     <button onclick="handleSignOut()" class="text-xs bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg text-rose-500 font-bold transition-all uppercase tracking-wider flex items-center gap-1.5">
@@ -110,10 +114,11 @@
         </div>
 
         <!-- Mobile Navigation Menu -->
-        <div id="mobileMenu" class="md:hidden max-h-0 opacity-0 overflow-hidden transition-all duration-300 ease-in-out bg-white border-t border-slate-200 px-6 space-y-3 shadow-inner">
-            <a href="index.html" class="block py-2 text-sm font-semibold text-slate-700 hover:text-brandBlue">Home</a>
-            <a href="gallery.html" class="block py-2 text-sm font-semibold text-slate-700 hover:text-brandBlue">Gallery</a>
-            <a href="archives.html" class="block py-2 text-sm font-semibold text-slate-700 hover:text-brandBlue">Archive</a>
+        <div id="mobileMenu" class="md:hidden max-h-0 opacity-0 overflow-hidden transition-all duration-300 ease-in-out bg-white border-t border-slate-200 px-4 space-y-1 shadow-inner">
+            <a href="index.html" class="block py-2.5 text-sm font-semibold text-slate-700 hover:text-brandBlue border-b border-slate-100">Home</a>
+            <a href="gallery.html" class="block py-2.5 text-sm font-semibold text-slate-700 hover:text-brandBlue border-b border-slate-100">Gallery</a>
+            <a href="archives.html" class="block py-2.5 text-sm font-semibold text-slate-700 hover:text-brandBlue border-b border-slate-100">Archive</a>
+            <a href="admin.html" class="block py-2.5 text-sm font-semibold text-indigo-650 hover:text-indigo-500 border-b border-slate-100"><i class="fa-solid fa-user-shield text-xs mr-1"></i> Login as Team</a>
             <div id="mobile-user-badge" class="hidden border-t border-slate-100 pt-3 pb-2 space-y-2">
                 <div class="text-xs font-bold text-slate-800" id="mobile-username">Member</div>
                 <button onclick="handleSignOut()" class="w-full text-center bg-rose-500 text-white py-2 rounded text-xs font-bold tracking-wide uppercase">Sign Out</button>
@@ -142,12 +147,6 @@
                 <p class="text-xs text-slate-500 leading-relaxed max-w-sm mx-auto">Access direct downloads of Vishwa Leader publications, manage your attendee profile for the SOAS London Summit, and submit academic paper drafts.</p>
             </div>
 
-            <!-- Login tabs -->
-            <div class="flex border-b border-slate-200 justify-center gap-6">
-                <button onclick="switchLoginTab('google')" id="tab-btn-google" class="pb-2 text-xs font-extrabold uppercase tracking-wider text-brandBlue border-b-2 border-brandBlue transition-all">Google Sign-in</button>
-                <button onclick="switchLoginTab('email')" id="tab-btn-email" class="pb-2 text-xs font-bold uppercase tracking-wider text-slate-400 border-b-2 border-transparent transition-all">Email Account</button>
-            </div>
-
             <!-- Google Authentication Option -->
             <div id="login-google-section" class="space-y-4">
                 <button onclick="handleGoogleSignIn()" class="w-full bg-slate-950 hover:bg-slate-900 text-white font-bold py-4 rounded-xl transition-all shadow-md flex items-center justify-center gap-3 text-xs uppercase tracking-wider">
@@ -159,26 +158,8 @@
                     </svg>
                     Continue with Google
                 </button>
-                <div class="text-[10px] text-slate-400">Recommended for instant, passwordless setup.</div>
+                <div class="text-[10px] text-slate-400">Required Google account for member verification.</div>
             </div>
-
-            <!-- Email Registration & Sign-in Option -->
-            <form id="login-email-section" onsubmit="handleEmailAuth(event)" class="hidden space-y-4 text-left">
-                <div class="space-y-1.5">
-                    <label class="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Email Address</label>
-                    <input type="email" id="member-email" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-brandBlue focus:bg-white transition-all" required>
-                </div>
-                <div class="space-y-1.5">
-                    <label class="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Password</label>
-                    <input type="password" id="member-password" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-brandBlue focus:bg-white transition-all" placeholder="At least 6 characters" required>
-                </div>
-                
-                <div class="flex items-center gap-4 text-xs font-bold uppercase tracking-wider pt-2">
-                    <button type="submit" id="email-submit-btn" class="flex-grow bg-brandBlue hover:bg-brandBlue/90 text-white py-3 rounded-xl transition-all shadow-md text-[10px]">
-                        Sign In / Register
-                    </button>
-                </div>
-            </form>
         </div>
 
         <!-- Authenticated View: Member Dashboard -->
@@ -493,10 +474,10 @@
             const isOpen = !mobileMenu.classList.contains('max-h-0');
             if (isOpen) {
                 mobileMenu.classList.add('max-h-0', 'opacity-0');
-                mobileMenu.classList.remove('max-h-96', 'opacity-100', 'py-4');
+                mobileMenu.classList.remove('max-h-[400px]', 'opacity-100', 'py-4');
             } else {
                 mobileMenu.classList.remove('max-h-0', 'opacity-0');
-                mobileMenu.classList.add('max-h-96', 'opacity-100', 'py-4');
+                mobileMenu.classList.add('max-h-[400px]', 'opacity-100', 'py-4');
             }
         });
 
