@@ -1,72 +1,70 @@
 # Transnational Advocacy and Diaspora Mobilization
 ## The Socio-Political Networks of Shirish Ramteke & Vishwa Leader Techmedia
 
-Welcome to the official profile of **Vishwa Leader** and **Vishwa Leader Techmedia Private Limited**, a media enterprise and social advocacy platform driving global Ambedkarite and minority representation. 
+<p align="center">
+  <img src="assets/images/vishwaleader-logo-hd.png" alt="Vishwa Leader Logo" width="160" />
+</p>
 
-This repository serves as the official corporate registry and digital portal for the organization's regional media roots and international campaigns, most notably the **World Leader Dr. B. R. Ambedkar International Award-2026** summit held in London.
+<h1 align="center">Vishwa Leader</h1>
+<p align="center">
+  <strong>Official Executive Registry & Profile Directory</strong>
+</p>
 
----
-
-### 🌐 Digital Portal
-Our interactive corporate and compliance portal is hosted on GitHub Pages:
-👉 **[Live Corporate Portal](https://vishwaleader.github.io/)** *(Alternative testing URL: [opendev-labs.github.io/vishwaleader](https://opendev-labs.github.io/vishwaleader/))*
-
----
-
-### 🏛️ Corporate & Media Infrastructure
-
-Our operations rest on a dual infrastructure combining a registered regional print publication and a formalized corporate entity.
-
-#### 1. Vishwa Leader Marathi Magazine (Print Periodical)
-* **Registration Number:** RNI MAHMAR/2009/34832
-* **Date of Registration:** December 15, 2010
-* **Ownership:** Shirish Bhageshwar Ramteke (Owner/Publisher/Editor)
-* **Description:** A monthly Marathi periodical established to provide a media outlet for Bahujan and Ambedkarite community representation within the Mumbai Suburban district. Printed at Usha Printers.
-* **Registry Verification:** [Press Registrar General of India (PRGI) Record](https://prgi.gov.in)
-
-#### 2. Vishwa Leader Techmedia Private Limited (Corporate Vehicle)
-* **Corporate Identification Number (CIN):** U74999MH2016PTC273606
-* **Date of Incorporation:** February 29, 2016 (under ROC Mumbai)
-* **Capitalization:** Authorized Capital: Rs. 100,000 | Paid-up Capital: Rs. 100,000
-* **Address:** Unit 1, Malwa Patanwala Complex, Lalbahadur Shastri Marg, Ghatkopar West, Mumbai - 400086
-* **Key Personnel:** Shirish Bhageshwar Ramteke (Director)
-* **Registry Verification:** [Ministry of Corporate Affairs (MCA) Profile via Tracxn](https://tracxn.com/d/legal-entities/india/vishwa-leader-techmedia-private-limited/__jDthDz58Owry-yAaHPhKSuhVYScE1DyjR4IGLp2Bhz8)
+<p align="center">
+  <a href="https://vishwaleader.vercel.app">
+    <img src="https://img.shields.io/badge/Live-Vercel%20Portal-blue?style=for-the-badge&logo=vercel" alt="Vercel Website" />
+  </a>
+  <a href="https://vishwaleader.github.io">
+    <img src="https://img.shields.io/badge/Live-GitHub%20Pages-black?style=for-the-badge&logo=github" alt="GitHub Pages Website" />
+  </a>
+</p>
 
 ---
 
-### 🗓️ The London Program: World Leader Dr. B. R. Ambedkar International Award 2026
+### 📝 Corporate & Media Registry
 
-Organized to mark the 135th birth anniversary of Dr. B. R. Ambedkar, this three-day summit took place at the **School of Oriental and African Studies (SOAS) University of London** from **May 8 to May 10, 2026**.
+Vishwa Leader combines print journalism, social advocacy, and legal structures to amplify underrepresented voices, promote constitutional values, and coordinate international diaspora networks.
 
-| Event Date | Day | Focus Area | Scheduled Activities |
-| :--- | :--- | :--- | :--- |
-| **May 8, 2026** | Day 1 | International Academic Seminar | Scholars and jurists presenting research on global justice, equality, and constitutional governance. |
-| **May 9, 2026** | Day 2 | International Business Seminar | Business leaders and entrepreneurs discussing minority participation, venture capital, and trade routes. |
-| **May 10, 2026** | Day 3 | Ambedkar Gaurav Sohala | Celebrating Ambedkar's legacy, cultural programs, and presentation of international awards. |
-
-#### 🎓 Distinguished Chief Guest
-The summit welcomed **Justice C. L. Thul** (former Chairman of the Maharashtra Scheduled Castes and Scheduled Tribes Commission, and former Chairman of the Maharashtra State Human Rights Commission) as Chief Guest. His academic background in management and leadership from Washington D.C. bridged theoretical constitutional law with practical human rights enforcement. [Read Announcement (Loksatta)](https://www.loksatta.com/nagpur/justice-cl-thul-wardha-dr-ambedkar-international-award-london-visit-rds-00-5756745/).
+| Category | Registry Detail / Credential | Official Verification Link |
+| :--- | :--- | :--- |
+| **Print Periodical** | **Vishwa Leader Monthly Magazine**<br>• RNI Registration: `MAHMAR/2009/34832`<br>• Date: Dec 15, 2010 | 🔍 [Press Registrar General of India (PRGI)](https://prgi.gov.in) |
+| **Corporate Entity** | **Vishwa Leader Techmedia Private Limited**<br>• Corporate ID (CIN): `U74999MH2016PTC273606`<br>• Date: Feb 29, 2016 | 🔍 [Ministry of Corporate Affairs ROC Mumbai](https://tracxn.com/d/legal-entities/india/vishwa-leader-techmedia-private-limited/__jDthDz58Owry-yAaHPhKSuhVYScE1DyjR4IGLp2Bhz8) |
+| **Leadership** | **Shirish Bhageshwar Ramteke**<br>• Director DIN: `07427260`<br>• Role: Publisher, Editor, & Managing Director | 🔍 [MCA Director Directory](https://www.mca.gov.in/) |
 
 ---
 
-### 🤝 Geopolitical Alliances & Transnational Networks
+### 🗓️ International Summit: London 2026
 
-Vishwa Leader actively partners with diplomatic and spiritual representatives to build international solidarity for minority rights:
-* **Tibetan Parliament-in-Exile:** On November 3, 2025, Shirish Bhageshwar Ramteke led a delegation of Ambedkarites to Dharamshala, meeting with Deputy Speaker Dolma Tsering Teykhang. [Official Statement (Tibet.net)](https://tibet.net/delegation-of-ambedkarites-meets-deputy-speaker-led-standing-committee-members/).
-* **State Advocacy Tour:** In January 2025, Ramteke and Sandesh Meshram (Samten Yeshi), president of the Indo-Tibetan Friendship Association, hosted Tibetan MPs in Mumbai for lectures at Siddharth College of Arts, Science, and Commerce (founded by Dr. Ambedkar) and high-level meetings with Maharashtra's political leadership.
-* **The Bahujans Club & World Art Conclave:** Co-organized the 2nd Edition of the World Art Conclave Art Expo in March 2025 at the Nehru Centre in Worli, bridging social advocacy and contemporary art.
+Organized to commemorate the **135th Birth Anniversary of Dr. B. R. Ambedkar**, Vishwa Leader Techmedia coordinated a premier international conference at the **School of Oriental and African Studies (SOAS) University of London** from **May 8 to May 10, 2026**.
+
+```mermaid
+gantt
+    title World Leader London Summit Agenda 2026
+    dateFormat  YYYY-MM-DD
+    section Summit Agenda
+    Academic Conference (SOAS) :active, 2026-05-08, 1d
+    International Business Summit :active, 2026-05-09, 1d
+    Ambedkar Gaurav Sohala Awards & Banquet :active, 2026-05-10, 1d
+```
+
+* **Honorable Chief Guest**: **Justice C. L. Thul** (Former Chairman of the State Commission for Scheduled Castes/Scheduled Tribes, and Former Chairman of the Maharashtra State Human Rights Commission). [Read Loksatta Press Announcement](https://www.loksatta.com/nagpur/justice-cl-thul-wardha-dr-ambedkar-international-award-london-visit-rds-00-5756745/).
+* **Venue Partner**: SOAS University of London, United Kingdom.
 
 ---
 
-### 🔍 Identity & Compliance Verification
+### 🤝 Strategic Collaborations & Geopolitical Advocacy
 
-To maintain record precision, the official identity of the publisher and director is verified:
+Vishwa Leader actively collaborates with local, national, and international organizations to foster dialogue, human rights, and social justice:
 
-* **Shirish Bhageshwar Ramteke (Mumbai Suburban):** Director of Vishwa Leader Techmedia Private Limited (DIN: 07427260) and publisher of the registered print magazine. Directs the global media operations, international collaborations, and the World Leader Ambedkar International Award program in London.
+* **Indo-Tibetan Friendship & Tibetan Parliament-in-Exile**: Shirish Ramteke led a high-level delegation of social advocates to Dharamshala in November 2025, meeting with Deputy Speaker Dolma Tsering Teykhang. [Read Official Press Statement (Tibet.net)](https://tibet.net/delegation-of-ambedkarites-meets-deputy-speaker-led-standing-committee-meets/).
+* **Siddharth College Seminars**: Co-sponsored educational symposiums hosting foreign delegates and parliament representatives in Mumbai.
+* **World Art Conclave**: Partnered with Nehru Centre, Worli in March 2025 to organize exhibitions promoting Bahujan and Ambedkarite digital artists.
 
 ---
 
-### 📞 Contact & Administration
-* **Corporate HQ:** Unit 1, Malwa Patanwala Complex, Lalbahadur Shastri Marg, Ghatkopar West, Mumbai - 400086
-* **Office Desk:** +91 22 25006697 | +91 9969688918 | +91 9969688928
-* **Email:** vishwaleader@gmail.com
+### 📞 Contact & Corporate Headquarters
+
+* **Registered Office**: Unit 1, Malwa Patanwala Complex, Lalbahadur Shastri Marg, Ghatkopar West, Mumbai - 400086
+* **Hotlines**: +91 9969688928 | +91 9969688918 | +91 22 25006697
+* **Contact Email**: vishwaleader@gmail.com
+* **Official Website**: [vishwaleader.vercel.app](https://vishwaleader.vercel.app)
