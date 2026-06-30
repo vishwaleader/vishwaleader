@@ -234,7 +234,7 @@
         </div>
 
         <!-- Mobile Navigation Menu -->
-        <div id="mobileMenu" class="md:hidden max-h-0 opacity-0 overflow-hidden transition-all duration-300 ease-in-out bg-white border-t border-slate-200 px-4 space-y-1 shadow-inner">
+        <div id="mobileMenu" class="md:hidden max-h-0 opacity-0 overflow-y-auto transition-all duration-300 ease-in-out bg-white border-t border-slate-200 px-4 space-y-1 shadow-inner">
             <div class="py-3 space-y-1.5">
                 <a href="#about" class="flex items-center py-2.5 px-3 text-sm font-semibold text-slate-700 hover:text-brandBlue active:bg-slate-50 rounded-xl transition-all border-b border-slate-50 last:border-0">
                     <i class="fa-solid fa-building text-slate-400 mr-3 w-5 text-center text-xs"></i>
@@ -285,25 +285,23 @@
                 </div>
 
                 <!-- Mobile: shown when logged in (hidden by default) -->
-                <div id="mobile-user-status" class="hidden pt-3 border-t border-slate-100 space-y-2">
-                    <div class="flex items-center gap-3 px-3 py-2 bg-slate-55/50 rounded-xl">
+                <div id="mobile-user-status" class="hidden pt-3 border-t border-slate-100 space-y-1">
+                    <div class="flex items-center gap-3 px-3 py-2 bg-slate-100 rounded-xl mb-1">
                         <div id="mobile-avatar" class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0 bg-brandBlue"></div>
                         <div class="overflow-hidden flex-1">
                             <p id="mobile-display-name" class="text-xs font-bold text-slate-900 truncate"></p>
                             <p id="mobile-status-label" class="text-[9px] font-extrabold uppercase tracking-wider text-brandBlue"></p>
                         </div>
                     </div>
-                    <div class="flex flex-col gap-1">
-                        <a id="mobile-portal-link" href="member" class="flex items-center py-2.5 px-3 text-sm font-semibold text-brandBlue hover:text-brandBlue/85 active:bg-slate-50 rounded-xl transition-all">
-                            <i id="mobile-portal-icon" class="fa-solid fa-user text-brandBlue mr-3 w-5 text-center text-xs"></i>
-                            <span id="mobile-portal-text">Profile</span>
-                            <i class="fa-solid fa-chevron-right text-slate-300 ml-auto text-[9px]"></i>
-                        </a>
-                        <button onclick="handleIndexSignOut()" class="flex items-center py-2.5 px-3 text-sm font-semibold text-rose-600 hover:text-rose-750 active:bg-rose-55/30 rounded-xl transition-all w-full text-left">
-                            <i class="fa-solid fa-right-from-bracket text-rose-500 mr-3 w-5 text-center text-xs"></i>
-                            <span>Sign Out</span>
-                        </button>
-                    </div>
+                    <a id="mobile-portal-link" href="member" class="flex items-center py-2.5 px-3 text-sm font-semibold text-slate-700 hover:text-brandBlue active:bg-slate-50 rounded-xl transition-all border-b border-slate-50">
+                        <i id="mobile-portal-icon" class="fa-solid fa-user text-slate-400 mr-3 w-5 text-center text-xs"></i>
+                        <span id="mobile-portal-text">Profile</span>
+                        <i class="fa-solid fa-chevron-right text-slate-300 ml-auto text-[9px]"></i>
+                    </a>
+                    <button onclick="handleIndexSignOut()" class="flex items-center py-2.5 px-3 text-sm font-semibold text-rose-600 hover:text-rose-750 active:bg-rose-50 rounded-xl transition-all w-full text-left">
+                        <i class="fa-solid fa-right-from-bracket text-rose-500 mr-3 w-5 text-center text-xs"></i>
+                        <span>Sign Out</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -1178,11 +1176,11 @@
             if (isOpen) {
                 menuBtn.classList.remove('menu-open');
                 mobileMenu.classList.add('max-h-0', 'opacity-0');
-                mobileMenu.classList.remove('max-h-[600px]', 'opacity-100', 'py-4');
+                mobileMenu.classList.remove('max-h-[85vh]', 'opacity-100', 'py-4');
             } else {
                 menuBtn.classList.add('menu-open');
                 mobileMenu.classList.remove('max-h-0', 'opacity-0');
-                mobileMenu.classList.add('max-h-[600px]', 'opacity-100', 'py-4');
+                mobileMenu.classList.add('max-h-[85vh]', 'opacity-100', 'py-4');
             }
         });
 
@@ -1328,7 +1326,7 @@
                 mobileLabelEl.textContent = 'Logged in as Team';
                 mobileLabelEl.style.color = '#6366f1';
                 mobilePortalLink.href = 'admin';
-                mobilePortalIcon.className = 'fa-solid fa-user-shield';
+                mobilePortalIcon.className = 'fa-solid fa-user-shield text-indigo-400 mr-3 w-5 text-center text-xs';
                 mobilePortalText.textContent = 'Admin Dashboard';
             } else {
                 mobileAvatar.style.background = '#0056CA';
@@ -1340,7 +1338,7 @@
                 mobileLabelEl.textContent = 'Logged in as Member';
                 mobileLabelEl.style.color = '#0056CA';
                 mobilePortalLink.href = 'member';
-                mobilePortalIcon.className = 'fa-solid fa-user';
+                mobilePortalIcon.className = 'fa-solid fa-user text-slate-400 mr-3 w-5 text-center text-xs';
                 mobilePortalText.textContent = 'Profile';
             }
 
