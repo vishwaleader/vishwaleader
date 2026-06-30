@@ -37,16 +37,17 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <style>
     /* ── Mobile safety: prevent horizontal overflow ── */
     html, body { overflow-x: hidden; max-width: 100%; }
     img { max-width: 100%; }
 </style>
-<body class="bg-brandDark text-slate-100 min-h-screen antialiased flex flex-col font-sans">
+<body class="bg-slate-50 text-slate-800 min-h-screen antialiased flex flex-col font-sans">
 
     <!-- Top header navigation bar -->
-    <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-40">
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-40">
         <div class="max-w-7xl mx-auto px-4 md:px-6 h-16 md:h-20 flex items-center justify-between">
             <div class="flex items-center gap-2 md:gap-3">
                 <a href="/" class="flex items-center gap-2 md:gap-3">
@@ -59,12 +60,12 @@
             </div>
             
             <div class="flex items-center gap-2 md:gap-4">
-                <a href="/" class="text-xs bg-slate-800 border border-slate-700 hover:bg-slate-700 px-3 md:px-3.5 py-1.5 rounded-lg font-bold transition-all text-slate-350 uppercase tracking-wider flex items-center gap-1.5">
-                    <i class="fa-solid fa-house text-amber-500"></i> <span class="hidden sm:inline">Home</span>
+                <a href="/" class="text-xs bg-slate-100 border border-slate-300 hover:bg-slate-200 px-3 md:px-3.5 py-1.5 rounded-lg font-bold transition-all text-slate-600 uppercase tracking-wider flex items-center gap-1.5">
+                    <i class="fa-solid fa-house text-amber-600"></i> <span class="hidden sm:inline">Home</span>
                 </a>
                 <div id="user-info-section" class="hidden flex items-center gap-2 md:gap-4">
-                    <span id="user-display-name" class="hidden md:inline text-xs font-medium text-slate-300">Loading profile...</span>
-                    <button onclick="handleSignOut()" class="text-xs bg-slate-800 border border-slate-700 hover:bg-slate-700 px-3 py-1.5 rounded-lg font-bold transition-all text-amber-500 uppercase tracking-wider flex items-center gap-1.5">
+                    <span id="user-display-name" class="hidden md:inline text-xs font-medium text-slate-600">Loading profile...</span>
+                    <button onclick="handleSignOut()" class="text-xs bg-slate-100 border border-slate-300 hover:bg-slate-200 px-3 py-1.5 rounded-lg font-bold transition-all text-amber-600 uppercase tracking-wider flex items-center gap-1.5">
                         <i class="fa-solid fa-sign-out-alt"></i> <span class="hidden sm:inline">Sign Out</span>
                     </button>
                 </div>
@@ -88,7 +89,7 @@
                 .cp-login-wrapper {
                     position: fixed; left: 0; right: 0; bottom: 0; top: 80px; z-index: 9999;
                     font-family: 'Open Sans', sans-serif; overflow: hidden; 
-                    background: url('assets/images/buddha-bg-2.png') no-repeat center center;
+                    background: url('assets/images/EkJYDaGD-fond-decran-Bouddha-54.png') no-repeat center center;
                     background-size: cover;
                 }
 
@@ -169,19 +170,19 @@
             <!-- LEFT COLUMN: Simplified Navigation & Path Guide -->
             <div class="lg:col-span-3 space-y-6">
                 <!-- Brand & User Profile Widget -->
-                <div class="bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-lg space-y-4">
+                <div class="bg-white border border-slate-200 rounded-3xl p-5 shadow-lg space-y-4">
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 rounded-xl bg-brandBlue/10 border border-brandBlue/20 flex items-center justify-center text-brandBlue text-lg">
                             <i class="fa-solid fa-square-poll-horizontal"></i>
                         </div>
                         <div>
-                            <h2 class="font-display text-sm font-black text-white uppercase tracking-wider">Site Manager</h2>
+                            <h2 class="font-display text-sm font-black text-slate-900 uppercase tracking-wider">Site Manager</h2>
                             <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Admin Workspace</p>
                         </div>
                     </div>
                     
-                    <div class="border-t border-slate-800 pt-3 flex items-center justify-between text-[11px] text-slate-300">
-                        <span id="user-display-name-sidebar" class="font-bold truncate max-w-[130px]"><i class="fa-solid fa-user-circle mr-1 text-slate-500"></i> admin</span>
+                    <div class="border-t border-slate-200 pt-3 flex items-center justify-between text-[11px] text-slate-600">
+                        <span id="user-display-name-sidebar" class="font-bold truncate max-w-[130px]"><i class="fa-solid fa-user-circle mr-1 text-slate-400"></i> admin</span>
                         <button onclick="handleSignOut()" class="text-rose-500 hover:text-rose-400 font-bold flex items-center gap-1">
                             <i class="fa-solid fa-right-from-bracket"></i> Sign Out
                         </button>
@@ -189,16 +190,33 @@
                 </div>
 
                 <!-- Interactive Page Guides (Sidebar Menu) -->
-                <div class="bg-slate-900 border border-slate-800 rounded-3xl p-4 shadow-lg space-y-1.5">
-                    <div class="text-[9px] font-extrabold text-slate-500 uppercase tracking-widest px-2.5 mb-3">
+                <div class="bg-white border border-slate-200 rounded-3xl p-4 shadow-lg space-y-1.5">
+                    <div class="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest px-2.5 mb-3">
                         Website Sections to Edit
                     </div>
+
+                    <button onclick="switchAdminTab('dashboard')" id="sidebar-tab-dashboard" class="w-full text-left p-3.5 rounded-2xl flex items-center gap-3 transition-all">
+                        <span class="w-8 h-8 rounded-xl flex items-center justify-center text-sm"><i class="fa-solid fa-chart-line"></i></span>
+                        <div class="flex-grow">
+                            <div class="text-xs font-bold">Analytics Dashboard</div>
+                            <div class="text-[9px] text-slate-400 leading-snug">Traffic and member stats</div>
+                        </div>
+                    </button>
+
+                    <button onclick="switchAdminTab('inquiries')" id="sidebar-tab-inquiries" class="w-full text-left p-3.5 rounded-2xl flex items-center gap-3 transition-all">
+                        <span class="w-8 h-8 rounded-xl flex items-center justify-center text-sm"><i class="fa-solid fa-envelope"></i></span>
+                        <div class="flex-grow">
+                            <div class="text-xs font-bold">Inquiries</div>
+                            <div class="text-[9px] text-slate-400 leading-snug">View reservations & messages</div>
+                        </div>
+                    </button>
+
                     
                     <button onclick="switchAdminTab('settings')" id="sidebar-tab-settings" class="w-full text-left p-3.5 rounded-2xl flex items-center gap-3 transition-all">
                         <span class="w-8 h-8 rounded-xl flex items-center justify-center text-sm"><i class="fa-solid fa-house"></i></span>
                         <div class="flex-grow">
                             <div class="text-xs font-bold">Homepage Content</div>
-                            <div class="text-[9px] text-slate-450 leading-snug">Edit banners, text, & schedule</div>
+                            <div class="text-[9px] text-slate-400 leading-snug">Edit banners, text, & schedule</div>
                         </div>
                     </button>
 
@@ -206,7 +224,7 @@
                         <span class="w-8 h-8 rounded-xl flex items-center justify-center text-sm"><i class="fa-solid fa-images"></i></span>
                         <div class="flex-grow">
                             <div class="text-xs font-bold">Photo Gallery Page</div>
-                            <div class="text-[9px] text-slate-450 leading-snug">Add or remove summit photos</div>
+                            <div class="text-[9px] text-slate-400 leading-snug">Add or remove summit photos</div>
                         </div>
                     </button>
 
@@ -214,7 +232,7 @@
                         <span class="w-8 h-8 rounded-xl flex items-center justify-center text-sm"><i class="fa-solid fa-file-pdf"></i></span>
                         <div class="flex-grow">
                             <div class="text-xs font-bold">Digital Library (PDF)</div>
-                            <div class="text-[9px] text-slate-450 leading-snug">Publish circulars & forms</div>
+                            <div class="text-[9px] text-slate-400 leading-snug">Publish circulars & forms</div>
                         </div>
                     </button>
 
@@ -222,7 +240,7 @@
                         <span class="w-8 h-8 rounded-xl flex items-center justify-center text-sm"><i class="fa-solid fa-key"></i></span>
                         <div class="flex-grow">
                             <div class="text-xs font-bold">Workspace Password</div>
-                            <div class="text-[9px] text-slate-450 leading-snug">Change access credentials</div>
+                            <div class="text-[9px] text-slate-400 leading-snug">Change access credentials</div>
                         </div>
                     </button>
                 </div>
@@ -232,26 +250,94 @@
             <div class="lg:col-span-9 space-y-8">
                 
                 <!-- ══════════════════════════════════════════════════════════════ -->
+                
+                <!-- TAB: DASHBOARD -->
+                <div id="admin-tab-content-dashboard" class="space-y-8 hidden">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-6">
+                        <div>
+                            <h1 class="font-display text-2xl font-black text-slate-900 uppercase tracking-tight">Analytics Dashboard</h1>
+                            <p class="text-xs text-slate-500 mt-1">Powered by Google Analytics & Firebase.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="bg-white border border-slate-200 rounded-2xl p-6 flex flex-col justify-center items-center">
+                            <i class="fa-solid fa-users text-3xl text-brandBlue mb-2"></i>
+                            <h3 class="text-slate-500 font-bold text-xs uppercase tracking-wider">Total Visitors</h3>
+                            <span class="text-3xl font-black text-slate-900" id="stat-visitors">12,504</span>
+                        </div>
+                        <div class="bg-white border border-slate-200 rounded-2xl p-6 flex flex-col justify-center items-center">
+                            <i class="fa-solid fa-user-plus text-3xl text-emerald-500 mb-2"></i>
+                            <h3 class="text-slate-500 font-bold text-xs uppercase tracking-wider">Total Members</h3>
+                            <span class="text-3xl font-black text-slate-900" id="stat-members">--</span>
+                        </div>
+                        <div class="bg-white border border-slate-200 rounded-2xl p-6 flex flex-col justify-center items-center">
+                            <i class="fa-solid fa-envelope-open-text text-3xl text-amber-600 mb-2"></i>
+                            <h3 class="text-slate-500 font-bold text-xs uppercase tracking-wider">Pending Inquiries</h3>
+                            <span class="text-3xl font-black text-slate-900" id="stat-inquiries">--</span>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-white border border-slate-200 rounded-2xl p-6">
+                            <h3 class="text-slate-900 font-bold mb-4">Traffic Overview</h3>
+                            <canvas id="trafficChart" height="200"></canvas>
+                        </div>
+                        <div class="bg-white border border-slate-200 rounded-2xl p-6">
+                            <h3 class="text-slate-900 font-bold mb-4">Member Growth</h3>
+                            <canvas id="membersChart" height="200"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB: INQUIRIES -->
+                <div id="admin-tab-content-inquiries" class="space-y-8 hidden">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-6">
+                        <div>
+                            <h1 class="font-display text-2xl font-black text-slate-900 uppercase tracking-tight">Inquiries & Reservations</h1>
+                            <p class="text-xs text-slate-500 mt-1">Review and manage form submissions from the website.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50 border-b border-slate-200">
+                                    <th class="py-3 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Date</th>
+                                    <th class="py-3 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Name</th>
+                                    <th class="py-3 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Email</th>
+                                    <th class="py-3 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Message</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inquiries-list">
+                                <tr>
+                                    <td colspan="4" class="py-10 text-center text-slate-500">Loading inquiries...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
                 <!-- TAB 1: SITE CONFIGURATION / SETTINGS                         -->
                 <!-- ══════════════════════════════════════════════════════════════ -->
                 <div id="admin-tab-content-settings" class="space-y-8">
                     <form onsubmit="handleSaveSettings(event)" class="space-y-8">
-                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-6">
+                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-6">
                             <div>
-                                <h1 class="font-display text-2xl font-black text-white uppercase tracking-tight">Homepage Content Editor</h1>
+                                <h1 class="font-display text-2xl font-black text-slate-900 uppercase tracking-tight">Homepage Content Editor</h1>
                                 <p class="text-xs text-slate-400 mt-1">Make changes below and click Save. Updates appear on the live website immediately.</p>
                             </div>
-                            <button type="submit" class="bg-brandBlue hover:bg-brandBlue/90 text-white font-bold px-8 py-3.5 rounded-xl transition-all shadow-md text-xs uppercase tracking-wider flex items-center justify-center gap-2">
+                            <button type="submit" class="bg-brandBlue hover:bg-brandBlue/90 text-slate-900 font-bold px-8 py-3.5 rounded-xl transition-all shadow-md text-xs uppercase tracking-wider flex items-center justify-center gap-2">
                                 <i class="fa-solid fa-floppy-disk"></i> Save Content Updates
                             </button>
                         </div>
 
                         <!-- Card 1: Homepage Title & Main Announcement Text -->
-                        <div class="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-6 space-y-5">
-                            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                        <div class="bg-white border border-slate-200 rounded-2xl p-6 space-y-5">
+                            <div class="flex items-center justify-between border-b border-slate-200 pb-3">
                                 <div class="flex items-center gap-2.5">
-                                    <i class="fa-solid fa-fire text-amber-500 text-sm"></i>
-                                    <h3 class="font-display text-sm font-bold text-white uppercase tracking-wide">Main Banner (Hero Section)</h3>
+                                    <i class="fa-solid fa-fire text-amber-600 text-sm"></i>
+                                    <h3 class="font-display text-sm font-bold text-slate-900 uppercase tracking-wide">Main Banner (Hero Section)</h3>
                                 </div>
                                 <span class="text-[8px] font-bold text-brandBlue uppercase bg-brandBlue/10 px-2 py-0.5 rounded border border-brandBlue/20">
                                     📍 TOP OF HOMEPAGE (index.html)
@@ -261,29 +347,29 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div class="space-y-1.5">
                                     <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Main Banner Heading</label>
-                                    <input type="text" id="hero-title" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-200 focus:outline-none focus:border-brandBlue transition-colors" required>
-                                    <span class="text-[9px] text-slate-500 block">The big title showing at the top.</span>
+                                    <input type="text" id="hero-title" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs text-slate-700 focus:outline-none focus:border-brandBlue transition-colors" required>
+                                    <span class="text-[9px] text-slate-400 block">The big title showing at the top.</span>
                                 </div>
                                 <div class="space-y-1.5">
                                     <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Location Tagline</label>
-                                    <input type="text" id="hero-location" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-200 focus:outline-none focus:border-brandBlue transition-colors" required>
-                                    <span class="text-[9px] text-slate-500 block">The location header (e.g. London, UK).</span>
+                                    <input type="text" id="hero-location" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs text-slate-700 focus:outline-none focus:border-brandBlue transition-colors" required>
+                                    <span class="text-[9px] text-slate-400 block">The location header (e.g. London, UK).</span>
                                 </div>
                             </div>
                             
                             <div class="space-y-1.5">
                                 <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Banner Description Text</label>
-                                <textarea id="hero-description" rows="3" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-200 focus:outline-none focus:border-brandBlue transition-colors" required></textarea>
-                                <span class="text-[9px] text-slate-500 block">A detailed paragraph describing the organization/summit.</span>
+                                <textarea id="hero-description" rows="3" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs text-slate-700 focus:outline-none focus:border-brandBlue transition-colors" required></textarea>
+                                <span class="text-[9px] text-slate-400 block">A detailed paragraph describing the organization/summit.</span>
                             </div>
                         </div>
 
                         <!-- Card 2: Calls to Action Links -->
-                        <div class="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-6 space-y-5">
-                            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                        <div class="bg-white border border-slate-200 rounded-2xl p-6 space-y-5">
+                            <div class="flex items-center justify-between border-b border-slate-200 pb-3">
                                 <div class="flex items-center gap-2.5">
                                     <i class="fa-solid fa-link text-brandBlue text-sm"></i>
-                                    <h3 class="font-display text-sm font-bold text-white uppercase tracking-wide">Action Button Links</h3>
+                                    <h3 class="font-display text-sm font-bold text-slate-900 uppercase tracking-wide">Action Button Links</h3>
                                 </div>
                                 <span class="text-[8px] font-bold text-brandBlue uppercase bg-brandBlue/10 px-2 py-0.5 rounded border border-brandBlue/20">
                                     📍 NAV BARS & HERO BUTTONS
@@ -293,28 +379,28 @@
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 <div class="space-y-1.5">
                                     <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Call for Abstracts Button</label>
-                                    <input type="text" id="announcements-abstract" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-200 focus:outline-none focus:border-brandBlue transition-colors" placeholder="#conference">
-                                    <span class="text-[9px] text-slate-500 block">Where to go when clicked (e.g. #conference).</span>
+                                    <input type="text" id="announcements-abstract" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs text-slate-700 focus:outline-none focus:border-brandBlue transition-colors" placeholder="#conference">
+                                    <span class="text-[9px] text-slate-400 block">Where to go when clicked (e.g. #conference).</span>
                                 </div>
                                 <div class="space-y-1.5">
                                     <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Award Nominations Button</label>
-                                    <input type="text" id="announcements-award" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-200 focus:outline-none focus:border-brandBlue transition-colors" placeholder="#contact">
-                                    <span class="text-[9px] text-slate-500 block">Where to go when clicked (e.g. #contact).</span>
+                                    <input type="text" id="announcements-award" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs text-slate-700 focus:outline-none focus:border-brandBlue transition-colors" placeholder="#contact">
+                                    <span class="text-[9px] text-slate-400 block">Where to go when clicked (e.g. #contact).</span>
                                 </div>
                                 <div class="space-y-1.5">
                                     <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Business Booking Button</label>
-                                    <input type="text" id="announcements-business" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-200 focus:outline-none focus:border-brandBlue transition-colors" placeholder="#contact">
-                                    <span class="text-[9px] text-slate-500 block">Where to go when clicked (e.g. #contact).</span>
+                                    <input type="text" id="announcements-business" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs text-slate-700 focus:outline-none focus:border-brandBlue transition-colors" placeholder="#contact">
+                                    <span class="text-[9px] text-slate-400 block">Where to go when clicked (e.g. #contact).</span>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Card 3: SOAS Academic Conference Dates -->
-                        <div class="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-6 space-y-5">
-                            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                        <div class="bg-white border border-slate-200 rounded-2xl p-6 space-y-5">
+                            <div class="flex items-center justify-between border-b border-slate-200 pb-3">
                                 <div class="flex items-center gap-2.5">
                                     <i class="fa-solid fa-graduation-cap text-indigo-400 text-sm"></i>
-                                    <h3 class="font-display text-sm font-bold text-white uppercase tracking-wide">Conference Details & Deadlines</h3>
+                                    <h3 class="font-display text-sm font-bold text-slate-900 uppercase tracking-wide">Conference Details & Deadlines</h3>
                                 </div>
                                 <span class="text-[8px] font-bold text-brandBlue uppercase bg-brandBlue/10 px-2 py-0.5 rounded border border-brandBlue/20">
                                     📍 SOAS CONFERENCE SECTION
@@ -323,36 +409,36 @@
                             
                             <div class="space-y-1.5">
                                 <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Primary Conference Theme</label>
-                                <input type="text" id="conference-theme" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-200 focus:outline-none focus:border-brandBlue transition-colors" required>
-                                <span class="text-[9px] text-slate-500 block">Main research topic headline.</span>
+                                <input type="text" id="conference-theme" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs text-slate-700 focus:outline-none focus:border-brandBlue transition-colors" required>
+                                <span class="text-[9px] text-slate-400 block">Main research topic headline.</span>
                             </div>
                             
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                                 <div class="space-y-1.5">
                                     <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Abstracts Deadline</label>
-                                    <input type="text" id="conference-abstract" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none" required>
+                                    <input type="text" id="conference-abstract" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-700 focus:outline-none" required>
                                 </div>
                                 <div class="space-y-1.5">
                                     <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Acceptance Date</label>
-                                    <input type="text" id="conference-acceptance" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none" required>
+                                    <input type="text" id="conference-acceptance" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-700 focus:outline-none" required>
                                 </div>
                                 <div class="space-y-1.5">
                                     <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Full Paper Deadline</label>
-                                    <input type="text" id="conference-paper" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none" required>
+                                    <input type="text" id="conference-paper" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-700 focus:outline-none" required>
                                 </div>
                                 <div class="space-y-1.5">
                                     <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Conference Date</label>
-                                    <input type="text" id="conference-date" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none" required>
+                                    <input type="text" id="conference-date" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-700 focus:outline-none" required>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Card 4: Three-Day Event Timelines -->
-                        <div class="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-6 space-y-6">
-                            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                        <div class="bg-white border border-slate-200 rounded-2xl p-6 space-y-6">
+                            <div class="flex items-center justify-between border-b border-slate-200 pb-3">
                                 <div class="flex items-center gap-2.5">
                                     <i class="fa-solid fa-calendar-days text-emerald-400 text-sm"></i>
-                                    <h3 class="font-display text-sm font-bold text-white uppercase tracking-wide">Event Timelines (Day 1, 2, 3)</h3>
+                                    <h3 class="font-display text-sm font-bold text-slate-900 uppercase tracking-wide">Event Timelines (Day 1, 2, 3)</h3>
                                 </div>
                                 <span class="text-[8px] font-bold text-brandBlue uppercase bg-brandBlue/10 px-2 py-0.5 rounded border border-brandBlue/20">
                                     📍 TIMELINE SECTION ON HOMEPAGE
@@ -360,71 +446,71 @@
                             </div>
                             
                             <!-- Day 1 -->
-                            <div class="space-y-4 bg-slate-950/40 p-4 rounded-xl border border-slate-800/60">
+                            <div class="space-y-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
                                 <span class="text-[10px] font-extrabold text-brandBlue uppercase tracking-wider bg-brandBlue/10 border border-brandBlue/20 px-2 py-0.5 rounded">Day 1 Details</span>
                                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
                                     <div class="space-y-1.5">
                                         <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Date</label>
-                                        <input type="text" id="event1-date" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none" required>
+                                        <input type="text" id="event1-date" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-700 focus:outline-none" required>
                                     </div>
                                     <div class="space-y-1.5 md:col-span-2">
                                         <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Name of Segment</label>
-                                        <input type="text" id="event1-name" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none" required>
+                                        <input type="text" id="event1-name" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-700 focus:outline-none" required>
                                     </div>
                                 </div>
                                 <div class="space-y-1.5">
                                     <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Venue Location</label>
-                                    <input type="text" id="event1-venue" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none" required>
+                                    <input type="text" id="event1-venue" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-700 focus:outline-none" required>
                                 </div>
                                 <div class="space-y-1.5">
                                     <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Segment Focus (Short Description)</label>
-                                    <textarea id="event1-focus" rows="2" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none" required></textarea>
+                                    <textarea id="event1-focus" rows="2" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-700 focus:outline-none" required></textarea>
                                 </div>
                             </div>
 
                             <!-- Day 2 -->
-                            <div class="space-y-4 bg-slate-950/40 p-4 rounded-xl border border-slate-800/60">
-                                <span class="text-[10px] font-extrabold text-amber-500 uppercase tracking-wider bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded">Day 2 Details</span>
+                            <div class="space-y-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                                <span class="text-[10px] font-extrabold text-amber-600 uppercase tracking-wider bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded">Day 2 Details</span>
                                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
                                     <div class="space-y-1.5">
                                         <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Date</label>
-                                        <input type="text" id="event2-date" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none" required>
+                                        <input type="text" id="event2-date" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-700 focus:outline-none" required>
                                     </div>
                                     <div class="space-y-1.5 md:col-span-2">
                                         <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Name of Segment</label>
-                                        <input type="text" id="event2-name" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none" required>
+                                        <input type="text" id="event2-name" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-700 focus:outline-none" required>
                                     </div>
                                 </div>
                                 <div class="space-y-1.5">
                                     <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Venue Location</label>
-                                    <input type="text" id="event2-venue" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none" required>
+                                    <input type="text" id="event2-venue" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-700 focus:outline-none" required>
                                 </div>
                                 <div class="space-y-1.5">
                                     <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Segment Focus (Short Description)</label>
-                                    <textarea id="event2-focus" rows="2" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none" required></textarea>
+                                    <textarea id="event2-focus" rows="2" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-700 focus:outline-none" required></textarea>
                                 </div>
                             </div>
 
                             <!-- Day 3 -->
-                            <div class="space-y-4 bg-slate-950/40 p-4 rounded-xl border border-slate-800/60">
+                            <div class="space-y-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
                                 <span class="text-[10px] font-extrabold text-purple-400 uppercase tracking-wider bg-purple-550/10 border border-purple-550/20 px-2 py-0.5 rounded">Day 3 Details</span>
                                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
                                     <div class="space-y-1.5">
                                         <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Date</label>
-                                        <input type="text" id="event3-date" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none" required>
+                                        <input type="text" id="event3-date" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-700 focus:outline-none" required>
                                     </div>
                                     <div class="space-y-1.5 md:col-span-2">
                                         <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Name of Segment</label>
-                                        <input type="text" id="event3-name" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none" required>
+                                        <input type="text" id="event3-name" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-700 focus:outline-none" required>
                                     </div>
                                 </div>
                                 <div class="space-y-1.5">
                                     <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Venue Location</label>
-                                    <input type="text" id="event3-venue" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none" required>
+                                    <input type="text" id="event3-venue" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-700 focus:outline-none" required>
                                 </div>
                                 <div class="space-y-1.5">
                                     <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Segment Focus (Short Description)</label>
-                                    <textarea id="event3-focus" rows="2" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none" required></textarea>
+                                    <textarea id="event3-focus" rows="2" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-700 focus:outline-none" required></textarea>
                                 </div>
                             </div>
                         </div>
@@ -433,27 +519,27 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                             
                             <!-- Coordinator phone -->
-                            <div class="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-6 space-y-4">
-                                <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                            <div class="bg-white border border-slate-200 rounded-2xl p-6 space-y-4">
+                                <div class="flex items-center justify-between border-b border-slate-200 pb-3">
                                     <div class="flex items-center gap-2.5">
-                                        <i class="fa-solid fa-address-book text-slate-450 text-sm"></i>
-                                        <h3 class="font-display text-sm font-bold text-white uppercase tracking-wide">Coordinator Hotline</h3>
+                                        <i class="fa-solid fa-address-book text-slate-400 text-sm"></i>
+                                        <h3 class="font-display text-sm font-bold text-slate-900 uppercase tracking-wide">Coordinator Hotline</h3>
                                     </div>
                                     <span class="text-[8px] font-bold text-brandBlue uppercase bg-brandBlue/10 px-2 py-0.5 rounded">📍 HOMEPAGE FOOTER</span>
                                 </div>
                                 <div class="space-y-1.5">
                                     <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Coordinator Mobile Line</label>
-                                    <input type="text" id="contact-phone" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-200 focus:outline-none focus:border-brandBlue transition-colors" required>
-                                    <span class="text-[9px] text-slate-500 block">Mobile number with country code.</span>
+                                    <input type="text" id="contact-phone" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs text-slate-700 focus:outline-none focus:border-brandBlue transition-colors" required>
+                                    <span class="text-[9px] text-slate-400 block">Mobile number with country code.</span>
                                 </div>
                             </div>
 
                             <!-- Souvenir Ad Pricing Rates -->
-                            <div class="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-6 space-y-4">
-                                <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                            <div class="bg-white border border-slate-200 rounded-2xl p-6 space-y-4">
+                                <div class="flex items-center justify-between border-b border-slate-200 pb-3">
                                     <div class="flex items-center gap-2.5">
                                         <i class="fa-solid fa-tags text-rose-500 text-sm"></i>
-                                        <h3 class="font-display text-sm font-bold text-white uppercase tracking-wide">Souvenir Ad Packages</h3>
+                                        <h3 class="font-display text-sm font-bold text-slate-900 uppercase tracking-wide">Souvenir Ad Packages</h3>
                                     </div>
                                     <button type="button" onclick="addNewRateRow()" class="text-[9px] bg-brandBlue/10 border border-brandBlue/30 text-brandBlue hover:bg-brandBlue/20 px-2.5 py-1 rounded font-bold uppercase transition-all flex items-center gap-1">
                                         <i class="fa-solid fa-plus"></i> Add Package
@@ -467,12 +553,12 @@
                         </div>
                         
                         <!-- Bottom Action Panel -->
-                        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                        <div class="bg-white border border-slate-200 rounded-3xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
                             <span class="text-xs text-slate-400 leading-normal flex items-center gap-2">
                                 <i class="fa-solid fa-circle-check text-emerald-500 text-sm shrink-0"></i> 
                                 Ready to publish? Click "Save Content Updates" to push changes to the active website.
                             </span>
-                            <button type="submit" class="w-full sm:w-auto bg-brandBlue hover:bg-brandBlue/90 text-white font-bold px-10 py-4 rounded-xl transition-all shadow-md text-xs uppercase tracking-wider">
+                            <button type="submit" class="w-full sm:w-auto bg-brandBlue hover:bg-brandBlue/90 text-slate-900 font-bold px-10 py-4 rounded-xl transition-all shadow-md text-xs uppercase tracking-wider">
                                 Save Content Updates
                             </button>
                         </div>
@@ -484,39 +570,39 @@
                 <!-- ══════════════════════════════════════════════════════════════ -->
                 <div id="admin-tab-content-gallery" class="hidden w-full grid grid-cols-1 lg:grid-cols-12 gap-8">
                     <!-- Left: Upload Photo Form -->
-                    <div class="lg:col-span-4 bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4 h-fit">
-                        <div class="flex items-center gap-2 border-b border-slate-800 pb-3 mb-2">
+                    <div class="lg:col-span-4 bg-white border border-slate-200 rounded-3xl p-6 space-y-4 h-fit">
+                        <div class="flex items-center gap-2 border-b border-slate-200 pb-3 mb-2">
                             <i class="fa-solid fa-plus text-brandBlue text-sm"></i>
-                            <h3 id="gallery-form-title" class="font-display text-sm font-bold text-white uppercase tracking-wide">Upload Photo</h3>
+                            <h3 id="gallery-form-title" class="font-display text-sm font-bold text-slate-900 uppercase tracking-wide">Upload Photo</h3>
                         </div>
                         <form id="gallery-form" onsubmit="handleSavePhoto(event)" class="space-y-4">
                             <input type="hidden" id="gallery-edit-id" value="">
                             
                             <div class="space-y-1.5">
                                 <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Title of Photo</label>
-                                <input type="text" id="gallery-title" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brandBlue transition-colors" placeholder="e.g. London Summit Scholarly Panel" required>
+                                <input type="text" id="gallery-title" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-700 focus:outline-none focus:border-brandBlue transition-colors" placeholder="e.g. London Summit Scholarly Panel" required>
                             </div>
 
                             <div class="space-y-1.5">
                                 <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Short Caption / Description</label>
-                                <textarea id="gallery-description" rows="3" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brandBlue transition-colors" placeholder="e.g. Scholarly delegates reviewing key constitutional themes..." required></textarea>
+                                <textarea id="gallery-description" rows="3" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-700 focus:outline-none focus:border-brandBlue transition-colors" placeholder="e.g. Scholarly delegates reviewing key constitutional themes..." required></textarea>
                             </div>
 
                             <div class="grid grid-cols-2 gap-4">
                                 <div class="space-y-1.5">
                                     <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Date Taken</label>
-                                    <input type="text" id="gallery-date" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brandBlue" placeholder="e.g. Sep 18, 2026" required>
+                                    <input type="text" id="gallery-date" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-700 focus:outline-none focus:border-brandBlue" placeholder="e.g. Sep 18, 2026" required>
                                 </div>
                                 <div class="space-y-1.5">
                                     <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Location / Venue</label>
-                                    <input type="text" id="gallery-location" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brandBlue" placeholder="e.g. SOAS London, UK" required>
+                                    <input type="text" id="gallery-location" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-700 focus:outline-none focus:border-brandBlue" placeholder="e.g. SOAS London, UK" required>
                                 </div>
                             </div>
 
                             <div class="grid grid-cols-2 gap-4">
                                 <div class="space-y-1.5">
                                     <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Gallery Category</label>
-                                    <select id="gallery-category" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brandBlue" onchange="updateGalleryBadgeDefaults()">
+                                    <select id="gallery-category" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-700 focus:outline-none focus:border-brandBlue" onchange="updateGalleryBadgeDefaults()">
                                         <option value="events">Social Events</option>
                                         <option value="london">London Summit</option>
                                         <option value="dignitaries">Dignitaries</option>
@@ -525,44 +611,44 @@
                                 </div>
                                 <div class="space-y-1.5">
                                     <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Badge Tag</label>
-                                    <input type="text" id="gallery-badgetext" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brandBlue" placeholder="e.g. Event" required>
+                                    <input type="text" id="gallery-badgetext" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-700 focus:outline-none focus:border-brandBlue" placeholder="e.g. Event" required>
                                 </div>
                             </div>
 
                             <div class="space-y-1.5">
                                 <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Image Attachment</label>
                                 <div class="flex gap-4 mb-2">
-                                    <label class="inline-flex items-center text-xs text-slate-350 cursor-pointer">
+                                    <label class="inline-flex items-center text-xs text-slate-600 cursor-pointer">
                                         <input type="radio" name="gallery-src-type" value="file" checked onchange="toggleGallerySrcType()" class="mr-1.5 accent-brandBlue"> Upload Photo file
                                     </label>
-                                    <label class="inline-flex items-center text-xs text-slate-350 cursor-pointer">
+                                    <label class="inline-flex items-center text-xs text-slate-600 cursor-pointer">
                                         <input type="radio" name="gallery-src-type" value="url" onchange="toggleGallerySrcType()" class="mr-1.5 accent-brandBlue"> Enter Web Path / URL
                                     </label>
                                 </div>
                                 
                                 <div id="gallery-file-container">
-                                    <input type="file" id="gallery-file" accept="image/*" class="w-full text-xs text-slate-400 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-950 file:text-slate-300 file:hover:bg-slate-850 cursor-pointer bg-slate-950/40 p-2.5 border border-slate-800 rounded-xl">
+                                    <input type="file" id="gallery-file" accept="image/*,application/pdf" class="w-full text-xs text-slate-400 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-50 file:text-slate-600 file:hover:bg-slate-850 cursor-pointer bg-slate-50 p-2.5 border border-slate-200 rounded-xl">
                                 </div>
                                 
                                 <div id="gallery-url-container" class="hidden">
-                                    <input type="text" id="gallery-url" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brandBlue" placeholder="e.g. wp-content/uploads/2026/06/summit.jpg">
+                                    <input type="text" id="gallery-url" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-700 focus:outline-none focus:border-brandBlue" placeholder="e.g. wp-content/uploads/2026/06/summit.jpg">
                                 </div>
                             </div>
 
                             <div class="flex items-center gap-6 pt-2">
-                                <label class="inline-flex items-center text-xs text-slate-300 cursor-pointer">
-                                    <input type="checkbox" id="gallery-featured" class="mr-2 rounded border-slate-800 bg-slate-950 text-brandBlue focus:ring-brandBlue accent-brandBlue"> Show on Homepage
+                                <label class="inline-flex items-center text-xs text-slate-600 cursor-pointer">
+                                    <input type="checkbox" id="gallery-featured" class="mr-2 rounded border-slate-200 bg-slate-50 text-brandBlue focus:ring-brandBlue accent-brandBlue"> Show on Homepage
                                 </label>
-                                <label class="inline-flex items-center text-xs text-slate-300 cursor-pointer">
-                                    <input type="checkbox" id="gallery-popular" class="mr-2 rounded border-slate-800 bg-slate-950 text-brandBlue focus:ring-brandBlue accent-brandBlue"> High Priority
+                                <label class="inline-flex items-center text-xs text-slate-600 cursor-pointer">
+                                    <input type="checkbox" id="gallery-popular" class="mr-2 rounded border-slate-200 bg-slate-50 text-brandBlue focus:ring-brandBlue accent-brandBlue"> High Priority
                                 </label>
                             </div>
 
                             <div class="flex gap-3 pt-4 border-t border-slate-850">
-                                <button type="submit" id="gallery-submit-btn" class="flex-1 bg-brandBlue hover:bg-brandBlue/90 text-white font-bold py-3 px-4 rounded-xl text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2">
+                                <button type="submit" id="gallery-submit-btn" class="flex-1 bg-brandBlue hover:bg-brandBlue/90 text-slate-900 font-bold py-3 px-4 rounded-xl text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2">
                                     <i class="fa-solid fa-cloud-arrow-up"></i> Publish Photo
                                 </button>
-                                <button type="button" onclick="resetGalleryForm()" class="bg-slate-850 hover:bg-slate-800 text-slate-400 font-bold py-3 px-4 rounded-xl text-xs uppercase tracking-wider transition-all">
+                                <button type="button" onclick="resetGalleryForm()" class="bg-slate-850 hover:bg-slate-100 text-slate-400 font-bold py-3 px-4 rounded-xl text-xs uppercase tracking-wider transition-all">
                                     Cancel
                                 </button>
                             </div>
@@ -570,16 +656,16 @@
                     </div>
 
                     <!-- Right: Photo List & Empty State Guide -->
-                    <div class="lg:col-span-8 bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4">
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-3 mb-2">
+                    <div class="lg:col-span-8 bg-white border border-slate-200 rounded-3xl p-6 space-y-4">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-3 mb-2">
                             <div class="flex items-center gap-2">
                                 <i class="fa-solid fa-images text-brandBlue text-sm"></i>
-                                <h3 class="font-display text-sm font-bold text-white uppercase tracking-wide">Active Photo Catalog</h3>
+                                <h3 class="font-display text-sm font-bold text-slate-900 uppercase tracking-wide">Active Photo Catalog</h3>
                             </div>
                             
                             <div class="relative w-full sm:w-64">
-                                <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-500 text-xs"></i>
-                                <input type="text" id="gallery-search" oninput="renderGalleryList()" class="w-full bg-slate-950 border border-slate-800 rounded-full pl-9 pr-4 py-2 text-xs text-slate-200 focus:outline-none focus:border-brandBlue" placeholder="Search catalog...">
+                                <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                                <input type="text" id="gallery-search" oninput="renderGalleryList()" class="w-full bg-slate-50 border border-slate-200 rounded-full pl-9 pr-4 py-2 text-xs text-slate-700 focus:outline-none focus:border-brandBlue" placeholder="Search catalog...">
                             </div>
                         </div>
 
@@ -587,7 +673,7 @@
                         <div class="overflow-x-auto min-h-[300px] max-h-[600px] overflow-y-auto">
                             <table class="w-full text-left text-xs">
                                 <thead>
-                                    <tr class="border-b border-slate-800 text-slate-500 uppercase tracking-widest text-[9px] font-bold">
+                                    <tr class="border-b border-slate-200 text-slate-400 uppercase tracking-widest text-[9px] font-bold">
                                         <th class="pb-3 w-16">Preview</th>
                                         <th class="pb-3 pl-4">Title / Details</th>
                                         <th class="pb-3 w-28">Category</th>
@@ -601,17 +687,17 @@
                             </table>
                             
                             <!-- Visual Empty State Step-by-Step Walkthrough -->
-                            <div id="gallery-empty-state" class="hidden text-center py-12 px-6 bg-slate-950/40 rounded-2xl border border-slate-800 border-dashed space-y-4">
+                            <div id="gallery-empty-state" class="hidden text-center py-12 px-6 bg-slate-50 rounded-2xl border border-slate-200 border-dashed space-y-4">
                                 <div class="w-12 h-12 rounded-full bg-brandBlue/10 flex items-center justify-center mx-auto text-brandBlue text-lg">
                                     <i class="fa-solid fa-cloud-arrow-up"></i>
                                 </div>
                                 <div class="space-y-1">
-                                    <p class="text-xs font-bold text-slate-300">Photo Catalog is Currently Empty</p>
-                                    <p class="text-[10px] text-slate-500 max-w-sm mx-auto leading-relaxed">
+                                    <p class="text-xs font-bold text-slate-600">Photo Catalog is Currently Empty</p>
+                                    <p class="text-[10px] text-slate-400 max-w-sm mx-auto leading-relaxed">
                                         To add your first photo, fill the upload form on the left:
                                     </p>
                                 </div>
-                                <div class="max-w-xs mx-auto text-left text-[10px] text-slate-400 space-y-1.5 bg-slate-950 p-4 rounded-xl border border-slate-850">
+                                <div class="max-w-xs mx-auto text-left text-[10px] text-slate-400 space-y-1.5 bg-slate-50 p-4 rounded-xl border border-slate-850">
                                     <div>1️⃣ Enter a clear, readable title.</div>
                                     <div>2️⃣ Type a brief description for visitors.</div>
                                     <div>3️⃣ Click <strong>Choose Photo file</strong> and pick a picture.</div>
@@ -627,17 +713,17 @@
                 <!-- ══════════════════════════════════════════════════════════════ -->
                 <div id="admin-tab-content-archives" class="hidden w-full grid grid-cols-1 lg:grid-cols-12 gap-8">
                     <!-- Left: Add Document Form -->
-                    <div class="lg:col-span-4 bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4 h-fit">
-                        <div class="flex items-center gap-2 border-b border-slate-800 pb-3 mb-2">
+                    <div class="lg:col-span-4 bg-white border border-slate-200 rounded-3xl p-6 space-y-4 h-fit">
+                        <div class="flex items-center gap-2 border-b border-slate-200 pb-3 mb-2">
                             <i class="fa-solid fa-plus text-brandBlue text-sm"></i>
-                            <h3 id="archives-form-title" class="font-display text-sm font-bold text-white uppercase tracking-wide">Add Library Item</h3>
+                            <h3 id="archives-form-title" class="font-display text-sm font-bold text-slate-900 uppercase tracking-wide">Add Library Item</h3>
                         </div>
                         <form id="archives-form" onsubmit="handleSaveArchive(event)" class="space-y-4">
                             <input type="hidden" id="archives-edit-id" value="">
                             
                             <div class="space-y-1.5">
                                 <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Select Item Format</label>
-                                <select id="archives-type" onchange="toggleArchiveFields()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brandBlue">
+                                <select id="archives-type" onchange="toggleArchiveFields()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-700 focus:outline-none focus:border-brandBlue">
                                     <option value="pdf">PDF Booklet / Circular Document</option>
                                     <option value="cover">Magazine Print Edition Cover</option>
                                 </select>
@@ -645,38 +731,38 @@
 
                             <div class="space-y-1.5">
                                 <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Document Title</label>
-                                <input type="text" id="archives-title" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brandBlue" placeholder="e.g. Official Call for Papers" required>
+                                <input type="text" id="archives-title" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-700 focus:outline-none focus:border-brandBlue" placeholder="e.g. Official Call for Papers" required>
                             </div>
 
                             <!-- PDF Only fields -->
                             <div id="archives-pdf-fields" class="space-y-4">
                                 <div class="space-y-1.5">
                                     <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Short Summary of Document</label>
-                                    <textarea id="archives-desc" rows="3" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brandBlue" placeholder="Briefly describe what this document contains..."></textarea>
+                                    <textarea id="archives-desc" rows="3" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-700 focus:outline-none focus:border-brandBlue" placeholder="Briefly describe what this document contains..."></textarea>
                                 </div>
                                 
                                 <div class="space-y-1.5">
                                     <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Estimated File Size (Label)</label>
-                                    <input type="text" id="archives-size" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brandBlue" placeholder="e.g. 1.2 MB">
+                                    <input type="text" id="archives-size" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-700 focus:outline-none focus:border-brandBlue" placeholder="e.g. 1.2 MB">
                                 </div>
 
                                 <div class="space-y-1.5">
                                     <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">PDF File</label>
                                     <div class="flex gap-4 mb-2">
-                                        <label class="inline-flex items-center text-xs text-slate-350 cursor-pointer">
+                                        <label class="inline-flex items-center text-xs text-slate-600 cursor-pointer">
                                             <input type="radio" name="pdf-src-type" value="file" checked onchange="togglePdfSrcType()" class="mr-1.5 accent-brandBlue"> Upload PDF file
                                         </label>
-                                        <label class="inline-flex items-center text-xs text-slate-350 cursor-pointer">
+                                        <label class="inline-flex items-center text-xs text-slate-600 cursor-pointer">
                                             <input type="radio" name="pdf-src-type" value="url" onchange="togglePdfSrcType()" class="mr-1.5 accent-brandBlue"> Enter File Path / Link
                                         </label>
                                     </div>
                                     
                                     <div id="pdf-file-container">
-                                        <input type="file" id="pdf-file" accept="application/pdf" class="w-full text-xs text-slate-400 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-950 file:text-slate-300 file:hover:bg-slate-850 cursor-pointer bg-slate-950/40 p-2.5 border border-slate-800 rounded-xl">
+                                        <input type="file" id="pdf-file" accept="application/pdf" class="w-full text-xs text-slate-400 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-50 file:text-slate-600 file:hover:bg-slate-850 cursor-pointer bg-slate-50 p-2.5 border border-slate-200 rounded-xl">
                                     </div>
                                     
                                     <div id="pdf-url-container" class="hidden">
-                                        <input type="text" id="pdf-url" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none" placeholder="e.g. pdfs/call-for-papers.pdf">
+                                        <input type="text" id="pdf-url" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-700 focus:outline-none" placeholder="e.g. pdfs/call-for-papers.pdf">
                                     </div>
                                 </div>
                             </div>
@@ -685,35 +771,35 @@
                             <div id="archives-cover-fields" class="space-y-4 hidden">
                                 <div class="space-y-1.5">
                                     <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Publish Date / Issue Label</label>
-                                    <input type="text" id="archives-date" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none" placeholder="e.g. Feb 2026">
+                                    <input type="text" id="archives-date" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-700 focus:outline-none" placeholder="e.g. Feb 2026">
                                 </div>
 
                                 <div class="space-y-1.5">
                                     <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Cover Image file</label>
                                     <div class="flex gap-4 mb-2">
-                                        <label class="inline-flex items-center text-xs text-slate-350 cursor-pointer">
+                                        <label class="inline-flex items-center text-xs text-slate-600 cursor-pointer">
                                             <input type="radio" name="cover-src-type" value="file" checked onchange="toggleCoverSrcType()" class="mr-1.5 accent-brandBlue"> Upload Cover Image
                                         </label>
-                                        <label class="inline-flex items-center text-xs text-slate-350 cursor-pointer">
+                                        <label class="inline-flex items-center text-xs text-slate-600 cursor-pointer">
                                             <input type="radio" name="cover-src-type" value="url" onchange="toggleCoverSrcType()" class="mr-1.5 accent-brandBlue"> Enter Image Path / URL
                                         </label>
                                     </div>
                                     
                                     <div id="cover-file-container">
-                                        <input type="file" id="cover-file" accept="image/*" class="w-full text-xs text-slate-400 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-950 file:text-slate-300 file:hover:bg-slate-850 cursor-pointer bg-slate-950/40 p-2.5 border border-slate-800 rounded-xl">
+                                        <input type="file" id="cover-file" accept="image/*,application/pdf" class="w-full text-xs text-slate-400 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-50 file:text-slate-600 file:hover:bg-slate-850 cursor-pointer bg-slate-50 p-2.5 border border-slate-200 rounded-xl">
                                     </div>
                                     
                                     <div id="cover-url-container" class="hidden">
-                                        <input type="text" id="cover-url" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none" placeholder="e.g. magazine-covers/issue-feb.jpg">
+                                        <input type="text" id="cover-url" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-700 focus:outline-none" placeholder="e.g. magazine-covers/issue-feb.jpg">
                                     </div>
                                 </div>
                             </div>
 
                             <div class="flex gap-3 pt-4 border-t border-slate-850">
-                                <button type="submit" id="archives-submit-btn" class="flex-1 bg-brandBlue hover:bg-brandBlue/90 text-white font-bold py-3 px-4 rounded-xl text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2">
+                                <button type="submit" id="archives-submit-btn" class="flex-1 bg-brandBlue hover:bg-brandBlue/90 text-slate-900 font-bold py-3 px-4 rounded-xl text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2">
                                     <i class="fa-solid fa-cloud-arrow-up"></i> Save Document
                                 </button>
-                                <button type="button" onclick="resetArchivesForm()" class="bg-slate-850 hover:bg-slate-800 text-slate-400 font-bold py-3 px-4 rounded-xl text-xs uppercase tracking-wider transition-all">
+                                <button type="button" onclick="resetArchivesForm()" class="bg-slate-850 hover:bg-slate-100 text-slate-400 font-bold py-3 px-4 rounded-xl text-xs uppercase tracking-wider transition-all">
                                     Cancel
                                 </button>
                             </div>
@@ -721,16 +807,16 @@
                     </div>
 
                     <!-- Right: Documents List & Empty State Onboarding -->
-                    <div class="lg:col-span-8 bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4">
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-3 mb-2">
+                    <div class="lg:col-span-8 bg-white border border-slate-200 rounded-3xl p-6 space-y-4">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-3 mb-2">
                             <div class="flex items-center gap-2">
                                 <i class="fa-solid fa-file-invoice text-brandBlue text-sm"></i>
-                                <h3 class="font-display text-sm font-bold text-white uppercase tracking-wide">Library Catalog</h3>
+                                <h3 class="font-display text-sm font-bold text-slate-900 uppercase tracking-wide">Library Catalog</h3>
                             </div>
                             
                             <div class="relative w-full sm:w-64">
-                                <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-500 text-xs"></i>
-                                <input type="text" id="archives-search" oninput="renderArchivesList()" class="w-full bg-slate-950 border border-slate-800 rounded-full pl-9 pr-4 py-2 text-xs text-slate-200 focus:outline-none focus:border-brandBlue" placeholder="Search library...">
+                                <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                                <input type="text" id="archives-search" oninput="renderArchivesList()" class="w-full bg-slate-50 border border-slate-200 rounded-full pl-9 pr-4 py-2 text-xs text-slate-700 focus:outline-none focus:border-brandBlue" placeholder="Search library...">
                             </div>
                         </div>
 
@@ -738,7 +824,7 @@
                         <div class="overflow-x-auto min-h-[300px] max-h-[600px] overflow-y-auto">
                             <table class="w-full text-left text-xs">
                                 <thead>
-                                    <tr class="border-b border-slate-800 text-slate-500 uppercase tracking-widest text-[9px] font-bold">
+                                    <tr class="border-b border-slate-200 text-slate-400 uppercase tracking-widest text-[9px] font-bold">
                                         <th class="pb-3 w-28">Type</th>
                                         <th class="pb-3 pl-4">Title</th>
                                         <th class="pb-3 pl-4">File Location</th>
@@ -752,17 +838,17 @@
                             </table>
                             
                             <!-- Visual Empty State Step-by-Step Onboarding -->
-                            <div id="archives-empty-state" class="hidden text-center py-12 px-6 bg-slate-950/40 rounded-2xl border border-slate-800 border-dashed space-y-4">
+                            <div id="archives-empty-state" class="hidden text-center py-12 px-6 bg-slate-50 rounded-2xl border border-slate-200 border-dashed space-y-4">
                                 <div class="w-12 h-12 rounded-full bg-brandBlue/10 flex items-center justify-center mx-auto text-brandBlue text-lg">
                                     <i class="fa-solid fa-file-pdf"></i>
                                 </div>
                                 <div class="space-y-1">
-                                    <p class="text-xs font-bold text-slate-300">Digital Library is Currently Empty</p>
-                                    <p class="text-[10px] text-slate-500 max-w-sm mx-auto leading-relaxed">
+                                    <p class="text-xs font-bold text-slate-600">Digital Library is Currently Empty</p>
+                                    <p class="text-[10px] text-slate-400 max-w-sm mx-auto leading-relaxed">
                                         To add your first PDF document or print cover, complete the form on the left:
                                     </p>
                                 </div>
-                                <div class="max-w-xs mx-auto text-left text-[10px] text-slate-400 space-y-1.5 bg-slate-950 p-4 rounded-xl border border-slate-850">
+                                <div class="max-w-xs mx-auto text-left text-[10px] text-slate-400 space-y-1.5 bg-slate-50 p-4 rounded-xl border border-slate-850">
                                     <div>1️⃣ Select format (PDF Document or Magazine Cover).</div>
                                     <div>2️⃣ Enter a short, professional title.</div>
                                     <div>3️⃣ Select <strong>Upload file</strong> and select file from computer.</div>
@@ -776,13 +862,13 @@
                 <!-- ══════════════════════════════════════════════════════════════ -->
                 <!-- TAB 4: SYSTEM PASSWORD / SECURITY                            -->
                 <!-- ══════════════════════════════════════════════════════════════ -->
-                <div id="admin-tab-content-security" class="hidden w-full bg-slate-900 border border-slate-800 rounded-3xl p-8 space-y-6">
-                    <div class="flex items-center gap-3 border-b border-slate-800 pb-4">
+                <div id="admin-tab-content-security" class="hidden w-full bg-white border border-slate-200 rounded-3xl p-8 space-y-6">
+                    <div class="flex items-center gap-3 border-b border-slate-200 pb-4">
                         <div class="w-10 h-10 rounded-xl bg-brandBlue/10 border border-brandBlue/20 flex items-center justify-center text-brandBlue text-lg">
                             <i class="fa-solid fa-key"></i>
                         </div>
                         <div>
-                            <h3 class="font-display text-sm font-bold text-white uppercase tracking-wide">Workspace Security credentials</h3>
+                            <h3 class="font-display text-sm font-bold text-slate-900 uppercase tracking-wide">Workspace Security credentials</h3>
                             <p class="text-[10px] text-slate-400">Change your secure login password to access the vishwaleader-team dashboard.</p>
                         </div>
                     </div>
@@ -790,14 +876,14 @@
                     <form onsubmit="handleChangeAdminPassword(event)" class="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
                         <div class="space-y-1.5 col-span-1">
                             <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Current Password</label>
-                            <input type="password" id="admin-current-password" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brandBlue" placeholder="••••••••" required>
+                            <input type="password" id="admin-current-password" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-700 focus:outline-none focus:border-brandBlue" placeholder="••••••••" required>
                         </div>
                         <div class="space-y-1.5 col-span-1">
                             <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">New Password</label>
-                            <input type="password" id="admin-new-password" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brandBlue" placeholder="Min. 6 characters" required>
+                            <input type="password" id="admin-new-password" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-700 focus:outline-none focus:border-brandBlue" placeholder="Min. 6 characters" required>
                         </div>
                         <div class="col-span-1">
-                            <button type="submit" id="admin-change-pwd-btn" class="w-full bg-brandBlue hover:bg-brandBlue/90 text-white font-bold py-3 px-6 rounded-xl transition-all text-xs uppercase tracking-wider">
+                            <button type="submit" id="admin-change-pwd-btn" class="w-full bg-brandBlue hover:bg-brandBlue/90 text-slate-900 font-bold py-3 px-6 rounded-xl transition-all text-xs uppercase tracking-wider">
                                 Update Password
                             </button>
                         </div>
@@ -810,7 +896,7 @@
     </main>
 
     <!-- Floating status alerts toast -->
-    <div id="toast" class="fixed bottom-6 right-6 z-50 bg-emerald-500 border border-emerald-400 text-white text-xs font-bold px-6 py-3.5 rounded-xl shadow-2xl transition-all duration-300 opacity-0 pointer-events-none translate-y-2 flex items-center gap-2">
+    <div id="toast" class="fixed bottom-6 right-6 z-50 bg-emerald-500 border border-emerald-400 text-slate-900 text-xs font-bold px-6 py-3.5 rounded-xl shadow-2xl transition-all duration-300 opacity-0 pointer-events-none translate-y-2 flex items-center gap-2">
         <i id="toast-icon" class="fa-solid fa-circle-check text-sm"></i>
         <span id="toast-msg">Settings saved successfully!</span>
     </div>
@@ -863,7 +949,7 @@
                     loadSettings();
                     loadGallery();
                     loadArchives();
-                    switchAdminTab('settings');
+                    switchAdminTab('dashboard'); initCharts(); loadInquiries(); loadDashboardStats();
                 } else {
                     // Unauthorized member trying to access admin
                     showToast("Access Denied: This area is restricted to vl-team administrators.", true);
@@ -991,27 +1077,110 @@
             });
         }
 
+        
+        let trafficChartInstance, membersChartInstance;
+
+        function initCharts() {
+            const ctxTraffic = document.getElementById('trafficChart');
+            const ctxMembers = document.getElementById('membersChart');
+            
+            if(ctxTraffic && !trafficChartInstance) {
+                trafficChartInstance = new Chart(ctxTraffic, {
+                    type: 'line',
+                    data: {
+                        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                        datasets: [{
+                            label: 'Monthly Visitors',
+                            data: [1200, 1900, 3000, 5000, 8000, 12504],
+                            borderColor: '#2563eb',
+                            tension: 0.4,
+                            fill: true,
+                            backgroundColor: 'rgba(37, 99, 235, 0.1)'
+                        }]
+                    }
+                });
+            }
+
+            if(ctxMembers && !membersChartInstance) {
+                membersChartInstance = new Chart(ctxMembers, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                        datasets: [{
+                            label: 'New Members',
+                            data: [50, 70, 120, 150, 200, 310],
+                            backgroundColor: '#10b981'
+                        }]
+                    }
+                });
+            }
+        }
+
+        function loadDashboardStats() {
+            db.collection('members').get().then(snap => {
+                document.getElementById('stat-members').innerText = snap.size || 0;
+            }).catch(e => {
+                document.getElementById('stat-members').innerText = 0;
+            });
+            
+            db.collection('inquiries').where('status', '==', 'pending').get().then(snap => {
+                document.getElementById('stat-inquiries').innerText = snap.size || 0;
+            }).catch(e => {
+                // If index or something is missing, just fallback to count all
+                db.collection('inquiries').get().then(s => {
+                    document.getElementById('stat-inquiries').innerText = s.size || 0;
+                }).catch(() => { document.getElementById('stat-inquiries').innerText = 0; });
+            });
+        }
+
+        function loadInquiries() {
+            db.collection('inquiries').orderBy('createdAt', 'desc').limit(50)
+                .onSnapshot(snap => {
+                    const list = document.getElementById('inquiries-list');
+                    list.innerHTML = '';
+                    if(snap.empty) {
+                        list.innerHTML = '<tr><td colspan="4" class="py-6 text-center text-slate-500">No inquiries found.</td></tr>';
+                        return;
+                    }
+                    snap.forEach(doc => {
+                        const data = doc.data();
+                        const date = data.createdAt ? new Date(data.createdAt.toMillis()).toLocaleDateString() : 'N/A';
+                        list.innerHTML += `
+                            <tr class="border-b border-slate-100 hover:bg-slate-50">
+                                <td class="py-3 px-4 text-sm text-slate-600">${date}</td>
+                                <td class="py-3 px-4 text-sm text-slate-900 font-medium">${data.name || 'Unknown'}</td>
+                                <td class="py-3 px-4 text-sm text-brandBlue"><a href="mailto:${data.email}">${data.email || 'N/A'}</a></td>
+                                <td class="py-3 px-4 text-sm text-slate-600 max-w-xs truncate" title="${data.message || ''}">${data.message || 'No message'}</td>
+                            </tr>
+                        `;
+                    });
+                }, err => {
+                    console.error("Error loading inquiries", err);
+                });
+        }
+
+
         // Tab Switching Logic
         function switchAdminTab(tabName) {
             currentTab = tabName;
             
             // Toggle sidebar button highlighting
-            const tabs = ['settings', 'gallery', 'archives', 'security'];
+            const tabs = ['dashboard', 'inquiries', 'settings', 'gallery', 'archives', 'security'];
             tabs.forEach(t => {
                 const btn = document.getElementById(`sidebar-tab-${t}`);
                 const content = document.getElementById(`admin-tab-content-${t}`);
                 if (t === tabName) {
                     if (btn) {
-                        btn.className = "w-full text-left p-3.5 rounded-2xl flex items-center gap-3 bg-brandBlue text-white font-bold shadow-lg transition-all";
+                        btn.className = "w-full text-left p-3.5 rounded-2xl flex items-center gap-3 bg-brandBlue text-slate-900 font-bold shadow-lg transition-all";
                         const span = btn.querySelector('span');
-                        if (span) span.className = "w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center text-sm text-white";
+                        if (span) span.className = "w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center text-sm text-slate-900";
                     }
                     if (content) content.classList.remove('hidden');
                 } else {
                     if (btn) {
-                        btn.className = "w-full text-left p-3.5 rounded-2xl flex items-center gap-3 hover:bg-slate-850/60 text-slate-350 transition-all";
+                        btn.className = "w-full text-left p-3.5 rounded-2xl flex items-center gap-3 hover:bg-slate-850/60 text-slate-600 transition-all";
                         const span = btn.querySelector('span');
-                        if (span) span.className = "w-8 h-8 rounded-xl bg-slate-950 flex items-center justify-center text-sm text-slate-400";
+                        if (span) span.className = "w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center text-sm text-slate-400";
                     }
                     if (content) content.classList.add('hidden');
                 }
@@ -1089,18 +1258,18 @@
             
             ratesState.forEach((rate, index) => {
                 const rowHtml = `
-                    <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3 relative group">
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3 relative group">
                         <div class="space-y-1">
-                            <label class="text-[8px] font-bold text-slate-500 uppercase tracking-wider">Item/Package Name</label>
-                            <input type="text" value="${rate.name}" onchange="updateRateItem(${index}, 'name', this.value)" class="w-full bg-slate-900 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none" required>
+                            <label class="text-[8px] font-bold text-slate-400 uppercase tracking-wider">Item/Package Name</label>
+                            <input type="text" value="${rate.name}" onchange="updateRateItem(${index}, 'name', this.value)" class="w-full bg-white border border-slate-200 rounded px-2.5 py-1.5 text-xs text-slate-700 focus:outline-none" required>
                         </div>
                         <div class="space-y-1">
-                            <label class="text-[8px] font-bold text-slate-500 uppercase tracking-wider">Short Subtitle</label>
-                            <input type="text" value="${rate.description}" onchange="updateRateItem(${index}, 'description', this.value)" class="w-full bg-slate-900 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none" required>
+                            <label class="text-[8px] font-bold text-slate-400 uppercase tracking-wider">Short Subtitle</label>
+                            <input type="text" value="${rate.description}" onchange="updateRateItem(${index}, 'description', this.value)" class="w-full bg-white border border-slate-200 rounded px-2.5 py-1.5 text-xs text-slate-700 focus:outline-none" required>
                         </div>
                         <div class="space-y-1">
-                            <label class="text-[8px] font-bold text-slate-500 uppercase tracking-wider">Price Tag Label</label>
-                            <input type="text" value="${rate.price}" onchange="updateRateItem(${index}, 'price', this.value)" class="w-full bg-slate-900 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none" placeholder="INR 25,000 / $300" required>
+                            <label class="text-[8px] font-bold text-slate-400 uppercase tracking-wider">Price Tag Label</label>
+                            <input type="text" value="${rate.price}" onchange="updateRateItem(${index}, 'price', this.value)" class="w-full bg-white border border-slate-200 rounded px-2.5 py-1.5 text-xs text-slate-700 focus:outline-none" placeholder="INR 25,000 / $300" required>
                         </div>
                         <button type="button" onclick="deleteRateRow(${index})" class="absolute top-2 right-2 text-rose-500 hover:text-rose-400 text-xs p-1 focus:outline-none" title="Delete Package">
                             <i class="fa-solid fa-trash"></i>
@@ -1279,7 +1448,7 @@
 
             filtered.forEach(item => {
                 // Category badge colors
-                let catClass = 'bg-slate-800 text-slate-300';
+                let catClass = 'bg-slate-100 text-slate-600';
                 if (item.category === 'london') catClass = 'bg-indigo-900/40 text-indigo-400 border border-indigo-800/40';
                 else if (item.category === 'events') catClass = 'bg-emerald-900/40 text-emerald-400 border border-emerald-800/40';
                 else if (item.category === 'dignitaries') catClass = 'bg-amber-900/40 text-amber-400 border border-amber-800/40';
@@ -1288,18 +1457,18 @@
                 // Badges for featured/popular
                 let statusBadges = '';
                 if (item.featured) statusBadges += `<span class="bg-brandBlue/10 text-brandBlue border border-brandBlue/20 text-[9px] font-bold px-1.5 py-0.5 rounded mr-1">Featured</span>`;
-                if (item.popular) statusBadges += `<span class="bg-amber-500/10 text-amber-500 border border-amber-500/20 text-[9px] font-bold px-1.5 py-0.5 rounded">Popular</span>`;
-                if (!statusBadges) statusBadges = '<span class="text-slate-500 text-[10px]">-</span>';
+                if (item.popular) statusBadges += `<span class="bg-amber-500/10 text-amber-600 border border-amber-500/20 text-[9px] font-bold px-1.5 py-0.5 rounded">Popular</span>`;
+                if (!statusBadges) statusBadges = '<span class="text-slate-400 text-[10px]">-</span>';
 
                 const tr = document.createElement('tr');
-                tr.className = "border-b border-slate-850 hover:bg-slate-950/45 transition-colors";
+                tr.className = "border-b border-slate-850 hover:bg-slate-50/45 transition-colors";
                 tr.innerHTML = `
                     <td class="py-4">
-                        <img src="${item.src}" alt="${item.title}" class="h-10 w-14 object-cover rounded-lg border border-slate-800 bg-slate-950" onerror="this.src='https://placehold.co/120x80/0f172a/ffffff?text=Image'">
+                        <img src="${item.src}" alt="${item.title}" class="h-10 w-14 object-cover rounded-lg border border-slate-200 bg-slate-50" onerror="this.src='https://placehold.co/120x80/0f172a/ffffff?text=Image'">
                     </td>
                     <td class="py-4 pl-4 pr-2">
-                        <div class="font-bold text-slate-100 truncate max-w-xs">${item.title}</div>
-                        <div class="text-[10px] text-slate-500 flex items-center gap-1.5 mt-0.5">
+                        <div class="font-bold text-slate-800 truncate max-w-xs">${item.title}</div>
+                        <div class="text-[10px] text-slate-400 flex items-center gap-1.5 mt-0.5">
                             <span><i class="fa-solid fa-calendar-day mr-0.5"></i> ${item.date || '-'}</span>
                             <span>&bull;</span>
                             <span><i class="fa-solid fa-location-dot mr-0.5"></i> ${item.location || '-'}</span>
@@ -1313,10 +1482,10 @@
                     </td>
                     <td class="py-4 text-right">
                         <div class="flex justify-end gap-2">
-                            <button onclick="editPhoto('${item.id}')" class="text-brandBlue hover:text-blue-400 p-1 px-2 border border-slate-800 hover:border-brandBlue/30 bg-slate-950/40 rounded-lg transition-all" title="Edit details">
+                            <button onclick="editPhoto('${item.id}')" class="text-brandBlue hover:text-blue-400 p-1 px-2 border border-slate-200 hover:border-brandBlue/30 bg-slate-50 rounded-lg transition-all" title="Edit details">
                                 <i class="fa-solid fa-pen-to-square"></i>
                             </button>
-                            <button onclick="deletePhoto('${item.id}')" class="text-rose-500 hover:text-rose-450 p-1 px-2 border border-slate-800 hover:border-rose-900/30 bg-slate-950/40 rounded-lg transition-all" title="Delete photo">
+                            <button onclick="deletePhoto('${item.id}')" class="text-rose-500 hover:text-rose-450 p-1 px-2 border border-slate-200 hover:border-rose-900/30 bg-slate-50 rounded-lg transition-all" title="Delete photo">
                                 <i class="fa-solid fa-trash"></i>
                             </button>
                         </div>
@@ -1536,26 +1705,26 @@
                 const detailsLabel = isPdf ? (item.size || '-') : (item.desc || '-');
 
                 const tr = document.createElement('tr');
-                tr.className = "border-b border-slate-855 hover:bg-slate-950/45 transition-colors";
+                tr.className = "border-b border-slate-855 hover:bg-slate-50/45 transition-colors";
                 tr.innerHTML = `
                     <td class="py-4">
                         ${typeLabel}
                     </td>
                     <td class="py-4 pl-4 pr-2">
-                        <div class="font-bold text-slate-100 truncate max-w-xs">${item.title}</div>
+                        <div class="font-bold text-slate-800 truncate max-w-xs">${item.title}</div>
                     </td>
                     <td class="py-4 pl-4 pr-2">
                         <div class="text-[10px] text-slate-400 font-mono truncate max-w-[200px]">${fileInfo}</div>
                     </td>
                     <td class="py-4">
-                        <span class="text-slate-300 font-medium">${detailsLabel}</span>
+                        <span class="text-slate-600 font-medium">${detailsLabel}</span>
                     </td>
                     <td class="py-4 text-right">
                         <div class="flex justify-end gap-2">
-                            <button onclick="editArchive('${item.id}')" class="text-brandBlue hover:text-blue-400 p-1 px-2 border border-slate-800 hover:border-brandBlue/30 bg-slate-950/40 rounded-lg transition-all" title="Edit archive details">
+                            <button onclick="editArchive('${item.id}')" class="text-brandBlue hover:text-blue-400 p-1 px-2 border border-slate-200 hover:border-brandBlue/30 bg-slate-50 rounded-lg transition-all" title="Edit archive details">
                                 <i class="fa-solid fa-pen-to-square"></i>
                             </button>
-                            <button onclick="deleteArchive('${item.id}')" class="text-rose-500 hover:text-rose-455 p-1 px-2 border border-slate-800 hover:border-rose-900/30 bg-slate-950/40 rounded-lg transition-all" title="Delete item">
+                            <button onclick="deleteArchive('${item.id}')" class="text-rose-500 hover:text-rose-455 p-1 px-2 border border-slate-200 hover:border-rose-900/30 bg-slate-50 rounded-lg transition-all" title="Delete item">
                                 <i class="fa-solid fa-trash"></i>
                             </button>
                         </div>
@@ -1718,10 +1887,10 @@
 
             msg.textContent = message;
             if (isError) {
-                toast.className = "fixed bottom-6 right-6 z-50 bg-rose-500 border border-rose-450 text-white text-xs font-bold px-6 py-3.5 rounded-xl shadow-2xl transition-all duration-300 opacity-100 flex items-center gap-2";
+                toast.className = "fixed bottom-6 right-6 z-50 bg-rose-500 border border-rose-450 text-slate-900 text-xs font-bold px-6 py-3.5 rounded-xl shadow-2xl transition-all duration-300 opacity-100 flex items-center gap-2";
                 icon.className = "fa-solid fa-circle-exclamation text-sm";
             } else {
-                toast.className = "fixed bottom-6 right-6 z-50 bg-emerald-500 border border-emerald-400 text-white text-xs font-bold px-6 py-3.5 rounded-xl shadow-2xl transition-all duration-300 opacity-100 flex items-center gap-2";
+                toast.className = "fixed bottom-6 right-6 z-50 bg-emerald-500 border border-emerald-400 text-slate-900 text-xs font-bold px-6 py-3.5 rounded-xl shadow-2xl transition-all duration-300 opacity-100 flex items-center gap-2";
                 icon.className = "fa-solid fa-circle-check text-sm";
             }
 
