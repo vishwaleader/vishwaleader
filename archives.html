@@ -97,35 +97,88 @@
         /* ── Mobile safety: prevent horizontal overflow ── */
         html, body { overflow-x: hidden; max-width: 100%; }
         img { max-width: 100%; }
+
+        /* ── Hamburger Morphing CSS ── */
+        #menuBtn.menu-open #bar1 { transform: translateY(7px) rotate(45deg); }
+        #menuBtn.menu-open #bar2 { opacity: 0; transform: scale(0); }
+        #menuBtn.menu-open #bar3 { transform: translateY(-7px) rotate(-45deg); }
     </style>
 </head>
 
 <body class="selection:bg-brandBlue/30 selection:text-white min-h-screen flex flex-col antialiased text-slate-200">
 
-    <!-- Navigation Header -->
-    <header class="bg-slate-950/80 backdrop-blur-md border-b border-slate-900 sticky top-0 z-40">
-        <div class="max-w-7xl mx-auto px-4 md:px-6 h-16 md:h-20 flex items-center justify-between gap-3">
-            <div class="flex items-center gap-3 shrink-0">
+    <!-- Navigation Header (matches index.html style) -->
+    <header class="bg-white/90 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 md:px-6 h-16 md:h-20 flex items-center justify-between">
+
+            <!-- Logo -->
+            <div class="flex items-center gap-4">
                 <a href="/" class="group flex items-center gap-2 md:gap-3">
-                    <img src="wp-content/uploads/2025/02/vishwaleader-logo-latest.png" 
-                          alt="Vishwa Leader Logo" 
-                          class="h-9 md:h-12 w-auto object-contain transition-transform group-hover:scale-105" 
-                          onerror="this.src='wp-content/uploads/2025/02/vishwaleader-logo-latest.png'" />
-                    <span class="hidden sm:inline text-[10px] font-black tracking-widest text-brandBlue uppercase border border-brandBlue/20 px-2.5 py-0.5 rounded bg-brandBlue/10">
-                        Digital Library
-                    </span>
+                    <img src="wp-content/uploads/2025/02/vishwaleader-logo-latest.png"
+                         alt="Vishwa Leader Logo"
+                         class="h-9 md:h-12 w-auto object-contain transition-transform group-hover:scale-105"
+                         onerror="this.src='wp-content/uploads/2025/02/vishwaleader-logo-latest.png'" />
+                    <div class="flex flex-col gap-0.5 leading-none">
+                        <span class="text-base md:text-lg font-black tracking-tight text-brandBlue font-display">Vishwa Leader</span>
+                        <span class="text-[9px] md:text-[10px] font-black tracking-widest text-brandBlue uppercase border border-brandBlue/20 px-2 py-0.5 rounded bg-brandBlue/5 self-start">Techmedia</span>
+                    </div>
                 </a>
             </div>
-            <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap justify-end">
-                <a href="member" class="inline-flex items-center gap-1.5 bg-brandBlue/10 hover:bg-brandBlue/15 text-brandBlue font-bold px-3.5 py-2.5 sm:px-3 sm:py-2 rounded-xl text-xs transition-all active:scale-95 uppercase tracking-wider border border-brandBlue/20">
-                    <i class="fa-solid fa-user text-[10px]"></i> Member
+
+            <!-- Desktop Navigation -->
+            <nav class="hidden md:flex items-center gap-6 text-sm font-semibold text-slate-600">
+                <a href="/" class="hover:text-brandBlue transition-colors">Home</a>
+                <a href="/#about" class="hover:text-brandBlue transition-colors">Corporate</a>
+                <a href="/#conference" class="hover:text-brandBlue transition-colors">SOAS Conference</a>
+                <a href="gallery" class="hover:text-brandBlue transition-colors">Gallery</a>
+                <a href="member" class="hover:text-brandBlue transition-colors font-bold text-brandBlue flex items-center gap-1">
+                    <i class="fa-solid fa-right-to-bracket text-xs"></i> Login/SignIn
                 </a>
-                <a href="admin" class="inline-flex items-center gap-1.5 bg-indigo-950/40 hover:bg-indigo-900/60 text-indigo-400 font-bold px-3.5 py-2.5 sm:px-3 sm:py-2 rounded-xl text-xs transition-all active:scale-95 uppercase tracking-wider border border-indigo-900/40">
-                    <i class="fa-solid fa-user-shield text-[10px]"></i> Team
+            </nav>
+
+            <!-- Mobile Hamburger Button -->
+            <button id="menuBtn" class="md:hidden relative w-10 h-10 text-slate-800 hover:text-brandBlue focus:outline-none flex items-center justify-center" aria-label="Toggle Menu">
+                <div class="w-6 h-4 flex flex-col justify-between items-center relative">
+                    <span class="w-full h-0.5 bg-slate-800 rounded transition-all duration-300 transform" id="bar1"></span>
+                    <span class="w-full h-0.5 bg-slate-800 rounded transition-all duration-300 transform" id="bar2"></span>
+                    <span class="w-full h-0.5 bg-slate-800 rounded transition-all duration-300 transform" id="bar3"></span>
+                </div>
+            </button>
+        </div>
+
+        <!-- Mobile Navigation Drawer -->
+        <div id="mobileMenu" class="md:hidden max-h-0 opacity-0 overflow-y-auto transition-all duration-300 ease-in-out bg-white border-t border-slate-200 px-4 space-y-1 shadow-inner">
+            <div class="py-3 space-y-1.5">
+                <a href="/" class="flex items-center py-2.5 px-3 text-sm font-semibold text-slate-700 hover:text-brandBlue active:bg-slate-50 rounded-xl transition-all border-b border-slate-50">
+                    <i class="fa-solid fa-house text-slate-400 mr-3 w-5 text-center text-xs"></i>
+                    <span>Home</span>
+                    <i class="fa-solid fa-chevron-right text-slate-300 ml-auto text-[9px]"></i>
                 </a>
-                <a href="/" class="inline-flex items-center gap-1.5 bg-slate-900 hover:bg-slate-850 text-slate-350 hover:text-white font-bold px-3.5 py-2.5 sm:px-3 sm:py-2 rounded-xl text-xs transition-all active:scale-95 uppercase tracking-wider border border-slate-800">
-                    <i class="fa-solid fa-house text-amber-500 text-[10px]"></i> Home
+                <a href="/#about" class="flex items-center py-2.5 px-3 text-sm font-semibold text-slate-700 hover:text-brandBlue active:bg-slate-50 rounded-xl transition-all border-b border-slate-50">
+                    <i class="fa-solid fa-building text-slate-400 mr-3 w-5 text-center text-xs"></i>
+                    <span>Corporate</span>
+                    <i class="fa-solid fa-chevron-right text-slate-300 ml-auto text-[9px]"></i>
                 </a>
+                <a href="/#conference" class="flex items-center py-2.5 px-3 text-sm font-semibold text-slate-700 hover:text-brandBlue active:bg-slate-50 rounded-xl transition-all border-b border-slate-50">
+                    <i class="fa-solid fa-graduation-cap text-slate-400 mr-3 w-5 text-center text-xs"></i>
+                    <span>SOAS Conference</span>
+                    <i class="fa-solid fa-chevron-right text-slate-300 ml-auto text-[9px]"></i>
+                </a>
+                <a href="gallery" class="flex items-center py-2.5 px-3 text-sm font-semibold text-slate-700 hover:text-brandBlue active:bg-slate-50 rounded-xl transition-all border-b border-slate-50">
+                    <i class="fa-solid fa-images text-slate-400 mr-3 w-5 text-center text-xs"></i>
+                    <span>Gallery</span>
+                    <i class="fa-solid fa-chevron-right text-slate-300 ml-auto text-[9px]"></i>
+                </a>
+                <div class="pt-2 border-t border-slate-100 flex flex-col gap-1.5">
+                    <a href="member" class="flex items-center py-2.5 px-3 text-sm font-semibold text-brandBlue hover:text-brandBlue/85 active:bg-slate-50 rounded-xl transition-all">
+                        <i class="fa-solid fa-right-to-bracket text-brandBlue mr-3 w-5 text-center text-xs"></i>
+                        <span>Login / Sign In</span>
+                        <i class="fa-solid fa-chevron-right text-slate-300 ml-auto text-[9px]"></i>
+                    </a>
+                    <a href="admin" class="flex items-center py-1.5 px-3 text-xs font-semibold text-indigo-600 hover:text-indigo-750 active:bg-slate-50 rounded-lg transition-all pl-11">
+                        <i class="fa-solid fa-user-shield mr-2"></i> login as team
+                    </a>
+                </div>
             </div>
         </div>
     </header>
@@ -655,6 +708,31 @@
                     }
                 });
         });
+
+        // ── Mobile hamburger menu toggle ──
+        const menuBtn = document.getElementById('menuBtn');
+        const mobileMenu = document.getElementById('mobileMenu');
+        if (menuBtn && mobileMenu) {
+            menuBtn.addEventListener('click', () => {
+                const isOpen = menuBtn.classList.contains('menu-open');
+                if (isOpen) {
+                    menuBtn.classList.remove('menu-open');
+                    mobileMenu.classList.add('max-h-0', 'opacity-0');
+                    mobileMenu.classList.remove('max-h-[85vh]', 'opacity-100', 'py-4');
+                } else {
+                    menuBtn.classList.add('menu-open');
+                    mobileMenu.classList.remove('max-h-0', 'opacity-0');
+                    mobileMenu.classList.add('max-h-[85vh]', 'opacity-100', 'py-4');
+                }
+            });
+            mobileMenu.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', () => {
+                    menuBtn.classList.remove('menu-open');
+                    mobileMenu.classList.add('max-h-0', 'opacity-0');
+                    mobileMenu.classList.remove('max-h-[85vh]', 'opacity-100', 'py-4');
+                });
+            });
+        }
 
     </script>
 </body>
