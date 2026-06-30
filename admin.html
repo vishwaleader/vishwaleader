@@ -81,27 +81,33 @@
         </div>
 
         <!-- Auth Login Screen (Hidden by default) -->
-        <div id="login-container" class="hidden max-w-md w-full bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl text-center space-y-6">
-            <div class="w-16 h-16 rounded-full bg-brandBlue/10 border border-brandBlue/20 flex items-center justify-center text-brandBlue text-2xl mx-auto">
-                <i class="fa-solid fa-lock text-brandBlue"></i>
+        <div id="login-container" class="hidden max-w-lg w-full bg-white border border-slate-200/80 rounded-3xl p-8 md:p-10 shadow-xl glow-card text-center space-y-8">
+            <div class="w-20 h-20 rounded-full bg-brandBlue/5 border border-brandBlue/10 flex items-center justify-center text-brandBlue text-3xl mx-auto shadow-inner">
+                <i class="fa-solid fa-user-shield"></i>
             </div>
-            <div class="space-y-2">
-                <h2 class="font-display text-2xl font-black tracking-tight text-white uppercase">Vishwa Leader Team</h2>
-                <p class="text-xs text-slate-400 leading-relaxed">Enter secure administrator credentials to manage configurations, gallery photos, and PDF archives.</p>
+            
+            <div class="space-y-2.5">
+                <span class="text-[9px] font-extrabold uppercase tracking-widest text-brandBlue border border-brandBlue/20 px-3 py-1 rounded-full bg-brandBlue/5">
+                    Vishwa Leader Network
+                </span>
+                <h2 class="font-display text-2xl font-black text-slate-900 uppercase tracking-tight">Vishwa Leader Team</h2>
+                <p class="text-xs text-slate-500 leading-relaxed max-w-sm mx-auto">Enter secure administrator credentials to manage configurations, gallery photos, and PDF archives.</p>
             </div>
             
             <form onsubmit="handleAdminLogin(event)" class="space-y-4 text-left">
                 <div class="space-y-1.5">
-                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Username</label>
-                    <input type="text" id="admin-username-input" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-200 focus:outline-none focus:border-brandBlue transition-colors" placeholder="e.g. admin" required>
+                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Username</label>
+                    <input type="text" id="admin-username-input" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3.5 text-xs text-slate-800 focus:outline-none focus:border-brandBlue focus:bg-white transition-colors" placeholder="e.g. admin" required>
                 </div>
                 <div class="space-y-1.5">
-                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Password</label>
-                    <input type="password" id="admin-password-input" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-200 focus:outline-none focus:border-brandBlue transition-colors" placeholder="••••••••" required>
+                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Password</label>
+                    <input type="password" id="admin-password-input" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3.5 text-xs text-slate-800 focus:outline-none focus:border-brandBlue focus:bg-white transition-colors" placeholder="••••••••" required>
                 </div>
-                <button type="submit" id="admin-login-btn" class="w-full bg-brandBlue hover:bg-brandBlue/90 text-white font-bold py-3.5 rounded-xl transition-all shadow-md text-xs uppercase tracking-wider">
-                    Sign In to Dashboard
-                </button>
+                <div class="pt-2">
+                    <button type="submit" id="admin-login-btn" class="w-full bg-slate-950 hover:bg-slate-900 text-white font-bold py-4 rounded-xl transition-all shadow-md text-xs uppercase tracking-wider">
+                        Sign In to Dashboard
+                    </button>
+                </div>
             </form>
         </div>
 
