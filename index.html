@@ -212,7 +212,7 @@
                         <div class="space-y-1.5">
                             <a id="nav-portal-link" href="member" class="flex items-center gap-2 w-full text-left text-xs font-semibold text-slate-700 hover:text-brandBlue hover:bg-brandBlue/5 px-3 py-2 rounded-xl transition-all">
                                 <i id="nav-portal-icon" class="fa-solid fa-user text-brandBlue"></i>
-                                <span id="nav-portal-text">Go to Member Profile</span>
+                                <span id="nav-portal-text">Go to Profile</span>
                             </a>
                             <button onclick="handleIndexSignOut()" class="flex items-center gap-2 w-full text-left text-xs font-semibold text-rose-600 hover:bg-rose-50 px-3 py-2 rounded-xl transition-all">
                                 <i class="fa-solid fa-right-from-bracket"></i> Sign Out
@@ -221,9 +221,6 @@
                     </div>
                 </div>
 
-                <a href="#contact" class="bg-brandBlue text-white px-4 py-2.5 rounded hover:bg-brandBlue/90 transition-colors text-xs font-bold tracking-wide uppercase shadow-sm">
-                    Contact Us
-                </a>
             </nav>
 
             <!-- Mobile Hamburger Menu Button -->
@@ -299,7 +296,7 @@
                     <div class="flex flex-col gap-1">
                         <a id="mobile-portal-link" href="member" class="flex items-center py-2.5 px-3 text-sm font-semibold text-brandBlue hover:text-brandBlue/85 active:bg-slate-50 rounded-xl transition-all">
                             <i id="mobile-portal-icon" class="fa-solid fa-user text-brandBlue mr-3 w-5 text-center text-xs"></i>
-                            <span id="mobile-portal-text">Member Profile</span>
+                            <span id="mobile-portal-text">Profile</span>
                             <i class="fa-solid fa-chevron-right text-slate-300 ml-auto text-[9px]"></i>
                         </a>
                         <button onclick="handleIndexSignOut()" class="flex items-center py-2.5 px-3 text-sm font-semibold text-rose-600 hover:text-rose-750 active:bg-rose-55/30 rounded-xl transition-all w-full text-left">
@@ -308,8 +305,6 @@
                         </button>
                     </div>
                 </div>
-
-                <a href="#contact" class="block py-3 mt-4 text-center bg-brandBlue text-white rounded-xl text-xs font-bold tracking-wide uppercase active:scale-[0.98] transition-transform shadow-md">Contact Us</a>
             </div>
         </div>
     </header>
@@ -1308,7 +1303,7 @@
                 badge.className      = 'text-[10px] font-extrabold uppercase tracking-widest px-2.5 py-1 rounded-full mb-3 text-center bg-blue-100 text-blue-700';
                 portalLink.href      = 'member';
                 portalIcon.className = 'fa-solid fa-user text-brandBlue';
-                portalText.textContent = 'Go to Member Profile';
+                portalText.textContent = 'Go to Profile';
             }
 
             document.getElementById('nav-display-name').textContent  = name;
@@ -1346,7 +1341,7 @@
                 mobileLabelEl.style.color = '#0056CA';
                 mobilePortalLink.href = 'member';
                 mobilePortalIcon.className = 'fa-solid fa-user';
-                mobilePortalText.textContent = 'Member Profile';
+                mobilePortalText.textContent = 'Profile';
             }
 
             // Update Inquiry section state
