@@ -987,40 +987,82 @@
                     </div>
                 </div>
 
-                <!-- Form Column -->
-                <div class="lg:col-span-7 border border-slate-200 rounded-2xl p-8 bg-white shadow-sm">
-                    <h3 class="font-display text-sm font-bold uppercase tracking-widest text-slate-400 mb-6">Send an Inquiry</h3>
-
-                    <form id="contactForm" onsubmit="handleInquiry(event)" class="space-y-4 text-xs">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div class="space-y-1">
-                                <label class="font-bold uppercase tracking-wider text-slate-500">Your Name</label>
-                                <input type="text" name="name" required class="w-full bg-slate-50 border border-slate-200 rounded px-4 py-3 text-slate-800 focus:outline-none focus:border-brandBlue focus:ring-1 focus:ring-brandBlue text-xs">
-                            </div>
-                            <div class="space-y-1">
-                                <label class="font-bold uppercase tracking-wider text-slate-500">Email Address</label>
-                                <input type="email" name="email" required class="w-full bg-slate-50 border border-slate-200 rounded px-4 py-3 text-slate-800 focus:outline-none focus:border-brandBlue focus:ring-1 focus:ring-brandBlue text-xs">
-                            </div>
+                <!-- Form Column (Google-Verified Inquiry) -->
+                <div class="lg:col-span-7 border border-slate-200 rounded-2xl p-8 bg-white shadow-sm flex flex-col justify-center">
+                    
+                    <!-- State A: Unauthenticated Visitor -->
+                    <div id="inquiry-unauth-container" class="space-y-6 text-center py-6">
+                        <div class="w-14 h-14 rounded-full bg-brandBlue/10 border border-brandBlue/20 flex items-center justify-center text-brandBlue text-xl mx-auto">
+                            <i class="fa-solid fa-shield-halved"></i>
                         </div>
-                        <div class="space-y-1">
-                            <label class="font-bold uppercase tracking-wider text-slate-500">Inquiry Category</label>
-                            <select name="category" class="w-full bg-slate-50 border border-slate-200 rounded px-4 py-3 text-slate-800 focus:outline-none focus:border-brandBlue focus:ring-1 focus:ring-brandBlue text-xs">
-                                <option>SOAS Conference 2026 - Article Submission</option>
-                                <option>Dr. Ambedkar Awards - Attendee Registration</option>
-                                <option>Vishwa Leader Magazine - Subscriptions & Print Ads</option>
-                                <option>General Information Inquiry</option>
-                            </select>
+                        <div class="space-y-2">
+                            <h3 class="font-display text-lg font-extrabold text-slate-900 tracking-tight">Verified Secure Inquiry</h3>
+                            <p class="text-xs text-slate-550 max-w-md mx-auto leading-relaxed">
+                                To prevent spam and register your contact details securely, we track sender email addresses verified by Google. Please sign in with a secure Google Account to submit your inquiry or message.
+                            </p>
                         </div>
-                        <div class="space-y-1">
-                            <label class="font-bold uppercase tracking-wider text-slate-500">Message Detail</label>
-                            <textarea name="message" rows="4" required class="w-full bg-slate-50 border border-slate-200 rounded px-4 py-3 text-slate-800 focus:outline-none focus:border-brandBlue focus:ring-1 focus:ring-brandBlue text-xs"></textarea>
-                        </div>
-                        <button type="submit" class="w-full bg-brandDark text-white font-bold py-4 rounded hover:bg-brandDark/95 transition-colors uppercase tracking-wider text-xs">
-                            Submit Inquiry Form
+                        <button onclick="handleInquiryGoogleSignIn()" class="inline-flex items-center gap-3 bg-brandBlue hover:bg-brandBlue/95 text-white font-bold px-8 py-3.5 rounded-xl transition-all shadow-md text-xs uppercase tracking-wider mx-auto">
+                            <i class="fa-brands fa-google text-sm"></i> Sign In with Google
                         </button>
-                    </form>
-                    <div id="formSuccess" class="hidden mt-4 bg-emerald-50 text-emerald-800 border border-emerald-200 p-4 rounded text-center text-xs">
-                        <i class="fa-solid fa-circle-check text-base mr-2"></i> Thank you! Your inquiry has been sent successfully.
+                    </div>
+
+                    <!-- State B: Authenticated Visitor -->
+                    <div id="inquiry-auth-container" class="hidden space-y-6">
+                        <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+                            <div class="flex items-center gap-3">
+                                <div id="inquiry-verified-avatar" class="w-9 h-9 rounded-full bg-brandBlue text-white font-bold flex items-center justify-center text-xs overflow-hidden">
+                                    VL
+                                </div>
+                                <div class="text-left leading-normal">
+                                    <h4 id="inquiry-verified-name" class="text-xs font-bold text-slate-900">Name</h4>
+                                    <p id="inquiry-verified-email" class="text-[10px] text-slate-500 font-mono">email@gmail.com</p>
+                                </div>
+                            </div>
+                            <span class="text-[9px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 rounded flex items-center gap-1">
+                                <i class="fa-solid fa-circle-check text-[10px]"></i> Verified Sender
+                            </span>
+                        </div>
+
+                        <form id="contactForm" onsubmit="handleVerifiedInquiry(event)" class="space-y-4 text-xs">
+                            <div class="space-y-1">
+                                <label class="font-bold uppercase tracking-wider text-slate-500">Inquiry Category</label>
+                                <select name="category" class="w-full bg-slate-50 border border-slate-200 rounded px-4 py-3 text-slate-800 focus:outline-none focus:border-brandBlue focus:ring-1 focus:ring-brandBlue text-xs">
+                                    <option>SOAS Conference 2026 - Article Submission</option>
+                                    <option>Dr. Ambedkar Awards - Attendee Registration</option>
+                                    <option>Vishwa Leader Magazine - Subscriptions & Print Ads</option>
+                                    <option>General Information Inquiry</option>
+                                </select>
+                            </div>
+                            <div class="space-y-1">
+                                <label class="font-bold uppercase tracking-wider text-slate-500">Message Detail</label>
+                                <textarea name="message" rows="4" required class="w-full bg-slate-50 border border-slate-200 rounded px-4 py-3 text-slate-800 focus:outline-none focus:border-brandBlue focus:ring-1 focus:ring-brandBlue text-xs" placeholder="Type your inquiry or message here..."></textarea>
+                            </div>
+                            <button type="submit" class="w-full bg-brandDark text-white font-bold py-4 rounded hover:bg-brandDark/95 transition-colors uppercase tracking-wider text-xs">
+                                Submit Verified Inquiry
+                            </button>
+                        </form>
+                        
+                        <div class="text-center pt-2">
+                            <button onclick="handleIndexSignOut()" class="text-[10px] text-rose-500 hover:text-rose-600 font-bold uppercase tracking-wide">
+                                <i class="fa-solid fa-sign-out-alt"></i> Sign Out
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Success State -->
+                    <div id="inquiry-success-alert" class="hidden text-center py-8 space-y-4">
+                        <div class="w-12 h-12 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500 text-xl mx-auto">
+                            <i class="fa-solid fa-circle-check"></i>
+                        </div>
+                        <div class="space-y-1">
+                            <p class="text-xs font-bold text-slate-900">Message Sent Successfully</p>
+                            <p class="text-[10px] text-slate-550 max-w-xs mx-auto leading-relaxed">
+                                Thank you! Your verified inquiry has been logged in our databases. The coordinator team will reach out directly to your Google email.
+                            </p>
+                        </div>
+                        <button onclick="document.getElementById('inquiry-success-alert').classList.add('hidden'); document.getElementById('contactForm').classList.remove('hidden');" class="text-[9px] font-bold text-brandBlue uppercase bg-brandBlue/10 hover:bg-brandBlue/20 px-3 py-1.5 rounded transition-all">
+                            Send Another Message
+                        </button>
                     </div>
                 </div>
             </div>
@@ -1155,6 +1197,14 @@
                 navStatus.classList.add('hidden');
                 mobileLogin.classList.remove('hidden');
                 mobileStatus.classList.add('hidden');
+
+                // Toggle Inquiry section state
+                const unauthBox = document.getElementById('inquiry-unauth-container');
+                const authBox = document.getElementById('inquiry-auth-container');
+                if (unauthBox && authBox) {
+                    unauthBox.classList.remove('hidden');
+                    authBox.classList.add('hidden');
+                }
                 return;
             }
 
@@ -1244,6 +1294,26 @@
                 mobilePortalIcon.className = 'fa-solid fa-user';
                 mobilePortalText.textContent = 'Member Portal';
             }
+
+            // Update Inquiry section state
+            const unauthBox = document.getElementById('inquiry-unauth-container');
+            const authBox = document.getElementById('inquiry-auth-container');
+            if (unauthBox && authBox) {
+                unauthBox.classList.add('hidden');
+                authBox.classList.remove('hidden');
+
+                document.getElementById('inquiry-verified-name').textContent = name;
+                document.getElementById('inquiry-verified-email').textContent = email;
+
+                const inquiryAvatar = document.getElementById('inquiry-verified-avatar');
+                if (inquiryAvatar) {
+                    if (user.photoURL) {
+                        inquiryAvatar.innerHTML = `<img src="${user.photoURL}" class="w-full h-full rounded-full object-cover" alt="avatar">`;
+                    } else {
+                        inquiryAvatar.textContent = initials;
+                    }
+                }
+            }
         }
 
         // Sign out from homepage
@@ -1255,20 +1325,57 @@
             }
         }
 
-        // Contact Form Handler
-        async function handleInquiry(event) {
+        // Google Sign-In for Inquiry Form
+        function handleInquiryGoogleSignIn() {
+            if (typeof firebase !== 'undefined' && firebase.apps.length) {
+                const provider = new firebase.auth.GoogleAuthProvider();
+                firebase.auth().signInWithPopup(provider)
+                    .catch((error) => {
+                        console.error("Sign-in error:", error);
+                        alert("Google verification failed: " + error.message);
+                    });
+            }
+        }
+
+        // Send Verified Inquiry Message to Firestore
+        async function handleVerifiedInquiry(event) {
             event.preventDefault();
             const form = event.target;
             const submitBtn = form.querySelector('button[type="submit"]');
-            const successAlert = document.getElementById('formSuccess');
+            const successAlert = document.getElementById('inquiry-success-alert');
+
+            const user = firebase.auth().currentUser;
+            if (!user) {
+                alert("You must be logged in with Google to send inquiries.");
+                return;
+            }
 
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<i class="fa-solid fa-spinner animate-spin mr-2"></i> Submitting...';
 
-            // Simulate form submission
-            await new Promise(resolve => setTimeout(resolve, 800));
-            form.classList.add('hidden');
-            successAlert.classList.remove('hidden');
+            const inquiryData = {
+                uid: user.uid,
+                name: user.displayName || user.email.split('@')[0],
+                email: user.email,
+                photoURL: user.photoURL || '',
+                category: form.category.value,
+                message: form.message.value,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            try {
+                const db = firebase.firestore();
+                await db.collection('vishwaleader_inquiries').add(inquiryData);
+                form.reset();
+                form.classList.add('hidden');
+                successAlert.classList.remove('hidden');
+            } catch (error) {
+                console.error("Firestore write failed:", error);
+                alert("Failed to submit inquiry: " + error.message);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'Submit Verified Inquiry';
+            }
         }
 
 
