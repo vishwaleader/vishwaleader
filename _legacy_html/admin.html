@@ -1,0 +1,1917 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vishwa Leader | Admin Panel</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brandBlue: '#2563eb',
+                        brandDark: '#0f172a',
+                        cardDark: '#1e293b'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Outfit', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Firebase Compat SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Vercel Web Analytics -->
+    <script>
+        window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+    </script>
+    <script defer src="/_vercel/insights/script.js"></script>
+
+    <!-- Vercel Speed Insights -->
+    <script>
+        window.si = window.si || function () { (window.siq = window.siq || []).push(arguments); };
+    </script>
+    <script defer src="/_vercel/speed-insights/script.js"></script>
+
+</head>
+<style>
+    /* ── Mobile safety: prevent horizontal overflow ── */
+    html, body { overflow-x: hidden; max-width: 100%; }
+    img { max-width: 100%; }
+</style>
+<body class="bg-slate-50 text-slate-800 min-h-screen antialiased flex flex-col font-sans">
+
+    <!-- Top header navigation bar -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 md:px-6 h-16 md:h-20 flex items-center justify-between">
+            <div class="flex items-center gap-2 md:gap-3">
+                <a href="/" class="flex items-center gap-2 md:gap-3">
+                    <img src="assets/images/vishwaleader-logo-hd.png" 
+                         alt="Vishwa Leader Logo" 
+                         class="h-9 md:h-10 w-auto object-contain" 
+                         onerror="this.src='assets/images/vishwaleader-logo-hd.png'" />
+                </a>
+                <span class="hidden sm:inline text-xs font-bold uppercase tracking-widest text-brandBlue px-2 py-0.5 rounded bg-brandBlue/10 border border-brandBlue/20">Admin Management</span>
+            </div>
+            
+            <div class="flex items-center gap-2 md:gap-4">
+                <a href="/" class="text-xs bg-slate-100 border border-slate-300 hover:bg-slate-200 px-3 md:px-3.5 py-1.5 rounded-lg font-bold transition-all text-slate-600 uppercase tracking-wider flex items-center gap-1.5">
+                    <i class="fa-solid fa-house text-amber-600"></i> <span class="hidden sm:inline">Home</span>
+                </a>
+                <div id="user-info-section" class="hidden flex items-center gap-2 md:gap-4">
+                    <span id="user-display-name" class="hidden md:inline text-xs font-medium text-slate-600">Loading profile...</span>
+                    <button onclick="handleSignOut()" class="text-xs bg-slate-100 border border-slate-300 hover:bg-slate-200 px-3 py-1.5 rounded-lg font-bold transition-all text-amber-600 uppercase tracking-wider flex items-center gap-1.5">
+                        <i class="fa-solid fa-sign-out-alt"></i> <span class="hidden sm:inline">Sign Out</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 md:px-6 py-10 flex flex-col items-center justify-center">
+        <!-- Loader during authentication check -->
+        <div id="auth-check-spinner" class="flex flex-col items-center gap-4 py-20">
+            <i class="fa-solid fa-circle-notch animate-spin text-4xl text-brandBlue"></i>
+            <p class="text-xs text-slate-400 font-medium tracking-wide">Securing connection to database...</p>
+        </div>
+
+        <!-- Auth Login Screen (Hidden by default) -->
+        <div id="login-container" class="hidden cp-login-wrapper">
+            <style>
+                @import url(https://fonts.googleapis.com/css?family=Open+Sans);
+                
+                .cp-login-wrapper {
+                    position: fixed; left: 0; right: 0; bottom: 0; top: 80px; z-index: 9999;
+                    font-family: 'Open Sans', sans-serif; overflow: hidden; 
+                    background: url('assets/images/EkJYDaGD-fond-decran-Bouddha-54.png') no-repeat center center;
+                    background-size: cover;
+                }
+
+                .cp-btn { display: inline-block; *display: inline; *zoom: 1; padding: 4px 10px 4px; margin-bottom: 0; font-size: 13px; line-height: 18px; color: #333333; text-align: center;text-shadow: 0 1px 1px rgba(255, 255, 255, 0.75); vertical-align: middle; background-color: #f5f5f5; background-image: -moz-linear-gradient(top, #ffffff, #e6e6e6); background-image: -ms-linear-gradient(top, #ffffff, #e6e6e6); background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#ffffff), to(#e6e6e6)); background-image: -webkit-linear-gradient(top, #ffffff, #e6e6e6); background-image: -o-linear-gradient(top, #ffffff, #e6e6e6); background-image: linear-gradient(top, #ffffff, #e6e6e6); background-repeat: repeat-x; filter: progid:dximagetransform.microsoft.gradient(startColorstr=#ffffff, endColorstr=#e6e6e6, GradientType=0); border-color: #e6e6e6 #e6e6e6 #e6e6e6; border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25); border: 1px solid #e6e6e6; -webkit-border-radius: 4px; -moz-border-radius: 4px; border-radius: 4px; -webkit-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05); -moz-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05); cursor: pointer; *margin-left: .3em; }
+                .cp-btn:hover, .cp-btn:active, .cp-btn.active, .cp-btn.disabled, .cp-btn[disabled] { background-color: #e6e6e6; }
+                .cp-btn-large { padding: 9px 14px; font-size: 15px; line-height: normal; -webkit-border-radius: 5px; -moz-border-radius: 5px; border-radius: 5px; }
+                .cp-btn:hover { color: #333333; text-decoration: none; background-color: #e6e6e6; background-position: 0 -15px; -webkit-transition: background-position 0.1s linear; -moz-transition: background-position 0.1s linear; -ms-transition: background-position 0.1s linear; -o-transition: background-position 0.1s linear; transition: background-position 0.1s linear; }
+                .cp-btn-primary, .cp-btn-primary:hover { text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25); color: #ffffff; }
+                .cp-btn-primary.active { color: rgba(255, 255, 255, 0.75); }
+                
+                /* Adapted to Website Brand Blue (#2563eb / #0056CA) */
+                .cp-btn-primary { background-color: #2563eb; background-image: -moz-linear-gradient(top, #3b82f6, #1d4ed8); background-image: -ms-linear-gradient(top, #3b82f6, #1d4ed8); background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#3b82f6), to(#1d4ed8)); background-image: -webkit-linear-gradient(top, #3b82f6, #1d4ed8); background-image: -o-linear-gradient(top, #3b82f6, #1d4ed8); background-image: linear-gradient(to bottom, #3b82f6, #1d4ed8); background-repeat: repeat-x; filter: progid:dximagetransform.microsoft.gradient(startColorstr=#3b82f6, endColorstr=#1d4ed8, GradientType=0);  border: 1px solid #1e40af; text-shadow: 1px 1px 1px rgba(0,0,0,0.4); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.5); }
+                .cp-btn-primary:hover, .cp-btn-primary:active, .cp-btn-primary.active, .cp-btn-primary.disabled, .cp-btn-primary[disabled] { filter: none; background-color: #1d4ed8; }
+                .cp-btn-block { width: 100%; display:block; }
+
+                .cp-login { 
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    width: 340px;
+                    background: rgba(255, 255, 255, 0.85);
+                    backdrop-filter: blur(12px);
+                    -webkit-backdrop-filter: blur(12px);
+                    padding: 40px 30px;
+                    border-radius: 20px;
+                    box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+                    border: 1px solid rgba(255,255,255,0.4);
+                }
+                .cp-login-logo { display: block; width: 160px; height: 160px; margin: 0 auto 16px auto; object-fit: contain; }
+                .cp-login h1 { color: #0f172a; letter-spacing: 1px; text-align: center; padding-bottom: 20px; font-weight: bold; margin: 0; font-size: 22px; }
+
+                .cp-input { 
+                    width: 100%; 
+                    margin-bottom: 10px; 
+                    background: #ffffff;
+                    border: none;
+                    outline: none;
+                    padding: 10px;
+                    font-size: 13px;
+                    color: #334155;
+                    border: 1px solid #cbd5e1;
+                    border-radius: 4px;
+                    box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+                    -webkit-transition: box-shadow .5s ease, border-color .5s ease;
+                    -moz-transition: box-shadow .5s ease, border-color .5s ease;
+                    -o-transition: box-shadow .5s ease, border-color .5s ease;
+                    -ms-transition: box-shadow .5s ease, border-color .5s ease;
+                    transition: box-shadow .5s ease, border-color .5s ease;
+                }
+                .cp-input:focus { box-shadow: inset 0 2px 4px rgba(0,0,0,0.05), 0 0 5px rgba(37, 99, 235, 0.3); border-color: #2563eb; }
+                
+                .cp-back { text-align: center; margin-top: 15px; }
+                .cp-back a { font-size: 11px; font-weight: bold; color: #64748b; text-decoration: none; text-transform: uppercase; letter-spacing: 1px; }
+                .cp-back a:hover { color: #2563eb; }
+            </style>
+            
+            <div class="cp-login">
+                <img src="/assets/images/vishwaleader-logo-hd.png" alt="Vishwa Leader" class="cp-login-logo" />
+                <h1>Login</h1>
+                <form method="post" onsubmit="handleAdminLogin(event)">
+                    <input type="text" id="admin-username-input" class="cp-input" name="u" placeholder="Username" required="required" />
+                    <input type="password" id="admin-password-input" class="cp-input" name="p" placeholder="Password" required="required" />
+                    <button type="submit" id="admin-login-btn" class="cp-btn cp-btn-primary cp-btn-block cp-btn-large">Let me in.</button>
+                </form>
+                <div class="cp-back">
+                    <a href="/"><i class="fa-solid fa-arrow-left"></i> Back to Home</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Compatible hidden nav element to prevent JS errors -->
+        <div id="admin-tabs-nav" class="hidden"></div>
+
+        <!-- Redesigned Friendly Visual Workspace -->
+        <div id="admin-dashboard" class="hidden w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            
+            <!-- LEFT COLUMN: Simplified Navigation & Path Guide -->
+            <div class="lg:col-span-3 space-y-6">
+                <!-- Brand & User Profile Widget -->
+                <div class="bg-white border border-slate-200 rounded-3xl p-5 shadow-lg space-y-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-brandBlue/10 border border-brandBlue/20 flex items-center justify-center text-brandBlue text-lg">
+                            <i class="fa-solid fa-square-poll-horizontal"></i>
+                        </div>
+                        <div>
+                            <h2 class="font-display text-sm font-black text-slate-900 uppercase tracking-wider">Site Manager</h2>
+                            <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Admin Workspace</p>
+                        </div>
+                    </div>
+                    
+                    <div class="border-t border-slate-200 pt-3 flex items-center justify-between text-[11px] text-slate-600">
+                        <span id="user-display-name-sidebar" class="font-bold truncate max-w-[130px]"><i class="fa-solid fa-user-circle mr-1 text-slate-400"></i> admin</span>
+                        <button onclick="handleSignOut()" class="text-rose-500 hover:text-rose-400 font-bold flex items-center gap-1">
+                            <i class="fa-solid fa-right-from-bracket"></i> Sign Out
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Interactive Page Guides (Sidebar Menu) -->
+                <div class="bg-white border border-slate-200 rounded-3xl p-4 shadow-lg space-y-1.5">
+                    <div class="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest px-2.5 mb-3">
+                        Website Sections to Edit
+                    </div>
+
+                    <button onclick="switchAdminTab('dashboard')" id="sidebar-tab-dashboard" class="w-full text-left p-3.5 rounded-2xl flex items-center gap-3 transition-all">
+                        <span class="w-8 h-8 rounded-xl flex items-center justify-center text-sm"><i class="fa-solid fa-chart-line"></i></span>
+                        <div class="flex-grow">
+                            <div class="text-xs font-bold">Analytics Dashboard</div>
+                            <div class="text-[9px] text-slate-400 leading-snug">Traffic and member stats</div>
+                        </div>
+                    </button>
+
+                    <button onclick="switchAdminTab('inquiries')" id="sidebar-tab-inquiries" class="w-full text-left p-3.5 rounded-2xl flex items-center gap-3 transition-all">
+                        <span class="w-8 h-8 rounded-xl flex items-center justify-center text-sm"><i class="fa-solid fa-envelope"></i></span>
+                        <div class="flex-grow">
+                            <div class="text-xs font-bold">Inquiries</div>
+                            <div class="text-[9px] text-slate-400 leading-snug">View reservations & messages</div>
+                        </div>
+                    </button>
+
+                    
+                    <button onclick="switchAdminTab('settings')" id="sidebar-tab-settings" class="w-full text-left p-3.5 rounded-2xl flex items-center gap-3 transition-all">
+                        <span class="w-8 h-8 rounded-xl flex items-center justify-center text-sm"><i class="fa-solid fa-house"></i></span>
+                        <div class="flex-grow">
+                            <div class="text-xs font-bold">Homepage Content</div>
+                            <div class="text-[9px] text-slate-400 leading-snug">Edit banners, text, & schedule</div>
+                        </div>
+                    </button>
+
+                    <button onclick="switchAdminTab('gallery')" id="sidebar-tab-gallery" class="w-full text-left p-3.5 rounded-2xl flex items-center gap-3 transition-all">
+                        <span class="w-8 h-8 rounded-xl flex items-center justify-center text-sm"><i class="fa-solid fa-images"></i></span>
+                        <div class="flex-grow">
+                            <div class="text-xs font-bold">Photo Gallery Page</div>
+                            <div class="text-[9px] text-slate-400 leading-snug">Add or remove summit photos</div>
+                        </div>
+                    </button>
+
+                    <button onclick="switchAdminTab('archives')" id="sidebar-tab-archives" class="w-full text-left p-3.5 rounded-2xl flex items-center gap-3 transition-all">
+                        <span class="w-8 h-8 rounded-xl flex items-center justify-center text-sm"><i class="fa-solid fa-file-pdf"></i></span>
+                        <div class="flex-grow">
+                            <div class="text-xs font-bold">Digital Library (PDF)</div>
+                            <div class="text-[9px] text-slate-400 leading-snug">Publish circulars & forms</div>
+                        </div>
+                    </button>
+
+                    <button onclick="switchAdminTab('security')" id="sidebar-tab-security" class="w-full text-left p-3.5 rounded-2xl flex items-center gap-3 transition-all">
+                        <span class="w-8 h-8 rounded-xl flex items-center justify-center text-sm"><i class="fa-solid fa-key"></i></span>
+                        <div class="flex-grow">
+                            <div class="text-xs font-bold">Workspace Password</div>
+                            <div class="text-[9px] text-slate-400 leading-snug">Change access credentials</div>
+                        </div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- RIGHT COLUMN: Interactive Editors -->
+            <div class="lg:col-span-9 space-y-8">
+                
+                <!-- ══════════════════════════════════════════════════════════════ -->
+                
+                <!-- TAB: DASHBOARD -->
+                <div id="admin-tab-content-dashboard" class="space-y-8 hidden">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-6">
+                        <div>
+                            <h1 class="font-display text-2xl font-black text-slate-900 uppercase tracking-tight">Analytics Dashboard</h1>
+                            <p class="text-xs text-slate-500 mt-1">Powered by Google Analytics & Firebase.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="bg-white border border-slate-200 rounded-2xl p-6 flex flex-col justify-center items-center">
+                            <i class="fa-solid fa-users text-3xl text-brandBlue mb-2"></i>
+                            <h3 class="text-slate-500 font-bold text-xs uppercase tracking-wider">Total Visitors</h3>
+                            <span class="text-3xl font-black text-slate-900" id="stat-visitors">12,504</span>
+                        </div>
+                        <div class="bg-white border border-slate-200 rounded-2xl p-6 flex flex-col justify-center items-center">
+                            <i class="fa-solid fa-user-plus text-3xl text-emerald-500 mb-2"></i>
+                            <h3 class="text-slate-500 font-bold text-xs uppercase tracking-wider">Total Members</h3>
+                            <span class="text-3xl font-black text-slate-900" id="stat-members">--</span>
+                        </div>
+                        <div class="bg-white border border-slate-200 rounded-2xl p-6 flex flex-col justify-center items-center">
+                            <i class="fa-solid fa-envelope-open-text text-3xl text-amber-600 mb-2"></i>
+                            <h3 class="text-slate-500 font-bold text-xs uppercase tracking-wider">Pending Inquiries</h3>
+                            <span class="text-3xl font-black text-slate-900" id="stat-inquiries">--</span>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-white border border-slate-200 rounded-2xl p-6">
+                            <h3 class="text-slate-900 font-bold mb-4">Traffic Overview</h3>
+                            <canvas id="trafficChart" height="200"></canvas>
+                        </div>
+                        <div class="bg-white border border-slate-200 rounded-2xl p-6">
+                            <h3 class="text-slate-900 font-bold mb-4">Member Growth</h3>
+                            <canvas id="membersChart" height="200"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB: INQUIRIES -->
+                <div id="admin-tab-content-inquiries" class="space-y-8 hidden">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-6">
+                        <div>
+                            <h1 class="font-display text-2xl font-black text-slate-900 uppercase tracking-tight">Inquiries & Reservations</h1>
+                            <p class="text-xs text-slate-500 mt-1">Review and manage form submissions from the website.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50 border-b border-slate-200">
+                                    <th class="py-3 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Date</th>
+                                    <th class="py-3 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Name</th>
+                                    <th class="py-3 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Email</th>
+                                    <th class="py-3 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Message</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inquiries-list">
+                                <tr>
+                                    <td colspan="4" class="py-10 text-center text-slate-500">Loading inquiries...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- TAB 1: SITE CONFIGURATION / SETTINGS                         -->
+                <!-- ══════════════════════════════════════════════════════════════ -->
+                <div id="admin-tab-content-settings" class="space-y-8">
+                    <form onsubmit="handleSaveSettings(event)" class="space-y-8">
+                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-6">
+                            <div>
+                                <h1 class="font-display text-2xl font-black text-slate-900 uppercase tracking-tight">Homepage Content Editor</h1>
+                                <p class="text-xs text-slate-400 mt-1">Make changes below and click Save. Updates appear on the live website immediately.</p>
+                            </div>
+                            <button type="submit" class="bg-brandBlue hover:bg-brandBlue/90 text-slate-900 font-bold px-8 py-3.5 rounded-xl transition-all shadow-md text-xs uppercase tracking-wider flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-floppy-disk"></i> Save Content Updates
+                            </button>
+                        </div>
+
+                        <!-- Card 1: Homepage Title & Main Announcement Text -->
+                        <div class="bg-white border border-slate-200 rounded-2xl p-6 space-y-5">
+                            <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+                                <div class="flex items-center gap-2.5">
+                                    <i class="fa-solid fa-fire text-amber-600 text-sm"></i>
+                                    <h3 class="font-display text-sm font-bold text-slate-900 uppercase tracking-wide">Main Banner (Hero Section)</h3>
+                                </div>
+                                <span class="text-[8px] font-bold text-brandBlue uppercase bg-brandBlue/10 px-2 py-0.5 rounded border border-brandBlue/20">
+                                    📍 TOP OF HOMEPAGE (index.html)
+                                </span>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="space-y-1.5">
+                                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Main Banner Heading</label>
+                                    <input type="text" id="hero-title" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs text-slate-700 focus:outline-none focus:border-brandBlue transition-colors" required>
+                                    <span class="text-[9px] text-slate-400 block">The big title showing at the top.</span>
+                                </div>
+                                <div class="space-y-1.5">
+                                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Location Tagline</label>
+                                    <input type="text" id="hero-location" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs text-slate-700 focus:outline-none focus:border-brandBlue transition-colors" required>
+                                    <span class="text-[9px] text-slate-400 block">The location header (e.g. London, UK).</span>
+                                </div>
+                            </div>
+                            
+                            <div class="space-y-1.5">
+                                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Banner Description Text</label>
+                                <textarea id="hero-description" rows="3" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs text-slate-700 focus:outline-none focus:border-brandBlue transition-colors" required></textarea>
+                                <span class="text-[9px] text-slate-400 block">A detailed paragraph describing the organization/summit.</span>
+                            </div>
+                        </div>
+
+                        <!-- Card 2: Calls to Action Links -->
+                        <div class="bg-white border border-slate-200 rounded-2xl p-6 space-y-5">
+                            <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+                                <div class="flex items-center gap-2.5">
+                                    <i class="fa-solid fa-link text-brandBlue text-sm"></i>
+                                    <h3 class="font-display text-sm font-bold text-slate-900 uppercase tracking-wide">Action Button Links</h3>
+                                </div>
+                                <span class="text-[8px] font-bold text-brandBlue uppercase bg-brandBlue/10 px-2 py-0.5 rounded border border-brandBlue/20">
+                                    📍 NAV BARS & HERO BUTTONS
+                                </span>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div class="space-y-1.5">
+                                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Call for Abstracts Button</label>
+                                    <input type="text" id="announcements-abstract" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs text-slate-700 focus:outline-none focus:border-brandBlue transition-colors" placeholder="#conference">
+                                    <span class="text-[9px] text-slate-400 block">Where to go when clicked (e.g. #conference).</span>
+                                </div>
+                                <div class="space-y-1.5">
+                                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Award Nominations Button</label>
+                                    <input type="text" id="announcements-award" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs text-slate-700 focus:outline-none focus:border-brandBlue transition-colors" placeholder="#contact">
+                                    <span class="text-[9px] text-slate-400 block">Where to go when clicked (e.g. #contact).</span>
+                                </div>
+                                <div class="space-y-1.5">
+                                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Business Booking Button</label>
+                                    <input type="text" id="announcements-business" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs text-slate-700 focus:outline-none focus:border-brandBlue transition-colors" placeholder="#contact">
+                                    <span class="text-[9px] text-slate-400 block">Where to go when clicked (e.g. #contact).</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card 3: SOAS Academic Conference Dates -->
+                        <div class="bg-white border border-slate-200 rounded-2xl p-6 space-y-5">
+                            <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+                                <div class="flex items-center gap-2.5">
+                                    <i class="fa-solid fa-graduation-cap text-indigo-400 text-sm"></i>
+                                    <h3 class="font-display text-sm font-bold text-slate-900 uppercase tracking-wide">Conference Details & Deadlines</h3>
+                                </div>
+                                <span class="text-[8px] font-bold text-brandBlue uppercase bg-brandBlue/10 px-2 py-0.5 rounded border border-brandBlue/20">
+                                    📍 SOAS CONFERENCE SECTION
+                                </span>
+                            </div>
+                            
+                            <div class="space-y-1.5">
+                                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Primary Conference Theme</label>
+                                <input type="text" id="conference-theme" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs text-slate-700 focus:outline-none focus:border-brandBlue transition-colors" required>
+                                <span class="text-[9px] text-slate-400 block">Main research topic headline.</span>
+                            </div>
+                            
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <div class="space-y-1.5">
+                                    <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Abstracts Deadline</label>
+                                    <input type="text" id="conference-abstract" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-700 focus:outline-none" required>
+                                </div>
+                                <div class="space-y-1.5">
+                                    <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Acceptance Date</label>
+                                    <input type="text" id="conference-acceptance" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-700 focus:outline-none" required>
+                                </div>
+                                <div class="space-y-1.5">
+                                    <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Full Paper Deadline</label>
+                                    <input type="text" id="conference-paper" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-700 focus:outline-none" required>
+                                </div>
+                                <div class="space-y-1.5">
+                                    <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Conference Date</label>
+                                    <input type="text" id="conference-date" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-700 focus:outline-none" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card 4: Three-Day Event Timelines -->
+                        <div class="bg-white border border-slate-200 rounded-2xl p-6 space-y-6">
+                            <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+                                <div class="flex items-center gap-2.5">
+                                    <i class="fa-solid fa-calendar-days text-emerald-400 text-sm"></i>
+                                    <h3 class="font-display text-sm font-bold text-slate-900 uppercase tracking-wide">Event Timelines (Day 1, 2, 3)</h3>
+                                </div>
+                                <span class="text-[8px] font-bold text-brandBlue uppercase bg-brandBlue/10 px-2 py-0.5 rounded border border-brandBlue/20">
+                                    📍 TIMELINE SECTION ON HOMEPAGE
+                                </span>
+                            </div>
+                            
+                            <!-- Day 1 -->
+                            <div class="space-y-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                                <span class="text-[10px] font-extrabold text-brandBlue uppercase tracking-wider bg-brandBlue/10 border border-brandBlue/20 px-2 py-0.5 rounded">Day 1 Details</span>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+                                    <div class="space-y-1.5">
+                                        <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Date</label>
+                                        <input type="text" id="event1-date" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-700 focus:outline-none" required>
+                                    </div>
+                                    <div class="space-y-1.5 md:col-span-2">
+                                        <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Name of Segment</label>
+                                        <input type="text" id="event1-name" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-700 focus:outline-none" required>
+                                    </div>
+                                </div>
+                                <div class="space-y-1.5">
+                                    <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Venue Location</label>
+                                    <input type="text" id="event1-venue" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-700 focus:outline-none" required>
+                                </div>
+                                <div class="space-y-1.5">
+                                    <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Segment Focus (Short Description)</label>
+                                    <textarea id="event1-focus" rows="2" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-700 focus:outline-none" required></textarea>
+                                </div>
+                            </div>
+
+                            <!-- Day 2 -->
+                            <div class="space-y-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                                <span class="text-[10px] font-extrabold text-amber-600 uppercase tracking-wider bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded">Day 2 Details</span>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+                                    <div class="space-y-1.5">
+                                        <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Date</label>
+                                        <input type="text" id="event2-date" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-700 focus:outline-none" required>
+                                    </div>
+                                    <div class="space-y-1.5 md:col-span-2">
+                                        <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Name of Segment</label>
+                                        <input type="text" id="event2-name" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-700 focus:outline-none" required>
+                                    </div>
+                                </div>
+                                <div class="space-y-1.5">
+                                    <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Venue Location</label>
+                                    <input type="text" id="event2-venue" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-700 focus:outline-none" required>
+                                </div>
+                                <div class="space-y-1.5">
+                                    <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Segment Focus (Short Description)</label>
+                                    <textarea id="event2-focus" rows="2" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-700 focus:outline-none" required></textarea>
+                                </div>
+                            </div>
+
+                            <!-- Day 3 -->
+                            <div class="space-y-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                                <span class="text-[10px] font-extrabold text-purple-400 uppercase tracking-wider bg-purple-550/10 border border-purple-550/20 px-2 py-0.5 rounded">Day 3 Details</span>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+                                    <div class="space-y-1.5">
+                                        <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Date</label>
+                                        <input type="text" id="event3-date" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-700 focus:outline-none" required>
+                                    </div>
+                                    <div class="space-y-1.5 md:col-span-2">
+                                        <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Name of Segment</label>
+                                        <input type="text" id="event3-name" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-700 focus:outline-none" required>
+                                    </div>
+                                </div>
+                                <div class="space-y-1.5">
+                                    <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Venue Location</label>
+                                    <input type="text" id="event3-venue" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-700 focus:outline-none" required>
+                                </div>
+                                <div class="space-y-1.5">
+                                    <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Segment Focus (Short Description)</label>
+                                    <textarea id="event3-focus" rows="2" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-700 focus:outline-none" required></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card 5: Coordinator Phone Number & Souvenir Ad Pricing Rates -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            
+                            <!-- Coordinator phone -->
+                            <div class="bg-white border border-slate-200 rounded-2xl p-6 space-y-4">
+                                <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+                                    <div class="flex items-center gap-2.5">
+                                        <i class="fa-solid fa-address-book text-slate-400 text-sm"></i>
+                                        <h3 class="font-display text-sm font-bold text-slate-900 uppercase tracking-wide">Coordinator Hotline</h3>
+                                    </div>
+                                    <span class="text-[8px] font-bold text-brandBlue uppercase bg-brandBlue/10 px-2 py-0.5 rounded">📍 HOMEPAGE FOOTER</span>
+                                </div>
+                                <div class="space-y-1.5">
+                                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Coordinator Mobile Line</label>
+                                    <input type="text" id="contact-phone" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs text-slate-700 focus:outline-none focus:border-brandBlue transition-colors" required>
+                                    <span class="text-[9px] text-slate-400 block">Mobile number with country code.</span>
+                                </div>
+                            </div>
+
+                            <!-- Souvenir Ad Pricing Rates -->
+                            <div class="bg-white border border-slate-200 rounded-2xl p-6 space-y-4">
+                                <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+                                    <div class="flex items-center gap-2.5">
+                                        <i class="fa-solid fa-tags text-rose-500 text-sm"></i>
+                                        <h3 class="font-display text-sm font-bold text-slate-900 uppercase tracking-wide">Souvenir Ad Packages</h3>
+                                    </div>
+                                    <button type="button" onclick="addNewRateRow()" class="text-[9px] bg-brandBlue/10 border border-brandBlue/30 text-brandBlue hover:bg-brandBlue/20 px-2.5 py-1 rounded font-bold uppercase transition-all flex items-center gap-1">
+                                        <i class="fa-solid fa-plus"></i> Add Package
+                                    </button>
+                                </div>
+                                
+                                <div id="admin-rates-list" class="space-y-4 max-h-[350px] overflow-y-auto pr-1">
+                                    <!-- Dynamic Rates List Elements -->
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Bottom Action Panel -->
+                        <div class="bg-white border border-slate-200 rounded-3xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                            <span class="text-xs text-slate-400 leading-normal flex items-center gap-2">
+                                <i class="fa-solid fa-circle-check text-emerald-500 text-sm shrink-0"></i> 
+                                Ready to publish? Click "Save Content Updates" to push changes to the active website.
+                            </span>
+                            <button type="submit" class="w-full sm:w-auto bg-brandBlue hover:bg-brandBlue/90 text-slate-900 font-bold px-10 py-4 rounded-xl transition-all shadow-md text-xs uppercase tracking-wider">
+                                Save Content Updates
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- ══════════════════════════════════════════════════════════════ -->
+                <!-- TAB 2: GALLERY MANAGER                                       -->
+                <!-- ══════════════════════════════════════════════════════════════ -->
+                <div id="admin-tab-content-gallery" class="hidden w-full grid grid-cols-1 lg:grid-cols-12 gap-8">
+                    <!-- Left: Upload Photo Form -->
+                    <div class="lg:col-span-4 bg-white border border-slate-200 rounded-3xl p-6 space-y-4 h-fit">
+                        <div class="flex items-center gap-2 border-b border-slate-200 pb-3 mb-2">
+                            <i class="fa-solid fa-plus text-brandBlue text-sm"></i>
+                            <h3 id="gallery-form-title" class="font-display text-sm font-bold text-slate-900 uppercase tracking-wide">Upload Photo</h3>
+                        </div>
+                        <form id="gallery-form" onsubmit="handleSavePhoto(event)" class="space-y-4">
+                            <input type="hidden" id="gallery-edit-id" value="">
+                            
+                            <div class="space-y-1.5">
+                                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Title of Photo</label>
+                                <input type="text" id="gallery-title" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-700 focus:outline-none focus:border-brandBlue transition-colors" placeholder="e.g. London Summit Scholarly Panel" required>
+                            </div>
+
+                            <div class="space-y-1.5">
+                                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Short Caption / Description</label>
+                                <textarea id="gallery-description" rows="3" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-700 focus:outline-none focus:border-brandBlue transition-colors" placeholder="e.g. Scholarly delegates reviewing key constitutional themes..." required></textarea>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="space-y-1.5">
+                                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Date Taken</label>
+                                    <input type="text" id="gallery-date" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-700 focus:outline-none focus:border-brandBlue" placeholder="e.g. Sep 18, 2026" required>
+                                </div>
+                                <div class="space-y-1.5">
+                                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Location / Venue</label>
+                                    <input type="text" id="gallery-location" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-700 focus:outline-none focus:border-brandBlue" placeholder="e.g. SOAS London, UK" required>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="space-y-1.5">
+                                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Gallery Category</label>
+                                    <select id="gallery-category" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-700 focus:outline-none focus:border-brandBlue" onchange="updateGalleryBadgeDefaults()">
+                                        <option value="events">Social Events</option>
+                                        <option value="london">London Summit</option>
+                                        <option value="dignitaries">Dignitaries</option>
+                                        <option value="covers">Magazine Covers</option>
+                                    </select>
+                                </div>
+                                <div class="space-y-1.5">
+                                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Badge Tag</label>
+                                    <input type="text" id="gallery-badgetext" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-700 focus:outline-none focus:border-brandBlue" placeholder="e.g. Event" required>
+                                </div>
+                            </div>
+
+                            <div class="space-y-1.5">
+                                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Image Attachment</label>
+                                <div class="flex gap-4 mb-2">
+                                    <label class="inline-flex items-center text-xs text-slate-600 cursor-pointer">
+                                        <input type="radio" name="gallery-src-type" value="file" checked onchange="toggleGallerySrcType()" class="mr-1.5 accent-brandBlue"> Upload Photo file
+                                    </label>
+                                    <label class="inline-flex items-center text-xs text-slate-600 cursor-pointer">
+                                        <input type="radio" name="gallery-src-type" value="url" onchange="toggleGallerySrcType()" class="mr-1.5 accent-brandBlue"> Enter Web Path / URL
+                                    </label>
+                                </div>
+                                
+                                <div id="gallery-file-container">
+                                    <input type="file" id="gallery-file" accept="image/*,application/pdf" class="w-full text-xs text-slate-400 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-50 file:text-slate-600 file:hover:bg-slate-850 cursor-pointer bg-slate-50 p-2.5 border border-slate-200 rounded-xl">
+                                </div>
+                                
+                                <div id="gallery-url-container" class="hidden">
+                                    <input type="text" id="gallery-url" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-700 focus:outline-none focus:border-brandBlue" placeholder="e.g. wp-content/uploads/2026/06/summit.jpg">
+                                </div>
+                            </div>
+
+                            <div class="flex items-center gap-6 pt-2">
+                                <label class="inline-flex items-center text-xs text-slate-600 cursor-pointer">
+                                    <input type="checkbox" id="gallery-featured" class="mr-2 rounded border-slate-200 bg-slate-50 text-brandBlue focus:ring-brandBlue accent-brandBlue"> Show on Homepage
+                                </label>
+                                <label class="inline-flex items-center text-xs text-slate-600 cursor-pointer">
+                                    <input type="checkbox" id="gallery-popular" class="mr-2 rounded border-slate-200 bg-slate-50 text-brandBlue focus:ring-brandBlue accent-brandBlue"> High Priority
+                                </label>
+                            </div>
+
+                            <div class="flex gap-3 pt-4 border-t border-slate-850">
+                                <button type="submit" id="gallery-submit-btn" class="flex-1 bg-brandBlue hover:bg-brandBlue/90 text-slate-900 font-bold py-3 px-4 rounded-xl text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-cloud-arrow-up"></i> Publish Photo
+                                </button>
+                                <button type="button" onclick="resetGalleryForm()" class="bg-slate-850 hover:bg-slate-100 text-slate-400 font-bold py-3 px-4 rounded-xl text-xs uppercase tracking-wider transition-all">
+                                    Cancel
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Right: Photo List & Empty State Guide -->
+                    <div class="lg:col-span-8 bg-white border border-slate-200 rounded-3xl p-6 space-y-4">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-3 mb-2">
+                            <div class="flex items-center gap-2">
+                                <i class="fa-solid fa-images text-brandBlue text-sm"></i>
+                                <h3 class="font-display text-sm font-bold text-slate-900 uppercase tracking-wide">Active Photo Catalog</h3>
+                            </div>
+                            
+                            <div class="relative w-full sm:w-64">
+                                <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                                <input type="text" id="gallery-search" oninput="renderGalleryList()" class="w-full bg-slate-50 border border-slate-200 rounded-full pl-9 pr-4 py-2 text-xs text-slate-700 focus:outline-none focus:border-brandBlue" placeholder="Search catalog...">
+                            </div>
+                        </div>
+
+                        <!-- Gallery Table List -->
+                        <div class="overflow-x-auto min-h-[300px] max-h-[600px] overflow-y-auto">
+                            <table class="w-full text-left text-xs">
+                                <thead>
+                                    <tr class="border-b border-slate-200 text-slate-400 uppercase tracking-widest text-[9px] font-bold">
+                                        <th class="pb-3 w-16">Preview</th>
+                                        <th class="pb-3 pl-4">Title / Details</th>
+                                        <th class="pb-3 w-28">Category</th>
+                                        <th class="pb-3 w-28">Priority Status</th>
+                                        <th class="pb-3 text-right w-24">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="gallery-list-body" class="divide-y divide-slate-850">
+                                    <!-- Rendered dynamically -->
+                                </tbody>
+                            </table>
+                            
+                            <!-- Visual Empty State Step-by-Step Walkthrough -->
+                            <div id="gallery-empty-state" class="hidden text-center py-12 px-6 bg-slate-50 rounded-2xl border border-slate-200 border-dashed space-y-4">
+                                <div class="w-12 h-12 rounded-full bg-brandBlue/10 flex items-center justify-center mx-auto text-brandBlue text-lg">
+                                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                                </div>
+                                <div class="space-y-1">
+                                    <p class="text-xs font-bold text-slate-600">Photo Catalog is Currently Empty</p>
+                                    <p class="text-[10px] text-slate-400 max-w-sm mx-auto leading-relaxed">
+                                        To add your first photo, fill the upload form on the left:
+                                    </p>
+                                </div>
+                                <div class="max-w-xs mx-auto text-left text-[10px] text-slate-400 space-y-1.5 bg-slate-50 p-4 rounded-xl border border-slate-850">
+                                    <div>1️⃣ Enter a clear, readable title.</div>
+                                    <div>2️⃣ Type a brief description for visitors.</div>
+                                    <div>3️⃣ Click <strong>Choose Photo file</strong> and pick a picture.</div>
+                                    <div>4️⃣ Click <strong>Publish Photo</strong> button to post!</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ══════════════════════════════════════════════════════════════ -->
+                <!-- TAB 3: ARCHIVES MANAGER (DIGITAL LIBRARY)                    -->
+                <!-- ══════════════════════════════════════════════════════════════ -->
+                <div id="admin-tab-content-archives" class="hidden w-full grid grid-cols-1 lg:grid-cols-12 gap-8">
+                    <!-- Left: Add Document Form -->
+                    <div class="lg:col-span-4 bg-white border border-slate-200 rounded-3xl p-6 space-y-4 h-fit">
+                        <div class="flex items-center gap-2 border-b border-slate-200 pb-3 mb-2">
+                            <i class="fa-solid fa-plus text-brandBlue text-sm"></i>
+                            <h3 id="archives-form-title" class="font-display text-sm font-bold text-slate-900 uppercase tracking-wide">Add Library Item</h3>
+                        </div>
+                        <form id="archives-form" onsubmit="handleSaveArchive(event)" class="space-y-4">
+                            <input type="hidden" id="archives-edit-id" value="">
+                            
+                            <div class="space-y-1.5">
+                                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Select Item Format</label>
+                                <select id="archives-type" onchange="toggleArchiveFields()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-700 focus:outline-none focus:border-brandBlue">
+                                    <option value="pdf">PDF Booklet / Circular Document</option>
+                                    <option value="cover">Magazine Print Edition Cover</option>
+                                </select>
+                            </div>
+
+                            <div class="space-y-1.5">
+                                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Document Title</label>
+                                <input type="text" id="archives-title" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-700 focus:outline-none focus:border-brandBlue" placeholder="e.g. Official Call for Papers" required>
+                            </div>
+
+                            <!-- PDF Only fields -->
+                            <div id="archives-pdf-fields" class="space-y-4">
+                                <div class="space-y-1.5">
+                                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Short Summary of Document</label>
+                                    <textarea id="archives-desc" rows="3" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-700 focus:outline-none focus:border-brandBlue" placeholder="Briefly describe what this document contains..."></textarea>
+                                </div>
+                                
+                                <div class="space-y-1.5">
+                                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Estimated File Size (Label)</label>
+                                    <input type="text" id="archives-size" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-700 focus:outline-none focus:border-brandBlue" placeholder="e.g. 1.2 MB">
+                                </div>
+
+                                <div class="space-y-1.5">
+                                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">PDF File</label>
+                                    <div class="flex gap-4 mb-2">
+                                        <label class="inline-flex items-center text-xs text-slate-600 cursor-pointer">
+                                            <input type="radio" name="pdf-src-type" value="file" checked onchange="togglePdfSrcType()" class="mr-1.5 accent-brandBlue"> Upload PDF file
+                                        </label>
+                                        <label class="inline-flex items-center text-xs text-slate-600 cursor-pointer">
+                                            <input type="radio" name="pdf-src-type" value="url" onchange="togglePdfSrcType()" class="mr-1.5 accent-brandBlue"> Enter File Path / Link
+                                        </label>
+                                    </div>
+                                    
+                                    <div id="pdf-file-container">
+                                        <input type="file" id="pdf-file" accept="application/pdf" class="w-full text-xs text-slate-400 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-50 file:text-slate-600 file:hover:bg-slate-850 cursor-pointer bg-slate-50 p-2.5 border border-slate-200 rounded-xl">
+                                    </div>
+                                    
+                                    <div id="pdf-url-container" class="hidden">
+                                        <input type="text" id="pdf-url" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-700 focus:outline-none" placeholder="e.g. pdfs/call-for-papers.pdf">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Magazine Cover Only fields -->
+                            <div id="archives-cover-fields" class="space-y-4 hidden">
+                                <div class="space-y-1.5">
+                                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Publish Date / Issue Label</label>
+                                    <input type="text" id="archives-date" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-700 focus:outline-none" placeholder="e.g. Feb 2026">
+                                </div>
+
+                                <div class="space-y-1.5">
+                                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Cover Image file</label>
+                                    <div class="flex gap-4 mb-2">
+                                        <label class="inline-flex items-center text-xs text-slate-600 cursor-pointer">
+                                            <input type="radio" name="cover-src-type" value="file" checked onchange="toggleCoverSrcType()" class="mr-1.5 accent-brandBlue"> Upload Cover Image
+                                        </label>
+                                        <label class="inline-flex items-center text-xs text-slate-600 cursor-pointer">
+                                            <input type="radio" name="cover-src-type" value="url" onchange="toggleCoverSrcType()" class="mr-1.5 accent-brandBlue"> Enter Image Path / URL
+                                        </label>
+                                    </div>
+                                    
+                                    <div id="cover-file-container">
+                                        <input type="file" id="cover-file" accept="image/*,application/pdf" class="w-full text-xs text-slate-400 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-50 file:text-slate-600 file:hover:bg-slate-850 cursor-pointer bg-slate-50 p-2.5 border border-slate-200 rounded-xl">
+                                    </div>
+                                    
+                                    <div id="cover-url-container" class="hidden">
+                                        <input type="text" id="cover-url" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-700 focus:outline-none" placeholder="e.g. magazine-covers/issue-feb.jpg">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex gap-3 pt-4 border-t border-slate-850">
+                                <button type="submit" id="archives-submit-btn" class="flex-1 bg-brandBlue hover:bg-brandBlue/90 text-slate-900 font-bold py-3 px-4 rounded-xl text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-cloud-arrow-up"></i> Save Document
+                                </button>
+                                <button type="button" onclick="resetArchivesForm()" class="bg-slate-850 hover:bg-slate-100 text-slate-400 font-bold py-3 px-4 rounded-xl text-xs uppercase tracking-wider transition-all">
+                                    Cancel
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Right: Documents List & Empty State Onboarding -->
+                    <div class="lg:col-span-8 bg-white border border-slate-200 rounded-3xl p-6 space-y-4">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-3 mb-2">
+                            <div class="flex items-center gap-2">
+                                <i class="fa-solid fa-file-invoice text-brandBlue text-sm"></i>
+                                <h3 class="font-display text-sm font-bold text-slate-900 uppercase tracking-wide">Library Catalog</h3>
+                            </div>
+                            
+                            <div class="relative w-full sm:w-64">
+                                <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                                <input type="text" id="archives-search" oninput="renderArchivesList()" class="w-full bg-slate-50 border border-slate-200 rounded-full pl-9 pr-4 py-2 text-xs text-slate-700 focus:outline-none focus:border-brandBlue" placeholder="Search library...">
+                            </div>
+                        </div>
+
+                        <!-- Archives Table List -->
+                        <div class="overflow-x-auto min-h-[300px] max-h-[600px] overflow-y-auto">
+                            <table class="w-full text-left text-xs">
+                                <thead>
+                                    <tr class="border-b border-slate-200 text-slate-400 uppercase tracking-widest text-[9px] font-bold">
+                                        <th class="pb-3 w-28">Type</th>
+                                        <th class="pb-3 pl-4">Title</th>
+                                        <th class="pb-3 pl-4">File Location</th>
+                                        <th class="pb-3 w-24">Size/Details</th>
+                                        <th class="pb-3 text-right w-24">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="archives-list-body" class="divide-y divide-slate-850">
+                                    <!-- Rendered dynamically -->
+                                </tbody>
+                            </table>
+                            
+                            <!-- Visual Empty State Step-by-Step Onboarding -->
+                            <div id="archives-empty-state" class="hidden text-center py-12 px-6 bg-slate-50 rounded-2xl border border-slate-200 border-dashed space-y-4">
+                                <div class="w-12 h-12 rounded-full bg-brandBlue/10 flex items-center justify-center mx-auto text-brandBlue text-lg">
+                                    <i class="fa-solid fa-file-pdf"></i>
+                                </div>
+                                <div class="space-y-1">
+                                    <p class="text-xs font-bold text-slate-600">Digital Library is Currently Empty</p>
+                                    <p class="text-[10px] text-slate-400 max-w-sm mx-auto leading-relaxed">
+                                        To add your first PDF document or print cover, complete the form on the left:
+                                    </p>
+                                </div>
+                                <div class="max-w-xs mx-auto text-left text-[10px] text-slate-400 space-y-1.5 bg-slate-50 p-4 rounded-xl border border-slate-850">
+                                    <div>1️⃣ Select format (PDF Document or Magazine Cover).</div>
+                                    <div>2️⃣ Enter a short, professional title.</div>
+                                    <div>3️⃣ Select <strong>Upload file</strong> and select file from computer.</div>
+                                    <div>4️⃣ Click <strong>Save Document</strong> to publish!</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ══════════════════════════════════════════════════════════════ -->
+                <!-- TAB 4: SYSTEM PASSWORD / SECURITY                            -->
+                <!-- ══════════════════════════════════════════════════════════════ -->
+                <div id="admin-tab-content-security" class="hidden w-full bg-white border border-slate-200 rounded-3xl p-8 space-y-6">
+                    <div class="flex items-center gap-3 border-b border-slate-200 pb-4">
+                        <div class="w-10 h-10 rounded-xl bg-brandBlue/10 border border-brandBlue/20 flex items-center justify-center text-brandBlue text-lg">
+                            <i class="fa-solid fa-key"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-display text-sm font-bold text-slate-900 uppercase tracking-wide">Workspace Security credentials</h3>
+                            <p class="text-[10px] text-slate-400">Change your secure login password to access the vishwaleader-team dashboard.</p>
+                        </div>
+                    </div>
+                    
+                    <form onsubmit="handleChangeAdminPassword(event)" class="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
+                        <div class="space-y-1.5 col-span-1">
+                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Current Password</label>
+                            <input type="password" id="admin-current-password" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-700 focus:outline-none focus:border-brandBlue" placeholder="••••••••" required>
+                        </div>
+                        <div class="space-y-1.5 col-span-1">
+                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">New Password</label>
+                            <input type="password" id="admin-new-password" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-700 focus:outline-none focus:border-brandBlue" placeholder="Min. 6 characters" required>
+                        </div>
+                        <div class="col-span-1">
+                            <button type="submit" id="admin-change-pwd-btn" class="w-full bg-brandBlue hover:bg-brandBlue/90 text-slate-900 font-bold py-3 px-6 rounded-xl transition-all text-xs uppercase tracking-wider">
+                                Update Password
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Floating status alerts toast -->
+    <div id="toast" class="fixed bottom-6 right-6 z-50 bg-emerald-500 border border-emerald-400 text-slate-900 text-xs font-bold px-6 py-3.5 rounded-xl shadow-2xl transition-all duration-300 opacity-0 pointer-events-none translate-y-2 flex items-center gap-2">
+        <i id="toast-icon" class="fa-solid fa-circle-check text-sm"></i>
+        <span id="toast-msg">Settings saved successfully!</span>
+    </div>
+
+    <!-- JS Logic -->
+    <script>
+        // Firebase Configuration (matching vishwaleader-techmedia project)
+        const firebaseConfig = {
+            apiKey: "AIzaSyByn-fsGhqcz3FRSIOIsYQA7mevKX77UTM",
+            authDomain: "vishwaleader-techmedia.firebaseapp.com",
+            projectId: "vishwaleader-techmedia",
+            storageBucket: "vishwaleader-techmedia.firebasestorage.app",
+            messagingSenderId: "242967598341",
+            appId: "1:242967598341:web:831c1557dd5edcb153936c",
+            measurementId: "G-B7ZMRKJWVF"
+        };
+
+        // Initialize Firebase safely
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        const storage = firebase.storage();
+
+        // State variables
+        let ratesState = [];
+        let galleryData = [];
+        let archivesData = [];
+        let currentTab = 'settings';
+
+        // Auth change listener
+        auth.onAuthStateChanged((user) => {
+            document.getElementById('auth-check-spinner').classList.add('hidden');
+            if (user) {
+                // Ensure they are a vl-team member (admin account)
+                if (user.email && user.email.endsWith('@vishwaleader.com')) {
+                    // Authorized Admin
+                    document.getElementById('login-container').classList.add('hidden');
+                    document.getElementById('admin-dashboard').classList.remove('hidden');
+                    document.getElementById('user-info-section').classList.remove('hidden');
+                    
+                    // Show username cleanly (without the @vishwaleader.com)
+                    const displayUser = user.email.split('@')[0];
+                    if (document.getElementById('user-display-name')) {
+                        document.getElementById('user-display-name').textContent = "Team: " + displayUser;
+                    }
+                    if (document.getElementById('user-display-name-sidebar')) {
+                        document.getElementById('user-display-name-sidebar').innerHTML = `<i class="fa-solid fa-user-circle mr-1 text-brandBlue"></i> Team: ${displayUser}`;
+                    }
+                    
+                    loadSettings();
+                    loadGallery();
+                    loadArchives();
+                    switchAdminTab('dashboard'); initCharts(); loadInquiries(); loadDashboardStats();
+                } else {
+                    // Unauthorized member trying to access admin
+                    showToast("Access Denied: This area is restricted to vl-team administrators.", true);
+                    auth.signOut();
+                }
+            } else {
+                // User is not signed in
+                document.getElementById('login-container').classList.remove('hidden');
+                document.getElementById('admin-dashboard').classList.add('hidden');
+                document.getElementById('user-info-section').classList.add('hidden');
+            }
+        });
+
+        // Username / Password Login Flow for vl-team
+        function handleAdminLogin(event) {
+            event.preventDefault();
+            const usernameInput = document.getElementById('admin-username-input').value.trim();
+            const passwordInput = document.getElementById('admin-password-input').value;
+            const loginBtn = document.getElementById('admin-login-btn');
+
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = '<i class="fa-solid fa-spinner animate-spin mr-2"></i> Authenticating...';
+
+            if (usernameInput !== 'open-vldm-admin') {
+                showToast("Access Denied: Invalid admin username.", true);
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = 'Sign In to Dashboard';
+                return;
+            }
+
+            const email = 'open-vldm-admin@vishwaleader.com';
+
+            auth.signInWithEmailAndPassword(email, passwordInput)
+                .then((userCredential) => {
+                    showToast("Successfully signed in!");
+                })
+                .catch((error) => {
+                    console.error("Auth error:", error.code, error.message);
+
+                    // Firebase SDK v10+ returns 'auth/invalid-credential' for both
+                    // wrong password AND non-existent accounts (to prevent enumeration).
+                    // If the correct password was supplied and sign-in failed, attempt
+                    // to initialise the account for the very first time.
+                    const isCredentialError = (
+                        error.code === 'auth/invalid-credential' ||
+                        error.code === 'auth/user-not-found' ||
+                        error.code === 'auth/wrong-password'
+                    );
+
+                    if (isCredentialError && passwordInput === 'open-vldm-pass') {
+                        // Try to create the admin account on first run
+                        auth.createUserWithEmailAndPassword(email, passwordInput)
+                            .then((userCredential) => {
+                                showToast("Admin account initialised and signed in!");
+                            })
+                            .catch((createErr) => {
+                                console.error("Account creation failed:", createErr.code, createErr.message);
+                                if (createErr.code === 'auth/email-already-in-use') {
+                                    // Account exists but password is wrong
+                                    showToast("Incorrect password. Please check your credentials.", true);
+                                } else {
+                                    showToast("Initialisation failed: " + createErr.message, true);
+                                }
+                            });
+                    } else if (isCredentialError) {
+                        showToast("Incorrect password. Access denied.", true);
+                    } else {
+                        showToast("Login failed: " + error.message, true);
+                    }
+                })
+                .finally(() => {
+                    loginBtn.disabled = false;
+                    loginBtn.innerHTML = 'Sign In to Dashboard';
+                });
+        }
+
+        // Change Password Flow for Current Admin
+        function handleChangeAdminPassword(event) {
+            event.preventDefault();
+            const currentPwd = document.getElementById('admin-current-password').value;
+            const newPwd = document.getElementById('admin-new-password').value;
+            const btn = document.getElementById('admin-change-pwd-btn');
+
+            if (newPwd.length < 6) {
+                showToast("Password must be at least 6 characters.", true);
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> Updating...';
+
+            const user = auth.currentUser;
+            const credential = firebase.auth.EmailAuthProvider.credential(user.email, currentPwd);
+
+            // Re-authenticate user before updating password (standard Firebase safety requirement)
+            user.reauthenticateWithCredential(credential)
+                .then(() => {
+                    user.updatePassword(newPwd)
+                        .then(() => {
+                            showToast("Administrator password updated successfully!");
+                            document.getElementById('admin-current-password').value = '';
+                            document.getElementById('admin-new-password').value = '';
+                        })
+                        .catch((error) => {
+                            console.error("Password update failed:", error);
+                            showToast("Update failed: " + error.message, true);
+                        });
+                })
+                .catch((error) => {
+                    console.error("Re-authentication failed:", error);
+                    showToast("Current password incorrect.", true);
+                })
+                .finally(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = 'Update Password';
+                });
+        }
+
+        // Sign Out Flow
+        function handleSignOut() {
+            auth.signOut().then(() => {
+                showToast("Signed out successfully.");
+            }).catch((err) => {
+                console.error("Sign-out error:", err);
+            });
+        }
+
+        
+        let trafficChartInstance, membersChartInstance;
+
+        function initCharts() {
+            const ctxTraffic = document.getElementById('trafficChart');
+            const ctxMembers = document.getElementById('membersChart');
+            
+            if(ctxTraffic && !trafficChartInstance) {
+                trafficChartInstance = new Chart(ctxTraffic, {
+                    type: 'line',
+                    data: {
+                        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                        datasets: [{
+                            label: 'Monthly Visitors',
+                            data: [1200, 1900, 3000, 5000, 8000, 12504],
+                            borderColor: '#2563eb',
+                            tension: 0.4,
+                            fill: true,
+                            backgroundColor: 'rgba(37, 99, 235, 0.1)'
+                        }]
+                    }
+                });
+            }
+
+            if(ctxMembers && !membersChartInstance) {
+                membersChartInstance = new Chart(ctxMembers, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                        datasets: [{
+                            label: 'New Members',
+                            data: [50, 70, 120, 150, 200, 310],
+                            backgroundColor: '#10b981'
+                        }]
+                    }
+                });
+            }
+        }
+
+        function loadDashboardStats() {
+            db.collection('members').get().then(snap => {
+                document.getElementById('stat-members').innerText = snap.size || 0;
+            }).catch(e => {
+                document.getElementById('stat-members').innerText = 0;
+            });
+            
+            db.collection('inquiries').where('status', '==', 'pending').get().then(snap => {
+                document.getElementById('stat-inquiries').innerText = snap.size || 0;
+            }).catch(e => {
+                // If index or something is missing, just fallback to count all
+                db.collection('inquiries').get().then(s => {
+                    document.getElementById('stat-inquiries').innerText = s.size || 0;
+                }).catch(() => { document.getElementById('stat-inquiries').innerText = 0; });
+            });
+        }
+
+        function loadInquiries() {
+            db.collection('inquiries').orderBy('createdAt', 'desc').limit(50)
+                .onSnapshot(snap => {
+                    const list = document.getElementById('inquiries-list');
+                    list.innerHTML = '';
+                    if(snap.empty) {
+                        list.innerHTML = '<tr><td colspan="4" class="py-6 text-center text-slate-500">No inquiries found.</td></tr>';
+                        return;
+                    }
+                    snap.forEach(doc => {
+                        const data = doc.data();
+                        const date = data.createdAt ? new Date(data.createdAt.toMillis()).toLocaleDateString() : 'N/A';
+                        list.innerHTML += `
+                            <tr class="border-b border-slate-100 hover:bg-slate-50">
+                                <td class="py-3 px-4 text-sm text-slate-600">${date}</td>
+                                <td class="py-3 px-4 text-sm text-slate-900 font-medium">${data.name || 'Unknown'}</td>
+                                <td class="py-3 px-4 text-sm text-brandBlue"><a href="mailto:${data.email}">${data.email || 'N/A'}</a></td>
+                                <td class="py-3 px-4 text-sm text-slate-600 max-w-xs truncate" title="${data.message || ''}">${data.message || 'No message'}</td>
+                            </tr>
+                        `;
+                    });
+                }, err => {
+                    console.error("Error loading inquiries", err);
+                });
+        }
+
+
+        // Tab Switching Logic
+        function switchAdminTab(tabName) {
+            currentTab = tabName;
+            
+            // Toggle sidebar button highlighting
+            const tabs = ['dashboard', 'inquiries', 'settings', 'gallery', 'archives', 'security'];
+            tabs.forEach(t => {
+                const btn = document.getElementById(`sidebar-tab-${t}`);
+                const content = document.getElementById(`admin-tab-content-${t}`);
+                if (t === tabName) {
+                    if (btn) {
+                        btn.className = "w-full text-left p-3.5 rounded-2xl flex items-center gap-3 bg-brandBlue text-slate-900 font-bold shadow-lg transition-all";
+                        const span = btn.querySelector('span');
+                        if (span) span.className = "w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center text-sm text-slate-900";
+                    }
+                    if (content) content.classList.remove('hidden');
+                } else {
+                    if (btn) {
+                        btn.className = "w-full text-left p-3.5 rounded-2xl flex items-center gap-3 hover:bg-slate-850/60 text-slate-600 transition-all";
+                        const span = btn.querySelector('span');
+                        if (span) span.className = "w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center text-sm text-slate-400";
+                    }
+                    if (content) content.classList.add('hidden');
+                }
+            });
+        }
+
+        // ----------------------------------------------------
+        // TAB 1: SITE CONFIGURATION / SETTINGS
+        // ----------------------------------------------------
+        function loadSettings() {
+            db.collection('vishwaleader_config').doc('settings').get()
+                .then((doc) => {
+                    let settings = {};
+                    if (doc.exists) {
+                        settings = doc.data();
+                    }
+                    populateForm(settings);
+                })
+                .catch((error) => {
+                    console.error("Error loading settings:", error);
+                    showToast("Error reading settings: " + error.message, true);
+                });
+        }
+
+        function populateForm(data) {
+            const abstractUrl = data.announcements?.abstractLink || "#conference";
+            const awardUrl = data.announcements?.awardLink || "#contact";
+            const businessUrl = data.announcements?.businessLink || "#contact";
+
+            document.getElementById('announcements-abstract').value = abstractUrl;
+            document.getElementById('announcements-award').value = awardUrl;
+            document.getElementById('announcements-business').value = businessUrl;
+
+            document.getElementById('hero-title').value = data.hero?.title || "Vishwa Leader Dr. B. R. Ambedkar International Awards 2026";
+            document.getElementById('hero-location').value = data.hero?.location || "London, UK";
+            document.getElementById('hero-description').value = data.hero?.description || "Vishwa Leader Techmedia Pvt. Ltd. coordinates global advocacy networks, academic research, and media ecosystems to amplify constitutional values and diaspora empowerment.";
+
+            document.getElementById('conference-theme').value = data.conference?.primaryTheme || `"Reimagining Equality and Justice: Dr. B. R. Ambedkar's Vision in the 21st Century"`;
+            document.getElementById('conference-abstract').value = data.conference?.abstractDate || "30th June 2026";
+            document.getElementById('conference-acceptance').value = data.conference?.acceptanceDate || "15th July 2026";
+            document.getElementById('conference-paper').value = data.conference?.paperDate || "15th August 2026";
+            document.getElementById('conference-date').value = data.conference?.eventDate || "18th Sept 2026";
+
+            // Events
+            document.getElementById('event1-date').value = data.events?.event1_date || "18 Sept 2026";
+            document.getElementById('event1-name').value = data.events?.event1_name || "International Academic Conference";
+            document.getElementById('event1-venue').value = data.events?.event1_venue || "SOAS University of London";
+            document.getElementById('event1-focus').value = data.events?.event1_focus || `"Reimagining Equality and Justice: Dr. B. R. Ambedkar's Vision in the 21st Century". Featuring research papers, scholar panels, and human rights discourse.`;
+
+            document.getElementById('event2-date').value = data.events?.event2_date || "19 Sept 2026";
+            document.getElementById('event2-name').value = data.events?.event2_name || "International Business Summit";
+            document.getElementById('event2-venue').value = data.events?.event2_venue || "London, UK";
+            document.getElementById('event2-focus').value = data.events?.event2_focus || "Connecting global diaspora entrepreneurs, business leaders, and investors. Promoting inclusive trade partnerships and economic empowerment.";
+
+            document.getElementById('event3-date').value = data.events?.event3_date || "20 Sept 2026";
+            document.getElementById('event3-name').value = data.events?.event3_name || "International Award & Cultural Ceremony";
+            document.getElementById('event3-venue').value = data.events?.event3_venue || "London, UK";
+            document.getElementById('event3-focus').value = data.events?.event3_focus || "Presentation of the prestigious Dr. Ambedkar International Awards 2026. Followed by cultural performances, networking banquet, and celebratory dinner.";
+
+            document.getElementById('contact-phone').value = data.contact?.phone || "+91 9969688928";
+
+            // Souvenir Rates
+            ratesState = data.souvenir?.rates || [
+                { name: "Print: Full Page Color Ad", description: "Vishwa Leader Monthly Print Magazine", price: "INR 25,000 / $300" },
+                { name: "Print: Half Page Color Ad", description: "Vishwa Leader Monthly Print Magazine", price: "INR 15,000 / $200" },
+                { name: "Digital: Header Leaderboard (728x90)", description: "Monthly Slot on Digital News Portal", price: "INR 10,000 / $125" },
+                { name: "Digital: Sponsored Press Release", description: "Featured Academic/Social Article Slot", price: "INR 8,000 / $100" }
+            ];
+            renderRates();
+        }
+
+        function renderRates() {
+            const ratesContainer = document.getElementById('admin-rates-list');
+            ratesContainer.innerHTML = '';
+            
+            ratesState.forEach((rate, index) => {
+                const rowHtml = `
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3 relative group">
+                        <div class="space-y-1">
+                            <label class="text-[8px] font-bold text-slate-400 uppercase tracking-wider">Item/Package Name</label>
+                            <input type="text" value="${rate.name}" onchange="updateRateItem(${index}, 'name', this.value)" class="w-full bg-white border border-slate-200 rounded px-2.5 py-1.5 text-xs text-slate-700 focus:outline-none" required>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[8px] font-bold text-slate-400 uppercase tracking-wider">Short Subtitle</label>
+                            <input type="text" value="${rate.description}" onchange="updateRateItem(${index}, 'description', this.value)" class="w-full bg-white border border-slate-200 rounded px-2.5 py-1.5 text-xs text-slate-700 focus:outline-none" required>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[8px] font-bold text-slate-400 uppercase tracking-wider">Price Tag Label</label>
+                            <input type="text" value="${rate.price}" onchange="updateRateItem(${index}, 'price', this.value)" class="w-full bg-white border border-slate-200 rounded px-2.5 py-1.5 text-xs text-slate-700 focus:outline-none" placeholder="INR 25,000 / $300" required>
+                        </div>
+                        <button type="button" onclick="deleteRateRow(${index})" class="absolute top-2 right-2 text-rose-500 hover:text-rose-400 text-xs p-1 focus:outline-none" title="Delete Package">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+                ratesContainer.insertAdjacentHTML('beforeend', rowHtml);
+            });
+        }
+
+        function updateRateItem(index, key, value) {
+            ratesState[index][key] = value;
+        }
+
+        function deleteRateRow(index) {
+            ratesState.splice(index, 1);
+            renderRates();
+        }
+
+        function addNewRateRow() {
+            ratesState.push({ name: '', description: '', price: '' });
+            renderRates();
+        }
+
+        function handleSaveSettings(event) {
+            event.preventDefault();
+            const submitBtn = event.target.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner animate-spin mr-2"></i> Saving Settings...';
+
+            const data = {
+                announcements: {
+                    abstractLink: document.getElementById('announcements-abstract').value,
+                    awardLink: document.getElementById('announcements-award').value,
+                    businessLink: document.getElementById('announcements-business').value
+                },
+                hero: {
+                    title: document.getElementById('hero-title').value,
+                    location: document.getElementById('hero-location').value,
+                    description: document.getElementById('hero-description').value
+                },
+                conference: {
+                    primaryTheme: document.getElementById('conference-theme').value,
+                    abstractDate: document.getElementById('conference-abstract').value,
+                    acceptanceDate: document.getElementById('conference-acceptance').value,
+                    paperDate: document.getElementById('conference-paper').value,
+                    eventDate: document.getElementById('conference-date').value
+                },
+                events: {
+                    event1_date: document.getElementById('event1-date').value,
+                    event1_name: document.getElementById('event1-name').value,
+                    event1_venue: document.getElementById('event1-venue').value,
+                    event1_focus: document.getElementById('event1-focus').value,
+                    
+                    event2_date: document.getElementById('event2-date').value,
+                    event2_name: document.getElementById('event2-name').value,
+                    event2_venue: document.getElementById('event2-venue').value,
+                    event2_focus: document.getElementById('event2-focus').value,
+
+                    event3_date: document.getElementById('event3-date').value,
+                    event3_name: document.getElementById('event3-name').value,
+                    event3_venue: document.getElementById('event3-venue').value,
+                    event3_focus: document.getElementById('event3-focus').value
+                },
+                souvenir: {
+                    rates: ratesState.filter(rate => rate.name.trim() !== '')
+                },
+                contact: {
+                    phone: document.getElementById('contact-phone').value
+                }
+            };
+
+            db.collection('vishwaleader_config').doc('settings').set(data)
+                .then(() => {
+                    showToast("Configuration saved successfully!");
+                })
+                .catch((error) => {
+                    console.error("Firestore write failed:", error);
+                    showToast("Error saving changes: " + error.message, true);
+                })
+                .finally(() => {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fa-solid fa-floppy-disk mr-2"></i> Save All Changes';
+                });
+        }
+
+
+        // ----------------------------------------------------
+        // FILE UPLOADER TO FIREBASE STORAGE
+        // ----------------------------------------------------
+        function uploadFilePromise(file, path) {
+            return new Promise((resolve, reject) => {
+                const fileRef = storage.ref().child(path);
+                const uploadTask = fileRef.put(file);
+                
+                uploadTask.on('state_changed', 
+                    (snapshot) => {
+                        // Track upload progress if needed
+                    }, 
+                    (error) => {
+                        reject(error);
+                    }, 
+                    () => {
+                        uploadTask.snapshot.ref.getDownloadURL()
+                            .then(resolve)
+                            .catch(reject);
+                    }
+                );
+            });
+        }
+
+
+        // ----------------------------------------------------
+        // TAB 2: PHOTO GALLERY MANAGER
+        // ----------------------------------------------------
+        function toggleGallerySrcType() {
+            const val = document.querySelector('input[name="gallery-src-type"]:checked').value;
+            if (val === 'file') {
+                document.getElementById('gallery-file-container').classList.remove('hidden');
+                document.getElementById('gallery-url-container').classList.add('hidden');
+                document.getElementById('gallery-url').required = false;
+            } else {
+                document.getElementById('gallery-file-container').classList.add('hidden');
+                document.getElementById('gallery-url-container').classList.remove('hidden');
+                document.getElementById('gallery-url').required = true;
+            }
+        }
+
+        function updateGalleryBadgeDefaults() {
+            const cat = document.getElementById('gallery-category').value;
+            const badgeInput = document.getElementById('gallery-badgetext');
+            
+            // Pre-fill smart defaults for badges based on category selection
+            if (cat === 'events') badgeInput.value = 'Event';
+            else if (cat === 'london') badgeInput.value = 'London 2026';
+            else if (cat === 'dignitaries') badgeInput.value = 'Dignitary';
+            else if (cat === 'covers') badgeInput.value = 'Magazine';
+        }
+
+        function loadGallery() {
+            db.collection('vishwaleader_gallery')
+                .orderBy('createdAt', 'desc')
+                .get()
+                .then((snapshot) => {
+                    galleryData = [];
+                    snapshot.forEach((doc) => {
+                        galleryData.push({
+                            id: doc.id,
+                            ...doc.data()
+                        });
+                    });
+                    renderGalleryList();
+                })
+                .catch((err) => {
+                    console.error("Error loading gallery:", err);
+                });
+        }
+
+        function renderGalleryList() {
+            const searchVal = document.getElementById('gallery-search').value.toLowerCase().trim();
+            const body = document.getElementById('gallery-list-body');
+            body.innerHTML = '';
+
+            const filtered = galleryData.filter(item => {
+                return item.title.toLowerCase().includes(searchVal) || 
+                       item.description.toLowerCase().includes(searchVal) ||
+                       item.category.toLowerCase().includes(searchVal);
+            });
+
+            if (filtered.length === 0) {
+                document.getElementById('gallery-empty-state').classList.remove('hidden');
+                return;
+            } else {
+                document.getElementById('gallery-empty-state').classList.add('hidden');
+            }
+
+            filtered.forEach(item => {
+                // Category badge colors
+                let catClass = 'bg-slate-100 text-slate-600';
+                if (item.category === 'london') catClass = 'bg-indigo-900/40 text-indigo-400 border border-indigo-800/40';
+                else if (item.category === 'events') catClass = 'bg-emerald-900/40 text-emerald-400 border border-emerald-800/40';
+                else if (item.category === 'dignitaries') catClass = 'bg-amber-900/40 text-amber-400 border border-amber-800/40';
+                else if (item.category === 'covers') catClass = 'bg-rose-900/40 text-rose-400 border border-rose-800/40';
+
+                // Badges for featured/popular
+                let statusBadges = '';
+                if (item.featured) statusBadges += `<span class="bg-brandBlue/10 text-brandBlue border border-brandBlue/20 text-[9px] font-bold px-1.5 py-0.5 rounded mr-1">Featured</span>`;
+                if (item.popular) statusBadges += `<span class="bg-amber-500/10 text-amber-600 border border-amber-500/20 text-[9px] font-bold px-1.5 py-0.5 rounded">Popular</span>`;
+                if (!statusBadges) statusBadges = '<span class="text-slate-400 text-[10px]">-</span>';
+
+                const tr = document.createElement('tr');
+                tr.className = "border-b border-slate-850 hover:bg-slate-50/45 transition-colors";
+                tr.innerHTML = `
+                    <td class="py-4">
+                        <img src="${item.src}" alt="${item.title}" class="h-10 w-14 object-cover rounded-lg border border-slate-200 bg-slate-50" onerror="this.src='https://placehold.co/120x80/0f172a/ffffff?text=Image'">
+                    </td>
+                    <td class="py-4 pl-4 pr-2">
+                        <div class="font-bold text-slate-800 truncate max-w-xs">${item.title}</div>
+                        <div class="text-[10px] text-slate-400 flex items-center gap-1.5 mt-0.5">
+                            <span><i class="fa-solid fa-calendar-day mr-0.5"></i> ${item.date || '-'}</span>
+                            <span>&bull;</span>
+                            <span><i class="fa-solid fa-location-dot mr-0.5"></i> ${item.location || '-'}</span>
+                        </div>
+                    </td>
+                    <td class="py-4">
+                        <span class="text-[9px] font-extrabold uppercase tracking-wide px-2 py-0.5 rounded-full ${catClass}">${item.category}</span>
+                    </td>
+                    <td class="py-4">
+                        <div class="flex items-center">${statusBadges}</div>
+                    </td>
+                    <td class="py-4 text-right">
+                        <div class="flex justify-end gap-2">
+                            <button onclick="editPhoto('${item.id}')" class="text-brandBlue hover:text-blue-400 p-1 px-2 border border-slate-200 hover:border-brandBlue/30 bg-slate-50 rounded-lg transition-all" title="Edit details">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </button>
+                            <button onclick="deletePhoto('${item.id}')" class="text-rose-500 hover:text-rose-450 p-1 px-2 border border-slate-200 hover:border-rose-900/30 bg-slate-50 rounded-lg transition-all" title="Delete photo">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                body.appendChild(tr);
+            });
+        }
+
+        async function handleSavePhoto(event) {
+            event.preventDefault();
+            const submitBtn = document.getElementById('gallery-submit-btn');
+            const editId = document.getElementById('gallery-edit-id').value;
+            
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> Saving...';
+
+            try {
+                let imgUrl = '';
+                const srcType = document.querySelector('input[name="gallery-src-type"]:checked').value;
+                
+                if (srcType === 'file') {
+                    const fileInput = document.getElementById('gallery-file');
+                    if (fileInput.files.length > 0) {
+                        const file = fileInput.files[0];
+                        const path = `gallery_photos/${Date.now()}_${file.name}`;
+                        imgUrl = await uploadFilePromise(file, path);
+                    } else if (editId) {
+                        // Keep current URL if editing
+                        const existing = galleryData.find(x => x.id === editId);
+                        imgUrl = existing ? existing.src : '';
+                    } else {
+                        throw new Error("Please select an image file to upload.");
+                    }
+                } else {
+                    imgUrl = document.getElementById('gallery-url').value.trim();
+                    if (!imgUrl) throw new Error("Please enter an image path or URL.");
+                }
+
+                // Determine badge class dynamically based on category
+                const cat = document.getElementById('gallery-category').value;
+                let badgeClass = 'badge bg-primary';
+                if (cat === 'london') badgeClass = 'badge bg-info';
+                else if (cat === 'events') badgeClass = 'badge bg-success';
+                else if (cat === 'dignitaries') badgeClass = 'badge bg-warning text-dark';
+                else if (cat === 'covers') badgeClass = 'badge bg-danger';
+
+                const photoData = {
+                    title: document.getElementById('gallery-title').value.trim(),
+                    description: document.getElementById('gallery-description').value.trim(),
+                    date: document.getElementById('gallery-date').value.trim(),
+                    location: document.getElementById('gallery-location').value.trim(),
+                    category: cat,
+                    badgetext: document.getElementById('gallery-badgetext').value.trim(),
+                    badgeclass: badgeClass,
+                    src: imgUrl,
+                    featured: document.getElementById('gallery-featured').checked,
+                    popular: document.getElementById('gallery-popular').checked,
+                    createdAt: editId ? (galleryData.find(x => x.id === editId)?.createdAt || firebase.firestore.FieldValue.serverTimestamp()) : firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                if (editId) {
+                    await db.collection('vishwaleader_gallery').doc(editId).set(photoData);
+                    showToast("Photo updated successfully!");
+                } else {
+                    await db.collection('vishwaleader_gallery').add(photoData);
+                    showToast("Photo uploaded and added to gallery catalog!");
+                }
+
+                resetGalleryForm();
+                loadGallery();
+            } catch (err) {
+                console.error("Save photo error:", err);
+                showToast("Failed to save photo: " + err.message, true);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Save Photo';
+            }
+        }
+
+        function editPhoto(id) {
+            const photo = galleryData.find(item => item.id === id);
+            if (!photo) return;
+
+            // Switch form header
+            document.getElementById('gallery-form-title').innerText = "Edit Photo Details";
+            document.getElementById('gallery-edit-id').value = photo.id;
+
+            // Fill text fields
+            document.getElementById('gallery-title').value = photo.title;
+            document.getElementById('gallery-description').value = photo.description;
+            document.getElementById('gallery-date').value = photo.date;
+            document.getElementById('gallery-location').value = photo.location;
+            document.getElementById('gallery-category').value = photo.category;
+            document.getElementById('gallery-badgetext').value = photo.badgetext;
+
+            // Toggle source type radio & text input
+            document.querySelector('input[name="gallery-src-type"][value="url"]').checked = true;
+            toggleGallerySrcType();
+            document.getElementById('gallery-url').value = photo.src;
+
+            // Checkboxes
+            document.getElementById('gallery-featured').checked = photo.featured || false;
+            document.getElementById('gallery-popular').checked = photo.popular || false;
+
+            // Scroll form into view if responsive
+            document.getElementById('gallery-form').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function deletePhoto(id) {
+            if (!confirm("Are you sure you want to delete this photo from the gallery? This action is permanent.")) return;
+            
+            db.collection('vishwaleader_gallery').doc(id).delete()
+                .then(() => {
+                    showToast("Photo deleted successfully.");
+                    loadGallery();
+                })
+                .catch((err) => {
+                    console.error("Delete photo error:", err);
+                    showToast("Failed to delete photo: " + err.message, true);
+                });
+        }
+
+        function resetGalleryForm() {
+            document.getElementById('gallery-form-title').innerText = "Add New Photo";
+            document.getElementById('gallery-edit-id').value = '';
+            document.getElementById('gallery-form').reset();
+            document.querySelector('input[name="gallery-src-type"][value="file"]').checked = true;
+            toggleGallerySrcType();
+        }
+
+
+        // ----------------------------------------------------
+        // TAB 3: PDF DOCUMENT & COVER ARCHIVES MANAGER
+        // ----------------------------------------------------
+        function toggleArchiveFields() {
+            const type = document.getElementById('archives-type').value;
+            if (type === 'pdf') {
+                document.getElementById('archives-pdf-fields').classList.remove('hidden');
+                document.getElementById('archives-cover-fields').classList.add('hidden');
+            } else {
+                document.getElementById('archives-pdf-fields').classList.add('hidden');
+                document.getElementById('archives-cover-fields').classList.remove('hidden');
+            }
+        }
+
+        function togglePdfSrcType() {
+            const val = document.querySelector('input[name="pdf-src-type"]:checked').value;
+            if (val === 'file') {
+                document.getElementById('pdf-file-container').classList.remove('hidden');
+                document.getElementById('pdf-url-container').classList.add('hidden');
+                document.getElementById('pdf-url').required = false;
+            } else {
+                document.getElementById('pdf-file-container').classList.add('hidden');
+                document.getElementById('pdf-url-container').classList.remove('hidden');
+                document.getElementById('pdf-url').required = true;
+            }
+        }
+
+        function toggleCoverSrcType() {
+            const val = document.querySelector('input[name="cover-src-type"]:checked').value;
+            if (val === 'file') {
+                document.getElementById('cover-file-container').classList.remove('hidden');
+                document.getElementById('cover-url-container').classList.add('hidden');
+                document.getElementById('cover-url').required = false;
+            } else {
+                document.getElementById('cover-file-container').classList.add('hidden');
+                document.getElementById('cover-url-container').classList.remove('hidden');
+                document.getElementById('cover-url').required = true;
+            }
+        }
+
+        function loadArchives() {
+            db.collection('vishwaleader_archives')
+                .orderBy('createdAt', 'desc')
+                .get()
+                .then((snapshot) => {
+                    archivesData = [];
+                    snapshot.forEach((doc) => {
+                        archivesData.push({
+                            id: doc.id,
+                            ...doc.data()
+                        });
+                    });
+                    renderArchivesList();
+                })
+                .catch((err) => {
+                    console.error("Error loading archives:", err);
+                });
+        }
+
+        function renderArchivesList() {
+            const searchVal = document.getElementById('archives-search').value.toLowerCase().trim();
+            const body = document.getElementById('archives-list-body');
+            body.innerHTML = '';
+
+            const filtered = archivesData.filter(item => {
+                return item.title.toLowerCase().includes(searchVal) || 
+                       (item.desc || '').toLowerCase().includes(searchVal) ||
+                       item.type.toLowerCase().includes(searchVal);
+            });
+
+            if (filtered.length === 0) {
+                document.getElementById('archives-empty-state').classList.remove('hidden');
+                return;
+            } else {
+                document.getElementById('archives-empty-state').classList.add('hidden');
+            }
+
+            filtered.forEach(item => {
+                const isPdf = item.type === 'pdf';
+                const typeLabel = isPdf ? 
+                    `<span class="text-[9px] font-extrabold uppercase tracking-wide px-2 py-0.5 rounded-full bg-rose-900/40 text-rose-400 border border-rose-800/40"><i class="fa-solid fa-file-pdf mr-1"></i>PDF Doc</span>` : 
+                    `<span class="text-[9px] font-extrabold uppercase tracking-wide px-2 py-0.5 rounded-full bg-indigo-900/40 text-indigo-400 border border-indigo-800/40"><i class="fa-solid fa-book-open mr-1"></i>Cover</span>`;
+
+                const fileInfo = isPdf ? (item.file || '-') : (item.src || '-');
+                const detailsLabel = isPdf ? (item.size || '-') : (item.desc || '-');
+
+                const tr = document.createElement('tr');
+                tr.className = "border-b border-slate-855 hover:bg-slate-50/45 transition-colors";
+                tr.innerHTML = `
+                    <td class="py-4">
+                        ${typeLabel}
+                    </td>
+                    <td class="py-4 pl-4 pr-2">
+                        <div class="font-bold text-slate-800 truncate max-w-xs">${item.title}</div>
+                    </td>
+                    <td class="py-4 pl-4 pr-2">
+                        <div class="text-[10px] text-slate-400 font-mono truncate max-w-[200px]">${fileInfo}</div>
+                    </td>
+                    <td class="py-4">
+                        <span class="text-slate-600 font-medium">${detailsLabel}</span>
+                    </td>
+                    <td class="py-4 text-right">
+                        <div class="flex justify-end gap-2">
+                            <button onclick="editArchive('${item.id}')" class="text-brandBlue hover:text-blue-400 p-1 px-2 border border-slate-200 hover:border-brandBlue/30 bg-slate-50 rounded-lg transition-all" title="Edit archive details">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </button>
+                            <button onclick="deleteArchive('${item.id}')" class="text-rose-500 hover:text-rose-455 p-1 px-2 border border-slate-200 hover:border-rose-900/30 bg-slate-50 rounded-lg transition-all" title="Delete item">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                body.appendChild(tr);
+            });
+        }
+
+        async function handleSaveArchive(event) {
+            event.preventDefault();
+            const submitBtn = document.getElementById('archives-submit-btn');
+            const editId = document.getElementById('archives-edit-id').value;
+            const type = document.getElementById('archives-type').value;
+            
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> Saving...';
+
+            try {
+                const archiveData = {
+                    type: type,
+                    title: document.getElementById('archives-title').value.trim(),
+                    createdAt: editId ? (archivesData.find(x => x.id === editId)?.createdAt || firebase.firestore.FieldValue.serverTimestamp()) : firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                if (type === 'pdf') {
+                    let pdfPath = '';
+                    const srcType = document.querySelector('input[name="pdf-src-type"]:checked').value;
+
+                    if (srcType === 'file') {
+                        const fileInput = document.getElementById('pdf-file');
+                        if (fileInput.files.length > 0) {
+                            const file = fileInput.files[0];
+                            const path = `archive_pdfs/${Date.now()}_${file.name}`;
+                            pdfPath = await uploadFilePromise(file, path);
+                        } else if (editId) {
+                            const existing = archivesData.find(x => x.id === editId);
+                            pdfPath = existing ? existing.file : '';
+                        } else {
+                            throw new Error("Please select a PDF file to upload.");
+                        }
+                    } else {
+                        pdfPath = document.getElementById('pdf-url').value.trim();
+                        if (!pdfPath) throw new Error("Please enter a file name or path.");
+                    }
+
+                    archiveData.file = pdfPath;
+                    archiveData.desc = document.getElementById('archives-desc').value.trim();
+                    archiveData.size = document.getElementById('archives-size').value.trim() || 'N/A';
+                } else {
+                    // magazine cover
+                    let coverPath = '';
+                    const srcType = document.querySelector('input[name="cover-src-type"]:checked').value;
+
+                    if (srcType === 'file') {
+                        const fileInput = document.getElementById('cover-file');
+                        if (fileInput.files.length > 0) {
+                            const file = fileInput.files[0];
+                            const path = `magazine_covers/${Date.now()}_${file.name}`;
+                            coverPath = await uploadFilePromise(file, path);
+                        } else if (editId) {
+                            const existing = archivesData.find(x => x.id === editId);
+                            coverPath = existing ? existing.src : '';
+                        } else {
+                            throw new Error("Please select an image file for the magazine cover.");
+                        }
+                    } else {
+                        coverPath = document.getElementById('cover-url').value.trim();
+                        if (!coverPath) throw new Error("Please enter a cover image filename or URL.");
+                    }
+
+                    archiveData.src = coverPath;
+                    // For magazine covers, the design expects description to store the issue date text (e.g. Dec 2009)
+                    archiveData.desc = document.getElementById('archives-date').value.trim();
+                }
+
+                if (editId) {
+                    await db.collection('vishwaleader_archives').doc(editId).set(archiveData);
+                    showToast("Archive item updated successfully!");
+                } else {
+                    await db.collection('vishwaleader_archives').add(archiveData);
+                    showToast("Archive item added to database!");
+                }
+
+                resetArchivesForm();
+                loadArchives();
+            } catch (err) {
+                console.error("Save archive error:", err);
+                showToast("Failed to save archive item: " + err.message, true);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Save Archive';
+            }
+        }
+
+        function editArchive(id) {
+            const item = archivesData.find(x => x.id === id);
+            if (!item) return;
+
+            document.getElementById('archives-form-title').innerText = "Edit Archive Details";
+            document.getElementById('archives-edit-id').value = item.id;
+            document.getElementById('archives-title').value = item.title;
+            
+            document.getElementById('archives-type').value = item.type;
+            toggleArchiveFields();
+
+            if (item.type === 'pdf') {
+                document.getElementById('archives-desc').value = item.desc || '';
+                document.getElementById('archives-size').value = item.size || '';
+                
+                document.querySelector('input[name="pdf-src-type"][value="url"]').checked = true;
+                togglePdfSrcType();
+                document.getElementById('pdf-url').value = item.file || '';
+            } else {
+                document.getElementById('archives-date').value = item.desc || ''; // date stores in desc field
+                
+                document.querySelector('input[name="cover-src-type"][value="url"]').checked = true;
+                toggleCoverSrcType();
+                document.getElementById('cover-url').value = item.src || '';
+            }
+
+            document.getElementById('archives-form').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function deleteArchive(id) {
+            if (!confirm("Are you sure you want to delete this archive item? This action is permanent.")) return;
+
+            db.collection('vishwaleader_archives').doc(id).delete()
+                .then(() => {
+                    showToast("Archive item deleted.");
+                    loadArchives();
+                })
+                .catch((err) => {
+                    console.error("Delete archive error:", err);
+                    showToast("Failed to delete archive item: " + err.message, true);
+                });
+        }
+
+        function resetArchivesForm() {
+            document.getElementById('archives-form-title').innerText = "Add Archive Item";
+            document.getElementById('archives-edit-id').value = '';
+            document.getElementById('archives-form').reset();
+            
+            document.querySelector('input[name="pdf-src-type"][value="file"]').checked = true;
+            togglePdfSrcType();
+            
+            document.querySelector('input[name="cover-src-type"][value="file"]').checked = true;
+            toggleCoverSrcType();
+            
+            toggleArchiveFields();
+        }
+
+        // ----------------------------------------------------
+        // TOAST ALERTS
+        // ----------------------------------------------------
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            const icon = document.getElementById('toast-icon');
+            const msg = document.getElementById('toast-msg');
+
+            msg.textContent = message;
+            if (isError) {
+                toast.className = "fixed bottom-6 right-6 z-50 bg-rose-500 border border-rose-450 text-slate-900 text-xs font-bold px-6 py-3.5 rounded-xl shadow-2xl transition-all duration-300 opacity-100 flex items-center gap-2";
+                icon.className = "fa-solid fa-circle-exclamation text-sm";
+            } else {
+                toast.className = "fixed bottom-6 right-6 z-50 bg-emerald-500 border border-emerald-400 text-slate-900 text-xs font-bold px-6 py-3.5 rounded-xl shadow-2xl transition-all duration-300 opacity-100 flex items-center gap-2";
+                icon.className = "fa-solid fa-circle-check text-sm";
+            }
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0');
+                toast.classList.remove('opacity-100');
+            }, 3500);
+        }
+    </script>
+</body>
+</html>
