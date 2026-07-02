@@ -29,7 +29,16 @@ import {
 export default function MemberClientPage() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [memberData, setMemberData] = useState<any>(null);
+  const [memberData, setMemberData] = useState<any>({
+    name: "",
+    email: "",
+    photoURL: "",
+    designation: "Member Delegate",
+    organization: "Independent Scholar",
+    country: "India",
+    phone: "",
+    bio: "Delegate participating in Vishwa Leader research panels."
+  });
   const [activeTab, setActiveTab] = useState<'dashboard' | 'profile' | 'submissions' | 'vault'>('dashboard');
 
   // Profile forms state
@@ -66,15 +75,34 @@ export default function MemberClientPage() {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
       if (currentUser) {
-        // Fetch or create user document in firestore
-        const userRef = doc(db, 'users', currentUser.uid);
-        const docSnap = await getDoc(userRef);
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          setMemberData(data);
-        } else {
-          const newMember = {
-            name: currentUser.displayName || "",
+        // Fetch or create user document in firestore with local catch fallbacks
+        try {
+          const userRef = doc(db, 'users', currentUser.uid);
+          const docSnap = await getDoc(userRef);
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+            setMemberData(data);
+          } else {
+            const newMember = {
+              name: currentUser.displayName || "",
+              email: currentUser.email || "",
+              photoURL: currentUser.photoURL || "",
+              role: 'member',
+              joinedAt: new Date().toISOString(),
+              designation: "Member Delegate",
+              organization: "Independent Scholar",
+              country: "India",
+              phone: "",
+              bio: "Delegate participating in Vishwa Leader research panels."
+            };
+            await setDoc(userRef, newMember);
+            setMemberData(newMember);
+          }
+        } catch (e) {
+          console.error("Error fetching firestore document:", e);
+          // Set standard defaults so dashboard is NEVER blank
+          setMemberData({
+            name: currentUser.displayName || "Delegate",
             email: currentUser.email || "",
             photoURL: currentUser.photoURL || "",
             role: 'member',
@@ -84,9 +112,7 @@ export default function MemberClientPage() {
             country: "India",
             phone: "",
             bio: "Delegate participating in Vishwa Leader research panels."
-          };
-          await setDoc(userRef, newMember);
-          setMemberData(newMember);
+          });
         }
       } else {
         setMemberData(null);
@@ -100,11 +126,11 @@ export default function MemberClientPage() {
   useEffect(() => {
     if (memberData) {
       setProfileName(memberData.name || "");
-      setProfileDesignation(memberData.designation || "");
-      setProfileOrganization(memberData.organization || "");
-      setProfileCountry(memberData.country || "");
+      setProfileDesignation(memberData.designation || "Member Delegate");
+      setProfileOrganization(memberData.organization || "Independent Scholar");
+      setProfileCountry(memberData.country || "India");
       setProfilePhone(memberData.phone || "");
-      setProfileBio(memberData.bio || "");
+      setProfileBio(memberData.bio || "Delegate participating in Vishwa Leader research panels.");
     }
   }, [memberData]);
 
@@ -296,7 +322,7 @@ export default function MemberClientPage() {
       )}
 
       {/* Authenticated View: Collapsible Sidebar + Shadcn layout panels */}
-      {!loading && user && memberData && (
+      {!loading && user && (
         <div className="w-full flex min-h-screen bg-slate-950 text-slate-100 font-sans">
           <SidebarProvider>
             
@@ -399,7 +425,7 @@ export default function MemberClientPage() {
                   <SidebarMenuItem>
                     <SidebarMenuButton 
                       onClick={handleLogout}
-                      className="w-full justify-start text-xs font-medium py-2 px-3 rounded-lg text-rose-500 hover:text-rose-400 hover:bg-rose-950/20"
+                      className="w-full justify-start text-xs font-medium py-2.5 px-3 rounded-lg text-rose-500 hover:text-rose-400 hover:bg-rose-950/20"
                     >
                       <LogOut className="size-4 shrink-0 mr-2" />
                       <span>Sign Out Session</span>
@@ -436,7 +462,7 @@ export default function MemberClientPage() {
 
                 <div className="flex items-center gap-3">
                   <div className="text-right hidden sm:block">
-                    <p className="text-xs font-bold text-slate-200">{memberData.name || "Delegate"}</p>
+                    <p className="text-xs font-bold text-slate-200">{memberData?.name || user.displayName || "Delegate"}</p>
                     <p className="text-[9px] text-slate-500 font-mono">Member ID: VL-2026-{(user.uid.substring(0, 4)).toUpperCase()}</p>
                   </div>
                   <img src={user.photoURL || "https://placehold.co/100x100"} alt="" className="w-8 h-8 rounded-full border border-slate-800 object-cover" />
@@ -452,7 +478,7 @@ export default function MemberClientPage() {
                     <div className="flex items-center justify-between border-b border-slate-900 pb-4">
                       <div>
                         <h2 className="text-2xl font-black font-display text-white uppercase tracking-tight">Overview Dashboard</h2>
-                        <p className="text-xs text-slate-500 mt-0.5">Welcome back! Review your active credentials and details below.</p>
+                        <p className="text-xs text-slate-550 mt-0.5 font-medium">Welcome back! Review your active credentials and details below.</p>
                       </div>
                     </div>
 
@@ -487,11 +513,11 @@ export default function MemberClientPage() {
                               <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-slate-900" title="Active Session"></div>
                             </div>
                             <div className="flex-grow space-y-0.5 overflow-hidden">
-                              <h3 className="font-display text-sm font-extrabold leading-tight truncate text-white">{memberData.name || "Delegate User"}</h3>
-                              <p className="text-[10px] text-slate-400 truncate">{memberData.designation || "Member Delegate"}</p>
+                              <h3 className="font-display text-sm font-extrabold leading-tight truncate text-white">{memberData?.name || user.displayName || "Delegate User"}</h3>
+                              <p className="text-[10px] text-slate-405 truncate">{memberData?.designation || "Member Delegate"}</p>
                               <p className="text-[9px] text-slate-500 leading-none flex items-center gap-1">
                                 <MapPin className="size-3 text-slate-600" />
-                                <span>{memberData.country || "India"}</span>
+                                <span>{memberData?.country || "India"}</span>
                               </p>
                             </div>
                           </div>
@@ -507,7 +533,7 @@ export default function MemberClientPage() {
                             <div className="space-y-0.5 text-right">
                               <div className="text-[7px] font-bold text-slate-600 uppercase tracking-wider">Member Since</div>
                               <div className="text-[10px] font-mono font-bold text-slate-350">
-                                {memberData.joinedAt ? new Date(memberData.joinedAt).toLocaleDateString(undefined, {month: 'short', year: 'numeric'}) : '2026'}
+                                {memberData?.joinedAt ? new Date(memberData.joinedAt).toLocaleDateString(undefined, {month: 'short', year: 'numeric'}) : '2026'}
                               </div>
                             </div>
                           </div>
@@ -531,7 +557,7 @@ export default function MemberClientPage() {
                           
                           <div className="space-y-1 border-t border-slate-900 pt-4">
                             <span className="text-[10px] uppercase font-bold text-slate-500 block">Short Bio / Profile Statement</span>
-                            <p className="text-xs text-slate-300 leading-relaxed italic">{memberData.bio || "No biography provided. Click 'Edit Profile Settings' in the sidebar navigation to define one."}</p>
+                            <p className="text-xs text-slate-300 leading-relaxed italic">{memberData?.bio || "No biography provided. Click 'Edit Profile Settings' in the sidebar navigation to define one."}</p>
                           </div>
                         </Card>
                       </div>
@@ -545,7 +571,7 @@ export default function MemberClientPage() {
                     <div className="flex items-center justify-between border-b border-slate-900 pb-4">
                       <div>
                         <h2 className="text-2xl font-black font-display text-white uppercase tracking-tight">Edit Profile</h2>
-                        <p className="text-xs text-slate-550 mt-0.5">Customize your delegate details saved in the registry.</p>
+                        <p className="text-xs text-slate-555 mt-0.5 font-medium">Customize your delegate details saved in the registry.</p>
                       </div>
                     </div>
 
@@ -642,7 +668,7 @@ export default function MemberClientPage() {
                     <div className="flex items-center justify-between border-b border-slate-900 pb-4">
                       <div>
                         <h2 className="text-2xl font-black font-display text-white uppercase tracking-tight">SOAS Conference Submissions</h2>
-                        <p className="text-xs text-slate-550 mt-0.5">Submit abstracts and manage co-authors for the upcoming London Summit.</p>
+                        <p className="text-xs text-slate-550 mt-0.5 font-medium">Submit abstracts and manage co-authors for the upcoming London Summit.</p>
                       </div>
                       
                       {!showSubForm && (
@@ -661,7 +687,7 @@ export default function MemberClientPage() {
                       <Card className="border-slate-800 bg-slate-900/60 p-6 rounded-2xl max-w-2xl">
                         <CardHeader className="px-0 pt-0 pb-4">
                           <CardTitle className="text-white text-base font-bold uppercase tracking-wider">New Submission Registration</CardTitle>
-                          <CardDescription className="text-xs text-slate-450">Complete all abstract fields to submit your registration document.</CardDescription>
+                          <CardDescription className="text-xs text-slate-455">Complete all abstract fields to submit your registration document.</CardDescription>
                         </CardHeader>
                         <CardContent className="px-0">
                           <form onSubmit={handleAddSubmission} className="space-y-4">
@@ -815,7 +841,7 @@ export default function MemberClientPage() {
                     <div className="flex items-center justify-between border-b border-slate-900 pb-4">
                       <div>
                         <h2 className="text-2xl font-black font-display text-white uppercase tracking-tight">Publications Vault</h2>
-                        <p className="text-xs text-slate-550 mt-0.5">Access exclusive publications and PDF issues compiled by Vishwa Leader.</p>
+                        <p className="text-xs text-slate-550 mt-0.5 font-medium">Access exclusive publications and PDF issues compiled by Vishwa Leader.</p>
                       </div>
                     </div>
 
@@ -833,7 +859,7 @@ export default function MemberClientPage() {
                           </CardHeader>
 
                           <CardContent className="px-4 pb-4 pt-0">
-                            <div className="flex items-center justify-between border-t border-slate-900/60 pt-3 text-[9px] font-mono text-slate-550">
+                            <div className="flex items-center justify-between border-t border-slate-900/60 pt-3 text-[9px] font-mono text-slate-555 font-medium">
                               <span>{pub.format} ({pub.size})</span>
                               <span>{pub.date}</span>
                             </div>
@@ -860,7 +886,7 @@ export default function MemberClientPage() {
               </main>
 
               {/* Corporate Footer */}
-              <footer className="border-t border-slate-900 bg-slate-950/40 py-6 text-center text-[10px] text-slate-650 font-normal mt-12">
+              <footer className="border-t border-slate-900 bg-slate-950/40 py-6 text-center text-[10px] text-slate-650 font-normal">
                 <p>© 2026 Vishwa Leader Techmedia Private Limited. All Rights Reserved.</p>
               </footer>
 
