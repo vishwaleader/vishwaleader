@@ -303,20 +303,10 @@ export default function MemberClientPage() {
             
             {/* Sidebar wrapper */}
             <Sidebar variant="inset" collapsible="icon" className="border-r border-slate-200 bg-white">
-              <SidebarHeader className="border-b border-slate-100 px-4 py-3">
-                <SidebarMenu>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton size="lg" render={<div />} className="hover:bg-slate-100/50">
-                      <div className="flex aspect-square size-8 items-center justify-center rounded-lg overflow-hidden bg-slate-50 border border-slate-200">
-                        <img src="/assets/images/vishwaleader-logo-globe.png" alt="Logo" className="w-full h-full object-contain p-0.5" />
-                      </div>
-                      <div className="flex flex-col gap-0.5 leading-none">
-                        <span className="font-bold text-sm tracking-tight text-slate-900">VishwaLeader Member</span>
-                        <span className="text-[9px] text-slate-500 font-mono tracking-wider">PANEL PORTAL</span>
-                      </div>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                </SidebarMenu>
+              <SidebarHeader className="border-b border-slate-100 px-4 py-4 flex items-center justify-start shrink-0">
+                <a href="/" className="flex items-center">
+                  <img src="/assets/images/vishwaleader-logo-hd.png" alt="Vishwa Leader" className="h-9 w-auto object-contain" />
+                </a>
               </SidebarHeader>
 
               <SidebarContent className="bg-white">
