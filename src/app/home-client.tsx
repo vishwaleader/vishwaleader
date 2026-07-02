@@ -632,7 +632,7 @@ export default function HomeClientPage() {
                     </div>
 
                     {/* Quick guidelines */}
-                    <div className="bg-slate-900 text-slate-350 border border-slate-850 rounded-2xl p-6 shadow-sm">
+                    <div className="bg-slate-900 text-white border border-slate-800 rounded-2xl p-6 shadow-sm">
                         <h4 className="font-display font-bold text-white border-b border-slate-800 pb-3 mb-4 uppercase text-xs tracking-wider">Submission Guidelines</h4>
                         <ul className="space-y-3.5 text-xs">
                             <li className="flex items-start gap-2.5"><i className="fa-solid fa-circle-check text-amber-400 mt-0.5"></i> <span><strong>Abstracts:</strong> Limit to 300 words with 4-5 keywords specifying research area.</span></li>
