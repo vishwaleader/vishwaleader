@@ -1,5 +1,7 @@
 "use server";
 
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 import { cookies } from "next/headers";
 
 export async function loginAsAdmin(username: string, password: string) {
@@ -16,7 +18,7 @@ export async function loginAsAdmin(username: string, password: string) {
     });
     return { success: true };
   }
-  return { success: false, error: "Invalid credentials. Only authorized team members can access this area." };
+  return { success: false, error: "Login failed. Please check your input and try again." };
 }
 
 export async function logoutAdmin() {
@@ -27,4 +29,19 @@ export async function logoutAdmin() {
 export async function checkAdminSession() {
   const cookieStore = await cookies();
   return cookieStore.get("vl_admin_session")?.value === "authenticated";
+}
+
+export async function getAllUsers() {
+  // First, ensure the request is from an authenticated admin
+  const isAdmin = await checkAdminSession();
+  if (!isAdmin) {
+    return { success: false, error: "Unauthorized" };
+  }
+
+  const usersCol = collection(db, "users");
+  const userSnapshot = await getDocs(usersCol);
+  const userList = userSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+  // We are returning plain objects to avoid serialization issues with Next.js
+  return { success: true, users: JSON.parse(JSON.stringify(userList)) };
 }
