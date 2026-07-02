@@ -22,8 +22,8 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow
 } from "@/components/ui/table";
 import { 
-  LayoutDashboard, User as UserIcon, FileText, BookOpen, LogOut, Search, 
-  MapPin, Calendar, Mail, Phone, Bookmark, Trash2, Plus, Download, CheckCircle, Clock 
+  LayoutDashboard, User as UserIcon, FileText, LogOut, Search, 
+  MapPin, Plus, Trash2, CheckCircle, Clock 
 } from "lucide-react";
 
 export default function MemberClientPage() {
@@ -39,7 +39,7 @@ export default function MemberClientPage() {
     phone: "",
     bio: "Delegate participating in Vishwa Leader research panels."
   });
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'profile' | 'submissions' | 'vault'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'profile' | 'submissions'>('dashboard');
 
   // Profile forms state
   const [profileName, setProfileName] = useState("");
@@ -75,6 +75,9 @@ export default function MemberClientPage() {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
       if (currentUser) {
+        // Set loading false immediately to prevent preloader stuck during database fetches
+        setLoading(false);
+
         // Fetch or create user document in firestore with local catch fallbacks
         try {
           const userRef = doc(db, 'users', currentUser.uid);
@@ -116,8 +119,8 @@ export default function MemberClientPage() {
         }
       } else {
         setMemberData(null);
+        setLoading(false);
       }
-      setLoading(false);
     });
     return () => unsubscribe();
   }, []);
@@ -240,34 +243,6 @@ export default function MemberClientPage() {
     }
   };
 
-  // Publications mock list
-  const vaultPublications = [
-    {
-      title: "SOAS London Summit Brochure 2026",
-      desc: "Official delegate handbook containing schedule breakdowns, seminar maps, and guest listings.",
-      format: "PDF Document",
-      size: "4.8 MB",
-      date: "2026-06-15",
-      file: "/magazine-covers/1001702555.jpg"
-    },
-    {
-      title: "Vishwa Leader Ambedkar Memorial Issue",
-      desc: "Mahaparinirvan Din special compilation covering human rights and social justice essays.",
-      format: "PDF Document",
-      size: "9.1 MB",
-      date: "2016-12-06",
-      file: "/magazine-covers/1001702550.jpg"
-    },
-    {
-      title: "Ambedkar Journal of Legal Equality Vol. 12",
-      desc: "Scholarly publications registry including constitutional safeguards and inclusive developments.",
-      format: "PDF Document",
-      size: "12.4 MB",
-      date: "2016-04-14",
-      file: "/magazine-covers/1001702539.jpg"
-    }
-  ];
-
   return (
     <>
       <Preloader loading={loading} />
@@ -321,22 +296,22 @@ export default function MemberClientPage() {
         </div>
       )}
 
-      {/* Authenticated View: Collapsible Sidebar + Shadcn layout panels */}
+      {/* Authenticated View: Collapsible Sidebar + Shadcn layout panels in Admin White Theme */}
       {!loading && user && (
-        <div className="w-full flex min-h-screen bg-slate-950 text-slate-100 font-sans">
+        <div className="w-full flex min-h-screen bg-slate-50 text-slate-900 font-sans">
           <SidebarProvider>
             
             {/* Sidebar wrapper */}
-            <Sidebar variant="inset" collapsible="icon" className="border-r border-slate-900 bg-slate-950">
-              <SidebarHeader className="border-b border-slate-900 px-4 py-3">
+            <Sidebar variant="inset" collapsible="icon" className="border-r border-slate-200 bg-white">
+              <SidebarHeader className="border-b border-slate-100 px-4 py-3">
                 <SidebarMenu>
                   <SidebarMenuItem>
-                    <SidebarMenuButton size="lg" render={<div />} className="hover:bg-slate-900/50">
-                      <div className="flex aspect-square size-8 items-center justify-center rounded-lg overflow-hidden bg-slate-900 border border-slate-800">
+                    <SidebarMenuButton size="lg" render={<div />} className="hover:bg-slate-100/50">
+                      <div className="flex aspect-square size-8 items-center justify-center rounded-lg overflow-hidden bg-slate-50 border border-slate-200">
                         <img src="/assets/images/vishwaleader-logo-globe.png" alt="Logo" className="w-full h-full object-contain p-0.5" />
                       </div>
                       <div className="flex flex-col gap-0.5 leading-none">
-                        <span className="font-bold text-sm tracking-tight text-white">VishwaLeader Member</span>
+                        <span className="font-bold text-sm tracking-tight text-slate-900">VishwaLeader Member</span>
                         <span className="text-[9px] text-slate-500 font-mono tracking-wider">PANEL PORTAL</span>
                       </div>
                     </SidebarMenuButton>
@@ -344,7 +319,7 @@ export default function MemberClientPage() {
                 </SidebarMenu>
               </SidebarHeader>
 
-              <SidebarContent>
+              <SidebarContent className="bg-white">
                 {/* Operations tabs selectors */}
                 <SidebarGroup>
                   <SidebarGroupLabel className="text-slate-500 font-bold uppercase tracking-wider text-[10px] px-3 mb-1">Navigation</SidebarGroupLabel>
@@ -356,11 +331,11 @@ export default function MemberClientPage() {
                           onClick={() => setActiveTab('dashboard')}
                           className={`w-full justify-start text-xs font-medium py-2 px-3 rounded-lg transition-all ${
                             activeTab === 'dashboard' 
-                              ? 'bg-brandBlue text-white shadow-lg shadow-brandBlue/15 font-semibold' 
-                              : 'text-slate-400 hover:text-white hover:bg-slate-900/60'
+                              ? 'bg-slate-100 text-slate-900 font-semibold' 
+                              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                           }`}
                         >
-                          <LayoutDashboard className="size-4 shrink-0 mr-2" />
+                          <LayoutDashboard className="size-4 shrink-0 mr-2 text-brandBlue" />
                           <span>Overview Dashboard</span>
                         </SidebarMenuButton>
                       </SidebarMenuItem>
@@ -370,11 +345,11 @@ export default function MemberClientPage() {
                           onClick={() => setActiveTab('profile')}
                           className={`w-full justify-start text-xs font-medium py-2 px-3 rounded-lg transition-all ${
                             activeTab === 'profile' 
-                              ? 'bg-brandBlue text-white shadow-lg shadow-brandBlue/15 font-semibold' 
-                              : 'text-slate-400 hover:text-white hover:bg-slate-900/60'
+                              ? 'bg-slate-100 text-slate-900 font-semibold' 
+                              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                           }`}
                         >
-                          <UserIcon className="size-4 shrink-0 mr-2" />
+                          <UserIcon className="size-4 shrink-0 mr-2 text-brandBlue" />
                           <span>Edit Profile Settings</span>
                         </SidebarMenuButton>
                       </SidebarMenuItem>
@@ -384,26 +359,12 @@ export default function MemberClientPage() {
                           onClick={() => setActiveTab('submissions')}
                           className={`w-full justify-start text-xs font-medium py-2 px-3 rounded-lg transition-all ${
                             activeTab === 'submissions' 
-                              ? 'bg-brandBlue text-white shadow-lg shadow-brandBlue/15 font-semibold' 
-                              : 'text-slate-400 hover:text-white hover:bg-slate-900/60'
+                              ? 'bg-slate-100 text-slate-900 font-semibold' 
+                              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                           }`}
                         >
-                          <FileText className="size-4 shrink-0 mr-2" />
+                          <FileText className="size-4 shrink-0 mr-2 text-brandBlue" />
                           <span>SOAS Submissions</span>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                      <SidebarMenuItem>
-                        <SidebarMenuButton 
-                          isActive={activeTab === 'vault'} 
-                          onClick={() => setActiveTab('vault')}
-                          className={`w-full justify-start text-xs font-medium py-2 px-3 rounded-lg transition-all ${
-                            activeTab === 'vault' 
-                              ? 'bg-brandBlue text-white shadow-lg shadow-brandBlue/15 font-semibold' 
-                              : 'text-slate-400 hover:text-white hover:bg-slate-900/60'
-                          }`}
-                        >
-                          <BookOpen className="size-4 shrink-0 mr-2" />
-                          <span>Publications Vault</span>
                         </SidebarMenuButton>
                       </SidebarMenuItem>
                     </SidebarMenu>
@@ -411,12 +372,12 @@ export default function MemberClientPage() {
                 </SidebarGroup>
               </SidebarContent>
 
-              <SidebarFooter className="border-t border-slate-900 p-3">
+              <SidebarFooter className="border-t border-slate-100 p-3 bg-white">
                 <SidebarMenu>
                   <SidebarMenuItem>
                     <SidebarMenuButton 
                       onClick={() => window.location.href = "/"}
-                      className="w-full justify-start text-xs font-medium py-2 px-3 rounded-lg text-slate-400 hover:text-white hover:bg-slate-900"
+                      className="w-full justify-start text-xs font-medium py-2 px-3 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-50"
                     >
                       <LogOut className="size-4 rotate-180 shrink-0 mr-2" />
                       <span>Return to Website</span>
@@ -425,7 +386,7 @@ export default function MemberClientPage() {
                   <SidebarMenuItem>
                     <SidebarMenuButton 
                       onClick={handleLogout}
-                      className="w-full justify-start text-xs font-medium py-2.5 px-3 rounded-lg text-rose-500 hover:text-rose-400 hover:bg-rose-950/20"
+                      className="w-full justify-start text-xs font-medium py-2.5 px-3 rounded-lg text-rose-600 hover:text-rose-700 hover:bg-rose-50"
                     >
                       <LogOut className="size-4 shrink-0 mr-2" />
                       <span>Sign Out Session</span>
@@ -437,23 +398,22 @@ export default function MemberClientPage() {
             </Sidebar>
 
             {/* Inset Main Pane */}
-            <SidebarInset className="bg-slate-950">
+            <SidebarInset className="bg-slate-50">
               {/* Sticky Header bar */}
-              <header className="flex h-16 shrink-0 items-center justify-between border-b border-slate-900 px-6 gap-4 bg-slate-950/80 backdrop-blur sticky top-0 z-30">
+              <header className="flex h-16 shrink-0 items-center justify-between border-b border-slate-200 px-6 gap-4 bg-white sticky top-0 z-30">
                 <div className="flex items-center gap-2">
-                  <SidebarTrigger className="text-slate-400 hover:text-white" />
+                  <SidebarTrigger className="text-slate-500 hover:text-slate-900" />
                   <Breadcrumb>
                     <BreadcrumbList>
                       <BreadcrumbItem className="hidden md:block">
-                        <BreadcrumbLink href="#" className="text-slate-500 hover:text-slate-300">Member Portal</BreadcrumbLink>
+                        <BreadcrumbLink href="#" className="text-slate-550 hover:text-slate-700">Member Portal</BreadcrumbLink>
                       </BreadcrumbItem>
-                      <BreadcrumbSeparator className="hidden md:block text-slate-700" />
+                      <BreadcrumbSeparator className="hidden md:block text-slate-300" />
                       <BreadcrumbItem>
-                        <BreadcrumbPage className="text-white capitalize font-semibold">
+                        <BreadcrumbPage className="text-slate-900 capitalize font-semibold">
                           {activeTab === 'dashboard' && 'Dashboard Overview'}
                           {activeTab === 'profile' && 'Profile Settings'}
                           {activeTab === 'submissions' && 'Abstract Submissions'}
-                          {activeTab === 'vault' && 'Publications Vault'}
                         </BreadcrumbPage>
                       </BreadcrumbItem>
                     </BreadcrumbList>
@@ -462,10 +422,10 @@ export default function MemberClientPage() {
 
                 <div className="flex items-center gap-3">
                   <div className="text-right hidden sm:block">
-                    <p className="text-xs font-bold text-slate-200">{memberData?.name || user.displayName || "Delegate"}</p>
-                    <p className="text-[9px] text-slate-500 font-mono">Member ID: VL-2026-{(user.uid.substring(0, 4)).toUpperCase()}</p>
+                    <p className="text-xs font-bold text-slate-800">{memberData?.name || user.displayName || "Delegate"}</p>
+                    <p className="text-[9px] text-slate-400 font-mono">Member ID: VL-2026-{(user.uid.substring(0, 4)).toUpperCase()}</p>
                   </div>
-                  <img src={user.photoURL || "https://placehold.co/100x100"} alt="" className="w-8 h-8 rounded-full border border-slate-800 object-cover" />
+                  <img src={user.photoURL || "https://placehold.co/100x100"} alt="" className="w-8 h-8 rounded-full border border-slate-200 object-cover" />
                 </div>
               </header>
 
@@ -475,10 +435,10 @@ export default function MemberClientPage() {
                 {/* ═════════════════════ TAB: DASHBOARD OVERVIEW ═════════════════════ */}
                 {activeTab === 'dashboard' && (
                   <div className="space-y-6">
-                    <div className="flex items-center justify-between border-b border-slate-900 pb-4">
+                    <div className="flex items-center justify-between border-b border-slate-200 pb-4">
                       <div>
-                        <h2 className="text-2xl font-black font-display text-white uppercase tracking-tight">Overview Dashboard</h2>
-                        <p className="text-xs text-slate-550 mt-0.5 font-medium">Welcome back! Review your active credentials and details below.</p>
+                        <h2 className="text-2xl font-black font-display text-slate-900 uppercase tracking-tight">Overview Dashboard</h2>
+                        <p className="text-xs text-slate-500 mt-0.5 font-medium">Welcome back! Review your active credentials and details below.</p>
                       </div>
                     </div>
 
@@ -494,7 +454,7 @@ export default function MemberClientPage() {
                           {/* Card Top */}
                           <div className="flex items-center justify-between border-b border-white/10 pb-3.5 relative z-10">
                             <div className="flex items-center gap-2">
-                              <img src="/assets/images/vishwaleader-logo-globe.png" className="h-5 w-auto" alt="Logo" />
+                              <img src="/assets/images/vishwaleader-logo-globe.png" className="h-5 w-auto brightness-0 invert" alt="Logo" />
                               <span className="text-[8px] font-black uppercase tracking-widest text-slate-300">Vishwa Leader</span>
                             </div>
                             <span className="text-[8px] font-black uppercase tracking-widest text-amber-500 border border-amber-500/20 px-2 py-0.5 rounded bg-amber-500/5">
@@ -514,7 +474,7 @@ export default function MemberClientPage() {
                             </div>
                             <div className="flex-grow space-y-0.5 overflow-hidden">
                               <h3 className="font-display text-sm font-extrabold leading-tight truncate text-white">{memberData?.name || user.displayName || "Delegate User"}</h3>
-                              <p className="text-[10px] text-slate-405 truncate">{memberData?.designation || "Member Delegate"}</p>
+                              <p className="text-[10px] text-slate-400 truncate">{memberData?.designation || "Member Delegate"}</p>
                               <p className="text-[9px] text-slate-500 leading-none flex items-center gap-1">
                                 <MapPin className="size-3 text-slate-600" />
                                 <span>{memberData?.country || "India"}</span>
@@ -542,22 +502,22 @@ export default function MemberClientPage() {
 
                       {/* Right: Quick Stats & Bio (7 cols) */}
                       <div className="md:col-span-7 space-y-6">
-                        <Card className="border-slate-900 bg-slate-900/30 p-6 rounded-2xl space-y-4">
-                          <h3 className="text-sm font-bold uppercase tracking-wider text-slate-400">Membership Summary</h3>
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="bg-slate-900/60 border border-slate-900 rounded-xl p-4 space-y-1">
-                              <span className="text-[10px] uppercase font-bold text-slate-500">Draft Submissions</span>
-                              <p className="text-2xl font-black text-white">{submissions.length}</p>
+                        <Card className="border-slate-200 bg-white p-6 rounded-2xl space-y-4 shadow-sm">
+                          <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500">Membership Summary</h3>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 space-y-1">
+                              <span className="text-[10px] uppercase font-bold text-slate-550">Registered Submissions</span>
+                              <p className="text-2xl font-black text-slate-800">{submissions.length}</p>
                             </div>
-                            <div className="bg-slate-900/60 border border-slate-900 rounded-xl p-4 space-y-1">
-                              <span className="text-[10px] uppercase font-bold text-slate-500">Vault Publications</span>
-                              <p className="text-2xl font-black text-white">{vaultPublications.length}</p>
+                            <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 space-y-1">
+                              <span className="text-[10px] uppercase font-bold text-slate-550">Official Designation</span>
+                              <p className="text-xs font-bold text-slate-800 line-clamp-1 mt-1.5">{memberData?.designation || "Member Delegate"}</p>
                             </div>
                           </div>
                           
-                          <div className="space-y-1 border-t border-slate-900 pt-4">
-                            <span className="text-[10px] uppercase font-bold text-slate-500 block">Short Bio / Profile Statement</span>
-                            <p className="text-xs text-slate-300 leading-relaxed italic">{memberData?.bio || "No biography provided. Click 'Edit Profile Settings' in the sidebar navigation to define one."}</p>
+                          <div className="space-y-1 border-t border-slate-100 pt-4">
+                            <span className="text-[10px] uppercase font-bold text-slate-550 block">Short Bio / Profile Statement</span>
+                            <p className="text-xs text-slate-600 leading-relaxed italic">{memberData?.bio || "No biography provided. Click 'Edit Profile Settings' in the sidebar navigation to define one."}</p>
                           </div>
                         </Card>
                       </div>
@@ -568,16 +528,16 @@ export default function MemberClientPage() {
                 {/* ═════════════════════ TAB: PROFILE SETTINGS ═════════════════════ */}
                 {activeTab === 'profile' && (
                   <div className="space-y-6">
-                    <div className="flex items-center justify-between border-b border-slate-900 pb-4">
+                    <div className="flex items-center justify-between border-b border-slate-200 pb-4">
                       <div>
-                        <h2 className="text-2xl font-black font-display text-white uppercase tracking-tight">Edit Profile</h2>
-                        <p className="text-xs text-slate-555 mt-0.5 font-medium">Customize your delegate details saved in the registry.</p>
+                        <h2 className="text-2xl font-black font-display text-slate-900 uppercase tracking-tight">Edit Profile</h2>
+                        <p className="text-xs text-slate-550 mt-0.5 font-medium">Customize your delegate details saved in the registry.</p>
                       </div>
                     </div>
 
-                    <Card className="border-slate-900 bg-slate-900/20 max-w-2xl rounded-2xl">
+                    <Card className="border-slate-200 bg-white max-w-2xl rounded-2xl shadow-sm">
                       <CardHeader>
-                        <CardTitle className="text-sm font-bold uppercase tracking-wider text-slate-400">Membership profile information</CardTitle>
+                        <CardTitle className="text-sm font-bold uppercase tracking-wider text-slate-500">Membership profile information</CardTitle>
                       </CardHeader>
                       <CardContent>
                         <form onSubmit={handleSaveProfile} className="space-y-4">
@@ -588,7 +548,7 @@ export default function MemberClientPage() {
                                 type="text" 
                                 value={profileName}
                                 onChange={(e) => setProfileName(e.target.value)}
-                                className="bg-slate-900 border-slate-800 text-xs rounded-xl focus:border-brandBlue text-slate-100 focus:ring-1 focus:ring-brandBlue outline-none placeholder:text-slate-500" 
+                                className="bg-slate-50 border-slate-200 text-xs rounded-xl focus:border-brandBlue text-slate-800 focus:ring-1 focus:ring-brandBlue outline-none placeholder:text-slate-400" 
                                 placeholder="Full Name" 
                                 required 
                               />
@@ -599,7 +559,7 @@ export default function MemberClientPage() {
                                 type="text" 
                                 value={profileDesignation}
                                 onChange={(e) => setProfileDesignation(e.target.value)}
-                                className="bg-slate-900 border-slate-800 text-xs rounded-xl focus:border-brandBlue text-slate-100 focus:ring-1 focus:ring-brandBlue outline-none placeholder:text-slate-500" 
+                                className="bg-slate-50 border-slate-200 text-xs rounded-xl focus:border-brandBlue text-slate-800 focus:ring-1 focus:ring-brandBlue outline-none placeholder:text-slate-400" 
                                 placeholder="Profession / Job Title" 
                                 required 
                               />
@@ -613,7 +573,7 @@ export default function MemberClientPage() {
                                 type="text" 
                                 value={profileOrganization}
                                 onChange={(e) => setProfileOrganization(e.target.value)}
-                                className="bg-slate-900 border-slate-800 text-xs rounded-xl focus:border-brandBlue text-slate-100 focus:ring-1 focus:ring-brandBlue outline-none placeholder:text-slate-500" 
+                                className="bg-slate-50 border-slate-200 text-xs rounded-xl focus:border-brandBlue text-slate-800 focus:ring-1 focus:ring-brandBlue outline-none placeholder:text-slate-400" 
                                 placeholder="Organization Name" 
                                 required 
                               />
@@ -624,7 +584,7 @@ export default function MemberClientPage() {
                                 type="text" 
                                 value={profilePhone}
                                 onChange={(e) => setProfilePhone(e.target.value)}
-                                className="bg-slate-900 border-slate-800 text-xs rounded-xl focus:border-brandBlue text-slate-100 focus:ring-1 focus:ring-brandBlue outline-none placeholder:text-slate-500" 
+                                className="bg-slate-50 border-slate-200 text-xs rounded-xl focus:border-brandBlue text-slate-800 focus:ring-1 focus:ring-brandBlue outline-none placeholder:text-slate-400" 
                                 placeholder="Phone number" 
                               />
                             </div>
@@ -636,7 +596,7 @@ export default function MemberClientPage() {
                               type="text" 
                               value={profileCountry}
                               onChange={(e) => setProfileCountry(e.target.value)}
-                              className="bg-slate-900 border-slate-800 text-xs rounded-xl focus:border-brandBlue text-slate-100 focus:ring-1 focus:ring-brandBlue outline-none placeholder:text-slate-500" 
+                              className="bg-slate-50 border-slate-200 text-xs rounded-xl focus:border-brandBlue text-slate-800 focus:ring-1 focus:ring-brandBlue outline-none placeholder:text-slate-400" 
                               placeholder="Country Name" 
                               required 
                             />
@@ -648,7 +608,7 @@ export default function MemberClientPage() {
                               value={profileBio}
                               onChange={(e) => setProfileBio(e.target.value)}
                               rows={3}
-                              className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-brandBlue focus:ring-1 focus:ring-brandBlue text-slate-100 placeholder:text-slate-500"
+                              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-brandBlue focus:ring-1 focus:ring-brandBlue text-slate-800 placeholder:text-slate-400"
                               placeholder="Tell the registry about your background, publications, or research fields..."
                             />
                           </div>
@@ -665,9 +625,9 @@ export default function MemberClientPage() {
                 {/* ═════════════════════ TAB: ABSTRACT SUBMISSIONS ═════════════════════ */}
                 {activeTab === 'submissions' && (
                   <div className="space-y-6">
-                    <div className="flex items-center justify-between border-b border-slate-900 pb-4">
+                    <div className="flex items-center justify-between border-b border-slate-200 pb-4">
                       <div>
-                        <h2 className="text-2xl font-black font-display text-white uppercase tracking-tight">SOAS Conference Submissions</h2>
+                        <h2 className="text-2xl font-black font-display text-slate-900 uppercase tracking-tight">SOAS Conference Submissions</h2>
                         <p className="text-xs text-slate-550 mt-0.5 font-medium">Submit abstracts and manage co-authors for the upcoming London Summit.</p>
                       </div>
                       
@@ -684,10 +644,10 @@ export default function MemberClientPage() {
 
                     {/* New Draft Form Panel */}
                     {showSubForm && (
-                      <Card className="border-slate-800 bg-slate-900/60 p-6 rounded-2xl max-w-2xl">
+                      <Card className="border-slate-200 bg-white p-6 rounded-2xl max-w-2xl shadow-sm">
                         <CardHeader className="px-0 pt-0 pb-4">
-                          <CardTitle className="text-white text-base font-bold uppercase tracking-wider">New Submission Registration</CardTitle>
-                          <CardDescription className="text-xs text-slate-455">Complete all abstract fields to submit your registration document.</CardDescription>
+                          <CardTitle className="text-slate-800 text-base font-bold uppercase tracking-wider">New Submission Registration</CardTitle>
+                          <CardDescription className="text-xs text-slate-500">Complete all abstract fields to submit your registration document.</CardDescription>
                         </CardHeader>
                         <CardContent className="px-0">
                           <form onSubmit={handleAddSubmission} className="space-y-4">
@@ -697,7 +657,7 @@ export default function MemberClientPage() {
                                 type="text" 
                                 value={subTitle}
                                 onChange={(e) => setSubTitle(e.target.value)}
-                                className="bg-slate-900 border-slate-850 text-xs rounded-xl focus:border-brandBlue text-slate-100 focus:ring-1 focus:ring-brandBlue placeholder:text-slate-500" 
+                                className="bg-slate-50 border-slate-200 text-xs rounded-xl focus:border-brandBlue text-slate-800 focus:ring-1 focus:ring-brandBlue placeholder:text-slate-400" 
                                 placeholder="Paper Title" 
                                 required 
                               />
@@ -710,7 +670,7 @@ export default function MemberClientPage() {
                                   type="text" 
                                   value={subAuthors}
                                   onChange={(e) => setSubAuthors(e.target.value)}
-                                  className="bg-slate-900 border-slate-850 text-xs rounded-xl focus:border-brandBlue text-slate-100 focus:ring-1 focus:ring-brandBlue placeholder:text-slate-500" 
+                                  className="bg-slate-50 border-slate-200 text-xs rounded-xl focus:border-brandBlue text-slate-800 focus:ring-1 focus:ring-brandBlue placeholder:text-slate-400" 
                                   placeholder="e.g. Dr. John Smith, Prof. Jane Doe" 
                                 />
                               </div>
@@ -719,7 +679,7 @@ export default function MemberClientPage() {
                                 <select 
                                   value={subTheme}
                                   onChange={(e) => setSubTheme(e.target.value)}
-                                  className="w-full bg-slate-900 border border-slate-850 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-brandBlue text-slate-100"
+                                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-brandBlue text-slate-800"
                                 >
                                   <option value="equality">Reimagining Equality and Justice</option>
                                   <option value="empowerment">Diaspora Empowerment & Global Alliances</option>
@@ -735,7 +695,7 @@ export default function MemberClientPage() {
                                 value={subAbstract}
                                 onChange={(e) => setSubAbstract(e.target.value)}
                                 rows={4} 
-                                className="w-full bg-slate-900 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-brandBlue focus:ring-1 focus:ring-brandBlue placeholder:text-slate-500" 
+                                className="w-full bg-slate-55 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-brandBlue focus:ring-1 focus:ring-brandBlue placeholder:text-slate-400" 
                                 placeholder="Outline thesis statements, research systems, and target conclusions..." 
                                 required 
                               />
@@ -747,7 +707,7 @@ export default function MemberClientPage() {
                                 type="text" 
                                 value={subFileName}
                                 onChange={(e) => setSubFileName(e.target.value)}
-                                className="bg-slate-900 border-slate-850 text-xs rounded-xl focus:border-brandBlue text-slate-100 focus:ring-1 focus:ring-brandBlue placeholder:text-slate-500" 
+                                className="bg-slate-55 border-slate-200 text-xs rounded-xl focus:border-brandBlue text-slate-800 focus:ring-1 focus:ring-brandBlue placeholder:text-slate-400" 
                                 placeholder="e.g. global_alliances_draft.pdf" 
                               />
                             </div>
@@ -759,7 +719,7 @@ export default function MemberClientPage() {
                               <Button 
                                 type="button" 
                                 onClick={() => setShowSubForm(false)}
-                                className="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold h-10 px-5 rounded-xl text-xs uppercase tracking-wider"
+                                className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold h-10 px-5 rounded-xl text-xs uppercase tracking-wider"
                               >
                                 Cancel
                               </Button>
@@ -770,37 +730,37 @@ export default function MemberClientPage() {
                     )}
 
                     {/* Submissions List Grid Table */}
-                    <Card className="border-slate-900 bg-slate-900/20 rounded-2xl overflow-hidden">
+                    <Card className="border-slate-200 bg-white rounded-2xl overflow-hidden shadow-sm">
                       <CardContent className="p-0">
                         {submissions.length > 0 ? (
                           <Table>
-                            <TableHeader className="bg-slate-900/50">
-                              <TableRow className="border-slate-850 hover:bg-transparent">
-                                <TableHead className="text-slate-400 font-bold uppercase tracking-wider text-[9px] py-4 pl-6">Abstract Title</TableHead>
-                                <TableHead className="text-slate-400 font-bold uppercase tracking-wider text-[9px] py-4">Theme</TableHead>
-                                <TableHead className="text-slate-400 font-bold uppercase tracking-wider text-[9px] py-4">Draft Reference</TableHead>
-                                <TableHead className="text-slate-400 font-bold uppercase tracking-wider text-[9px] py-4">Status</TableHead>
-                                <TableHead className="text-slate-400 font-bold uppercase tracking-wider text-[9px] py-4 text-right pr-6">Cancel</TableHead>
+                            <TableHeader className="bg-slate-50">
+                              <TableRow className="border-slate-200 hover:bg-transparent">
+                                <TableHead className="text-slate-500 font-bold uppercase tracking-wider text-[9px] py-4 pl-6">Abstract Title</TableHead>
+                                <TableHead className="text-slate-500 font-bold uppercase tracking-wider text-[9px] py-4">Theme</TableHead>
+                                <TableHead className="text-slate-500 font-bold uppercase tracking-wider text-[9px] py-4">Draft Reference</TableHead>
+                                <TableHead className="text-slate-500 font-bold uppercase tracking-wider text-[9px] py-4">Status</TableHead>
+                                <TableHead className="text-slate-500 font-bold uppercase tracking-wider text-[9px] py-4 text-right pr-6">Cancel</TableHead>
                               </TableRow>
                             </TableHeader>
                             <TableBody>
                               {submissions.map((sub) => (
-                                <TableRow key={sub.id} className="border-slate-900 hover:bg-slate-900/10">
-                                  <TableCell className="font-medium text-slate-100 py-4 pl-6">
+                                <TableRow key={sub.id} className="border-slate-100 hover:bg-slate-50/50">
+                                  <TableCell className="font-medium text-slate-800 py-4 pl-6">
                                     <div>
                                       <p className="font-bold text-xs">{sub.title}</p>
                                       <p className="text-[9px] text-slate-500 mt-0.5">Co-authors: {sub.authors || "None"}</p>
                                     </div>
                                   </TableCell>
-                                  <TableCell className="capitalize text-slate-350 text-xs py-4">{sub.theme}</TableCell>
-                                  <TableCell className="text-slate-400 font-mono text-[10px] py-4">{sub.fileName || "AbstractDraft.docx"}</TableCell>
+                                  <TableCell className="capitalize text-slate-600 text-xs py-4">{sub.theme}</TableCell>
+                                  <TableCell className="text-slate-500 font-mono text-[10px] py-4">{sub.fileName || "AbstractDraft.docx"}</TableCell>
                                   <TableCell className="py-4">
                                     {sub.status === 'pending' ? (
-                                      <Badge variant="outline" className="text-amber-500 border-amber-500/20 bg-amber-500/5 text-[8px] font-bold tracking-widest uppercase">
+                                      <Badge variant="outline" className="text-amber-600 border-amber-500/20 bg-amber-500/5 text-[8px] font-bold tracking-widest uppercase">
                                         <Clock className="size-3 mr-1" /> Pending Review
                                       </Badge>
                                     ) : (
-                                      <Badge variant="outline" className="text-emerald-500 border-emerald-500/20 bg-emerald-500/5 text-[8px] font-bold tracking-widest uppercase">
+                                      <Badge variant="outline" className="text-emerald-600 border-emerald-500/20 bg-emerald-500/5 text-[8px] font-bold tracking-widest uppercase">
                                         <CheckCircle className="size-3 mr-1" /> Approved
                                       </Badge>
                                     )}
@@ -810,7 +770,7 @@ export default function MemberClientPage() {
                                       size="icon" 
                                       variant="ghost" 
                                       onClick={() => handleDeleteSubmission(sub.id)}
-                                      className="text-rose-500 hover:text-rose-400 hover:bg-rose-950/20 rounded-lg size-8"
+                                      className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 rounded-lg size-8"
                                     >
                                       <Trash2 className="size-4" />
                                     </Button>
@@ -821,11 +781,11 @@ export default function MemberClientPage() {
                           </Table>
                         ) : (
                           <div className="text-center py-20 space-y-3">
-                            <div className="w-10 h-10 rounded-full bg-slate-900 border border-slate-850 flex items-center justify-center text-slate-600 mx-auto">
+                            <div className="w-10 h-10 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-400 mx-auto">
                               <FileText className="size-5" />
                             </div>
-                            <h4 className="font-black text-slate-400 text-xs uppercase tracking-wider">No Submissions Found</h4>
-                            <p className="text-[11px] text-slate-550 max-w-xs mx-auto">
+                            <h4 className="font-black text-slate-550 text-xs uppercase tracking-wider">No Submissions Found</h4>
+                            <p className="text-[11px] text-slate-400 max-w-xs mx-auto">
                               You haven&apos;t registered any research papers yet. Click &apos;New Submission Draft&apos; to submit.
                             </p>
                           </div>
@@ -835,58 +795,10 @@ export default function MemberClientPage() {
                   </div>
                 )}
 
-                {/* ═════════════════════ TAB: PUBLICATIONS VAULT ═════════════════════ */}
-                {activeTab === 'vault' && (
-                  <div className="space-y-6">
-                    <div className="flex items-center justify-between border-b border-slate-900 pb-4">
-                      <div>
-                        <h2 className="text-2xl font-black font-display text-white uppercase tracking-tight">Publications Vault</h2>
-                        <p className="text-xs text-slate-550 mt-0.5 font-medium">Access exclusive publications and PDF issues compiled by Vishwa Leader.</p>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                      {vaultPublications.map((pub) => (
-                        <Card key={pub.title} className="border-slate-900 bg-slate-900/30 flex flex-col justify-between rounded-2xl overflow-hidden hover:border-slate-800 transition-colors">
-                          <div className="relative aspect-[4/3] bg-slate-950 overflow-hidden shrink-0">
-                            <img src={pub.file} alt={pub.title} className="w-full h-full object-cover" />
-                            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent"></div>
-                          </div>
-                          
-                          <CardHeader className="p-4 space-y-1">
-                            <CardTitle className="text-white text-sm font-bold line-clamp-1">{pub.title}</CardTitle>
-                            <CardDescription className="text-[10px] text-slate-500 line-clamp-2 leading-relaxed font-light">{pub.desc}</CardDescription>
-                          </CardHeader>
-
-                          <CardContent className="px-4 pb-4 pt-0">
-                            <div className="flex items-center justify-between border-t border-slate-900/60 pt-3 text-[9px] font-mono text-slate-555 font-medium">
-                              <span>{pub.format} ({pub.size})</span>
-                              <span>{pub.date}</span>
-                            </div>
-                          </CardContent>
-
-                          <CardFooter className="px-4 pb-4 pt-0">
-                            <Button 
-                              onClick={() => {
-                                window.open(pub.file, '_blank');
-                                showToast("Initiating PDF document view!");
-                              }}
-                              className="w-full bg-slate-850 hover:bg-slate-800 border border-slate-800 text-slate-200 text-xs font-bold py-2 rounded-xl flex items-center justify-center gap-2"
-                            >
-                              <Download className="size-3.5" />
-                              <span>Download Document</span>
-                            </Button>
-                          </CardFooter>
-                        </Card>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
               </main>
 
               {/* Corporate Footer */}
-              <footer className="border-t border-slate-900 bg-slate-950/40 py-6 text-center text-[10px] text-slate-650 font-normal">
+              <footer className="border-t border-slate-200 bg-white py-6 text-center text-[10px] text-slate-500 font-normal">
                 <p>© 2026 Vishwa Leader Techmedia Private Limited. All Rights Reserved.</p>
               </footer>
 
