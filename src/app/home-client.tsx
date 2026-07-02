@@ -6,6 +6,9 @@ import { doc, getDoc } from "firebase/firestore";
 import { checkAdminSession, logoutAdmin } from "@/app/actions/adminAuth";
 
 const magazineCoversList = [
+  { src: '1001702539.jpg', title: 'April 2016 Cover', date: 'Apr 2016' },
+  { src: '1001702550.jpg', title: 'December 2016 Cover', date: 'Dec 2016' },
+  { src: '1001702555.jpg', title: 'August 2013 Cover', date: 'Aug 2013' },
   { src: 'December Cover 09.jpg', title: 'December 2009 Cover', date: 'Dec 2009' },
   { src: 'Nov cover 09.jpg', title: 'November 2009 Cover', date: 'Nov 2009' },
   { src: 'Oct Issue Cover 09.jpg', title: 'October 2009 Cover', date: 'Oct 2009' },
