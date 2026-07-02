@@ -131,9 +131,9 @@ export default function HomeClientPage() {
                     <div className="absolute top-full left-0 pt-2 w-56 hidden group-hover/nav:block z-50">
                         <div className="bg-white border border-slate-200 rounded-xl shadow-xl p-2">
                             <a href="/call-for-papers" className="block px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-brandBlue rounded-lg transition-colors">Call for Papers</a>
-                            <a href="/souvenir-articles" className="block px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-brandBlue rounded-lg transition-colors">Souvenir Articles</a>
-                            <a href="/awards" className="block px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-brandBlue rounded-lg transition-colors">Awards Nominations</a>
                             <a href="/business-summit" className="block px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-brandBlue rounded-lg transition-colors">Business Summit</a>
+                            <a href="/awards" className="block px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-brandBlue rounded-lg transition-colors">Awards Nominations</a>
+                            <a href="/souvenir-articles" className="block px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-brandBlue rounded-lg transition-colors">Souvenir Articles</a>
                             <a href="/tour-package" className="block px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-brandBlue rounded-lg transition-colors">London Tour Package</a>
                             <a href="/advertise" className="block px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-brandBlue rounded-lg transition-colors">Advertise with Us</a>
                         </div>
@@ -221,9 +221,9 @@ export default function HomeClientPage() {
                     </div>
                     <div className="pl-8 space-y-1">
                         <a href="/call-for-papers" className="block py-1.5 text-sm text-slate-600 hover:text-brandBlue">Call for Papers</a>
-                        <a href="/souvenir-articles" className="block py-1.5 text-sm text-slate-600 hover:text-brandBlue">Souvenir Articles</a>
-                        <a href="/awards" className="block py-1.5 text-sm text-slate-600 hover:text-brandBlue">Awards Nominations</a>
                         <a href="/business-summit" className="block py-1.5 text-sm text-slate-600 hover:text-brandBlue">Business Summit</a>
+                        <a href="/awards" className="block py-1.5 text-sm text-slate-600 hover:text-brandBlue">Awards Nominations</a>
+                        <a href="/souvenir-articles" className="block py-1.5 text-sm text-slate-600 hover:text-brandBlue">Souvenir Articles</a>
                         <a href="/tour-package" className="block py-1.5 text-sm text-slate-600 hover:text-brandBlue">London Tour Package</a>
                         <a href="/advertise" className="block py-1.5 text-sm text-slate-600 hover:text-brandBlue">Advertise with Us</a>
                     </div>
