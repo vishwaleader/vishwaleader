@@ -246,50 +246,52 @@ export default function MemberClientPage() {
     <>
       <Preloader loading={loading} />
 
-      {/* Unauthenticated View: Shadcn Sign-In Card */}
+      {/* Unauthenticated View: Sign In */}
       {!loading && !user && (
-        <div className="min-h-screen w-full flex items-center justify-center bg-slate-950 p-4 relative overflow-hidden">
-          {/* Subtle backgrounds */}
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-brandBlue/10 rounded-full blur-3xl pointer-events-none"></div>
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl pointer-events-none"></div>
-
-          <Card className="max-w-md w-full border-slate-800 bg-slate-900/90 text-white shadow-2xl relative z-10 rounded-2xl p-6">
-            <CardHeader className="text-center pb-4 space-y-3">
-              <div className="mx-auto flex aspect-square size-16 items-center justify-center rounded-2xl overflow-hidden bg-slate-950 border border-slate-800">
-                <img src="/assets/images/vishwaleader-logo-globe.png" alt="Vishwa Leader" className="w-full h-full object-contain p-1" />
+        <div className="animate-fade-in-slow w-full flex justify-center items-center">
+          <div id="login-card" className="block cp-member-login-wrapper" style={{
+              position: 'fixed', left: 0, right: 0, bottom: 0, top: 0, zIndex: 9999,
+              fontFamily: "'Open Sans', sans-serif", overflow: 'hidden',
+              background: "url('/assets/images/EkJYDaGD-fond-decran-Bouddha-54.png') no-repeat center center",
+              backgroundSize: 'cover'
+          }}>
+              <style dangerouslySetInnerHTML={{__html: `
+                  .cp-mbtn { display: inline-block; padding: 4px 10px 4px; margin-bottom: 0; font-size: 13px; line-height: 18px; color: #333333; text-align: center; text-shadow: 0 1px 1px rgba(255,255,255,0.75); vertical-align: middle; background-color: #f5f5f5; background-image: linear-gradient(to bottom, #ffffff, #e6e6e6); border: 1px solid #e6e6e6; border-radius: 4px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.2), 0 1px 2px rgba(0,0,0,0.05); cursor: pointer; }
+                  .cp-mbtn:hover { background-color: #e6e6e6; }
+                  .cp-mbtn-large { padding: 9px 14px; font-size: 15px; line-height: normal; border-radius: 5px; }
+                  .cp-mbtn-primary { background-color: #2563eb; background-image: linear-gradient(to bottom, #3b82f6, #1d4ed8); border: 1px solid #1e40af; text-shadow: 1px 1px 1px rgba(0,0,0,0.4); color: #ffffff; }
+                  .cp-mbtn-primary:hover { background-color: #1d4ed8; background-image: none; }
+                  .cp-mbtn-block { width: 100%; display: block; }
+                  .cp-mbtn-google { display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%; padding: 12px 16px; background-color: #ffffff; border: 1px solid #cbd5e1; border-radius: 12px; color: #334155; font-size: 14px; font-weight: 700; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05); cursor: pointer; transition: all 0.2s ease-in-out; text-shadow: none; }
+                  .cp-mbtn-google:hover { background-color: #f8fafc; border-color: #94a3b8; }
+                  .cp-mbtn-google:active { transform: scale(0.98); }
+                  .cp-mlogin { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 340px; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); padding: 30px 20px; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.4); }
+                  .cp-mlogin-logo { display: block; width: 160px; height: 160px; margin: 0 auto 16px auto; object-fit: contain; }
+                  .cp-mlogin h1 { color: #0f172a; letter-spacing: 1px; text-align: center; padding-bottom: 20px; font-weight: bold; margin: 0; font-size: 22px; }
+                  .cp-mback { text-align: center; margin-top: 15px; }
+                  .cp-mback a { font-size: 11px; font-weight: bold; color: #64748b; text-decoration: none; text-transform: uppercase; letter-spacing: 1px; }
+                  .cp-mback a:hover { color: #2563eb; }
+              `}} />
+              <div className="cp-mlogin">
+                  <img src="/assets/images/vishwaleader-logo-hd.png" alt="Vishwa Leader" className="cp-mlogin-logo" />
+                  <h1>Member Login</h1>
+                  <button onClick={handleGoogleLogin} className="cp-mbtn-google">
+                      <svg style={{ width:18, height:18, flexShrink:0 }} viewBox="0 0 24 24">
+                          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                      </svg>
+                      Continue with Google
+                  </button>
+                  <div className="cp-mback mt-3">
+                      <a href="/auth/admin"><i className="fa-solid fa-user-shield"></i> Login as Team</a>
+                  </div>
+                  <div className="cp-mback">
+                      <a href="/"><i className="fa-solid fa-arrow-left"></i> Back to Home</a>
+                  </div>
               </div>
-              <div>
-                <CardTitle className="text-2xl font-black font-display tracking-tight text-white uppercase">Member Login</CardTitle>
-                <CardDescription className="text-xs text-slate-400 mt-1">
-                  Access papers registry, profile cards, and publication vaults.
-                </CardDescription>
-              </div>
-            </CardHeader>
-
-            <CardContent className="space-y-4 pt-2">
-              <Button 
-                onClick={handleGoogleLogin} 
-                className="w-full bg-white hover:bg-slate-100 text-slate-800 font-bold h-12 flex items-center justify-center gap-3 rounded-xl transition-all"
-              >
-                <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
-                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
-                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
-                </svg>
-                <span>Continue with Google</span>
-              </Button>
-            </CardContent>
-
-            <CardFooter className="flex flex-col gap-2 pt-4 border-t border-slate-800/60 text-center">
-              <a href="/auth/admin" className="text-[10px] font-bold text-slate-400 hover:text-white uppercase tracking-wider transition-colors">
-                Login as Team Delegate
-              </a>
-              <a href="/" className="text-[10px] font-bold text-slate-500 hover:text-white uppercase tracking-wider transition-colors">
-                &larr; Back to Website
-              </a>
-            </CardFooter>
-          </Card>
+          </div>
         </div>
       )}
 
