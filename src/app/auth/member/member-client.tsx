@@ -1,11 +1,12 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { auth, db, storage } from "@/lib/firebase";
 import { onAuthStateChanged, signOut, User, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs, addDoc, deleteDoc } from "firebase/firestore";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
-import { createRazorpayOrder, verifyRazorpayPayment } from "@/app/actions/paymentActions";
+import { createDynamicOrder, verifyDynamicPayment } from "@/app/actions/paymentActions";
 import Preloader from "@/components/Preloader";
 import { 
   Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter 
@@ -35,6 +36,9 @@ declare global {
 }
 
 export default function MemberClientPage() {
+  const searchParams = useSearchParams();
+  const defaultTab = searchParams.get('tab') as 'dashboard' | 'registration' | 'uploads' | 'payment' | 'submissions' || 'dashboard';
+
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   
@@ -43,34 +47,100 @@ export default function MemberClientPage() {
     name: "",
     email: "",
     photoURL: "",
+    gender: "",
+    age: "",
+    nationality: "",
+    city: "",
+    wheelchairSupport: false,
     designation: "Member Delegate",
     organization: "Independent Scholar",
+    sector: "Academic/Research",
     country: "India",
     phone: "",
     bio: "Delegate participating in Vishwa Leader research panels.",
     passportNumber: "",
     fullAddress: "",
     nominationCategory: "ambedkar-awards",
+    delegateType: "conference",
+    participationCategories: [],
+    eventDays: [],
+    purpose: "",
+    visaSupport: false,
+    accommodationSupport: false,
+    packageTour: "None",
     dietaryNotes: "",
     paymentStatus: "Unpaid",
+    legalConsent: false,
     headshotUrl: "",
     passportScanUrl: "",
     evidenceUrl: ""
   });
   
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'registration' | 'uploads' | 'payment' | 'submissions'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'registration' | 'uploads' | 'payment' | 'submissions'>(defaultTab);
+
+  // Dynamic Payment States
+  const [selectedAlaCarte, setSelectedAlaCarte] = useState<string[]>([]);
+  const [selectedPackage, setSelectedPackage] = useState<string | null>(null);
+
+  const handleAlaCarteToggle = (item: string) => {
+    setSelectedPackage(null); // Mutual exclusivity
+    setSelectedAlaCarte(prev => 
+      prev.includes(item) ? prev.filter(i => i !== item) : [...prev, item]
+    );
+  };
+
+  const handlePackageSelect = (pkg: string) => {
+    setSelectedAlaCarte([]); // Mutual exclusivity
+    setSelectedPackage(pkg);
+  };
+
+  const calculateDynamicTotal = () => {
+    let total = 0;
+    if (selectedPackage === 'pkg_1') total = 310000;
+    else if (selectedPackage === 'pkg_2') total = 235000;
+    else if (selectedPackage === 'pkg_3') total = 200501;
+    else if (selectedPackage === 'pkg_4') total = 131000;
+    else {
+      if (selectedAlaCarte.includes('day_1')) total += 5900;
+      if (selectedAlaCarte.includes('day_2')) total += 11800;
+      if (selectedAlaCarte.includes('day_3')) total += 5900;
+      
+      if (selectedAlaCarte.includes('ad_front_cover')) total += 500000;
+      if (selectedAlaCarte.includes('ad_back_cover')) total += 200000;
+      if (selectedAlaCarte.includes('ad_inside_cover')) total += 150000;
+      if (selectedAlaCarte.includes('ad_double_spread')) total += 100000;
+      if (selectedAlaCarte.includes('ad_full_page')) total += 50000;
+      if (selectedAlaCarte.includes('ad_half_page')) total += 25000;
+      if (selectedAlaCarte.includes('ad_quarter_page')) total += 15000;
+    }
+    return total;
+  };
 
   // Registration form field states
   const [profileName, setProfileName] = useState("");
+  const [profileGender, setProfileGender] = useState("");
+  const [profileAge, setProfileAge] = useState("");
+  const [profileNationality, setProfileNationality] = useState("");
+  const [profileCity, setProfileCity] = useState("");
+  const [profileWheelchair, setProfileWheelchair] = useState(false);
   const [profileDesignation, setProfileDesignation] = useState("");
   const [profileOrganization, setProfileOrganization] = useState("");
+  const [profileSector, setProfileSector] = useState("Academic/Research");
   const [profilePhone, setProfilePhone] = useState("");
   const [profileBio, setProfileBio] = useState("");
   const [profilePassport, setProfilePassport] = useState("");
   const [profileAddress, setProfileAddress] = useState("");
   const [profileCategory, setProfileCategory] = useState("ambedkar-awards");
+  const [profileDelegateType, setProfileDelegateType] = useState("conference");
+  const [profileParticipationCategories, setProfileParticipationCategories] = useState<string[]>([]);
+  const [profileEventDays, setProfileEventDays] = useState<string[]>([]);
+  const [profilePurpose, setProfilePurpose] = useState("");
+  const [profileVisaSupport, setProfileVisaSupport] = useState(false);
+  const [profileAccommodation, setProfileAccommodation] = useState(false);
+  const [profilePackageTour, setProfilePackageTour] = useState("None");
   const [profileDietary, setProfileDietary] = useState("");
   const [profileCountry, setProfileCountry] = useState("India");
+  const [profileLegalConsent, setProfileLegalConsent] = useState(false);
 
   // File Upload statuses
   const [headshotUploading, setHeadshotUploading] = useState(false);
@@ -87,7 +157,7 @@ export default function MemberClientPage() {
   const [showSubForm, setShowSubForm] = useState(false);
   const [subTitle, setSubTitle] = useState("");
   const [subAuthors, setSubAuthors] = useState("");
-  const [subTheme, setSubTheme] = useState("equality");
+  const [subTheme, setSubTheme] = useState("primary");
   const [subAbstract, setSubAbstract] = useState("");
   const [subFileName, setSubFileName] = useState("");
 
@@ -122,18 +192,32 @@ export default function MemberClientPage() {
               name: currentUser.displayName || "",
               email: currentUser.email || "",
               photoURL: currentUser.photoURL || "",
+              gender: "",
+              age: "",
+              nationality: "",
+              city: "",
+              wheelchairSupport: false,
               role: 'member',
               joinedAt: new Date().toISOString(),
               designation: "Member Delegate",
               organization: "Independent Scholar",
+              sector: "Academic/Research",
               country: "India",
               phone: "",
               bio: "Delegate participating in Vishwa Leader research panels.",
               passportNumber: "",
               fullAddress: "",
               nominationCategory: "ambedkar-awards",
+              delegateType: "conference",
+              participationCategories: [],
+              eventDays: [],
+              purpose: "",
+              visaSupport: false,
+              accommodationSupport: false,
+              packageTour: "None",
               dietaryNotes: "",
               paymentStatus: "Unpaid",
+              legalConsent: false,
               headshotUrl: "",
               passportScanUrl: "",
               evidenceUrl: ""
@@ -148,18 +232,32 @@ export default function MemberClientPage() {
             name: currentUser.displayName || "Delegate",
             email: currentUser.email || "",
             photoURL: currentUser.photoURL || "",
+            gender: "",
+            age: "",
+            nationality: "",
+            city: "",
+            wheelchairSupport: false,
             role: 'member',
             joinedAt: new Date().toISOString(),
             designation: "Member Delegate",
             organization: "Independent Scholar",
+            sector: "Academic/Research",
             country: "India",
             phone: "",
             bio: "Delegate participating in Vishwa Leader research panels.",
             passportNumber: "",
             fullAddress: "",
             nominationCategory: "ambedkar-awards",
+            delegateType: "conference",
+            participationCategories: [],
+            eventDays: [],
+            purpose: "",
+            visaSupport: false,
+            accommodationSupport: false,
+            packageTour: "None",
             dietaryNotes: "",
             paymentStatus: "Unpaid",
+            legalConsent: false,
             headshotUrl: "",
             passportScanUrl: "",
             evidenceUrl: ""
@@ -177,15 +275,29 @@ export default function MemberClientPage() {
   useEffect(() => {
     if (memberData) {
       setProfileName(memberData.name || "");
+      setProfileGender(memberData.gender || "");
+      setProfileAge(memberData.age || "");
+      setProfileNationality(memberData.nationality || "");
+      setProfileCity(memberData.city || "");
+      setProfileWheelchair(memberData.wheelchairSupport || false);
       setProfileDesignation(memberData.designation || "Member Delegate");
       setProfileOrganization(memberData.organization || "Independent Scholar");
+      setProfileSector(memberData.sector || "Academic/Research");
       setProfilePhone(memberData.phone || "");
       setProfileBio(memberData.bio || "");
       setProfilePassport(memberData.passportNumber || "");
       setProfileAddress(memberData.fullAddress || "");
       setProfileCategory(memberData.nominationCategory || "ambedkar-awards");
+      setProfileDelegateType(memberData.delegateType || "conference");
+      setProfileParticipationCategories(memberData.participationCategories || []);
+      setProfileEventDays(memberData.eventDays || []);
+      setProfilePurpose(memberData.purpose || "");
+      setProfileVisaSupport(memberData.visaSupport || false);
+      setProfileAccommodation(memberData.accommodationSupport || false);
+      setProfilePackageTour(memberData.packageTour || "None");
       setProfileDietary(memberData.dietaryNotes || "");
       setProfileCountry(memberData.country || "India");
+      setProfileLegalConsent(memberData.legalConsent || false);
     }
   }, [memberData]);
 
@@ -222,6 +334,12 @@ export default function MemberClientPage() {
   // Launch secure payment gateway checkout
   const handlePayment = async () => {
     if (!user) return;
+    const selectedItems = selectedPackage ? [selectedPackage] : selectedAlaCarte;
+    if (selectedItems.length === 0) {
+      showToast("Please select at least one item to purchase.");
+      return;
+    }
+
     const scriptLoaded = await loadRazorpayScript();
     if (!scriptLoaded) {
       alert("Could not load payment gateway script. Please verify your connection.");
@@ -229,15 +347,14 @@ export default function MemberClientPage() {
     }
 
     // 1. Create order on the secure Server Action
-    const feeINR = 5000; // Registration fee amount in INR
-    const result = await createRazorpayOrder(feeINR);
+    const result = await createDynamicOrder(selectedItems);
 
     if (!result.success || !result.order) {
       alert(result.error || "Could not generate order order-id from checkout gateway.");
       return;
     }
 
-    const { order } = result;
+    const { order, totalAmount } = result;
 
     // 2. Configure payment options with transaction verification callback
     const options = {
@@ -245,17 +362,19 @@ export default function MemberClientPage() {
       amount: order.amount,
       currency: order.currency,
       name: "Vishwa Leader Tech Media Pvt Ltd",
-      description: "Dr. B. R. Ambedkar International Awards 2026 Registration",
+      description: `Dynamic Order - Total: ₹${totalAmount.toLocaleString('en-IN')}`,
       order_id: order.id,
       handler: async function (response: any) {
         setLoading(true);
         try {
           // 3. Verify Razorpay response signature securely on the server side
-          const verifyRes = await verifyRazorpayPayment(
+          const verifyRes = await verifyDynamicPayment(
             response.razorpay_payment_id,
             response.razorpay_order_id,
             response.razorpay_signature,
-            user.uid
+            user.uid,
+            selectedItems,
+            totalAmount
           );
           if (verifyRes.success) {
             setMemberData((prev: any) => ({ 
@@ -265,6 +384,7 @@ export default function MemberClientPage() {
               paymentOrderId: response.razorpay_order_id 
             }));
             showToast("Payment completed and verified successfully!");
+            window.location.reload(); // Quick refresh to update state based on accessRights
           } else {
             alert(`Signature verification failed: ${verifyRes.error}`);
           }
@@ -341,19 +461,39 @@ export default function MemberClientPage() {
   const handleSaveRegistration = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
+    
+    if (!profileLegalConsent) {
+      showToast("You must accept the Legal Note & Terms to proceed.");
+      return;
+    }
+
     try {
       const userRef = doc(db, "users", user.uid);
       const updatedData = {
         name: profileName,
+        gender: profileGender,
+        age: profileAge,
+        nationality: profileNationality,
+        city: profileCity,
+        wheelchairSupport: profileWheelchair,
         designation: profileDesignation,
         organization: profileOrganization,
+        sector: profileSector,
         phone: profilePhone,
         bio: profileBio,
         passportNumber: profilePassport,
         fullAddress: profileAddress,
         nominationCategory: profileCategory,
+        delegateType: profileDelegateType,
+        participationCategories: profileParticipationCategories,
+        eventDays: profileEventDays,
+        purpose: profilePurpose,
+        visaSupport: profileVisaSupport,
+        accommodationSupport: profileAccommodation,
+        packageTour: profilePackageTour,
         dietaryNotes: profileDietary,
-        country: profileCountry
+        country: profileCountry,
+        legalConsent: profileLegalConsent
       };
       await updateDoc(userRef, updatedData);
       setMemberData((prev: any) => ({ ...prev, ...updatedData }));
@@ -427,6 +567,54 @@ export default function MemberClientPage() {
       showToast("Failed to cancel submission.");
     }
   };
+
+  // Get pricing details based on delegate registration type
+  const getPricingForDelegate = (delegateType: string) => {
+    const type = delegateType || "conference";
+    if (type === "business") {
+      return { base: 10000, gst: 1800, total: 11800, label: "Business Summit Delegate" };
+    }
+    if (type === "awards") {
+      return { base: 5000, gst: 900, total: 5900, label: "Awards & Cultural Ceremony Delegate / Attendee" };
+    }
+    return { base: 5000, gst: 900, total: 5900, label: "Conference Delegate" };
+  };
+
+  // Get currency conversion info based on member country
+  const getCurrencyDetails = (countryName: string) => {
+    const country = (countryName || '').trim().toLowerCase();
+    if (!country || country === 'india') {
+      return { symbol: '₹', code: 'INR', rate: 1 };
+    }
+    if (['usa', 'united states', 'us', 'united states of america'].includes(country)) {
+      return { symbol: '$', code: 'USD', rate: 83.5 };
+    }
+    if (['uk', 'united kingdom', 'gb', 'britain', 'london', 'england', 'scotland'].includes(country)) {
+      return { symbol: '£', code: 'GBP', rate: 106.0 };
+    }
+    if (['europe', 'eu', 'germany', 'france', 'italy', 'spain', 'netherlands', 'belgium', 'austria', 'ireland', 'portugal', 'greece'].includes(country)) {
+      return { symbol: '€', code: 'EUR', rate: 90.0 };
+    }
+    if (['canada', 'ca'].includes(country)) {
+      return { symbol: 'C$', code: 'CAD', rate: 61.0 };
+    }
+    if (['australia', 'au'].includes(country)) {
+      return { symbol: 'A$', code: 'AUD', rate: 55.0 };
+    }
+    if (['singapore', 'sg'].includes(country)) {
+      return { symbol: 'S$', code: 'SGD', rate: 61.5 };
+    }
+    if (['uae', 'united arab emirates', 'dubai'].includes(country)) {
+      return { symbol: 'AED', code: 'AED', rate: 22.7 };
+    }
+    return { symbol: '$', code: 'USD', rate: 83.5 }; // Default international
+  };
+
+  const currency = getCurrencyDetails(memberData?.country);
+  const pricing = getPricingForDelegate(memberData?.delegateType);
+  const baseConverted = (pricing.base / currency.rate).toFixed(2);
+  const gstConverted = (pricing.gst / currency.rate).toFixed(2);
+  const totalConverted = (pricing.total / currency.rate).toFixed(2);
 
   return (
     <>
@@ -752,11 +940,11 @@ export default function MemberClientPage() {
                       <CardContent>
                         <form onSubmit={handleSaveRegistration} className="space-y-6">
                           
-                          {/* Section 1: Professional Details */}
+                          {/* Section 1: Personal & Professional Details */}
                           <div className="space-y-4">
                             <h3 className="text-xs font-bold text-brandBlue uppercase tracking-wider border-b border-slate-100 pb-1.5 flex items-center gap-1.5">
                               <UserIcon className="size-4 shrink-0" />
-                              <span>1. Professional Credentials</span>
+                              <span>1. Personal & Professional Details</span>
                             </h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div className="space-y-1.5">
@@ -771,6 +959,46 @@ export default function MemberClientPage() {
                                 />
                               </div>
                               <div className="space-y-1.5">
+                                <label className="text-[10px] font-bold text-slate-555 uppercase tracking-wider">Gender</label>
+                                <select 
+                                  value={profileGender}
+                                  onChange={(e) => setProfileGender(e.target.value)}
+                                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-brandBlue text-slate-800"
+                                  required
+                                >
+                                  <option value="">Select Gender</option>
+                                  <option value="Male">Male</option>
+                                  <option value="Female">Female</option>
+                                  <option value="Prefer not to say">Prefer not to say</option>
+                                </select>
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] font-bold text-slate-555 uppercase tracking-wider">Age</label>
+                                <Input 
+                                  type="number" 
+                                  value={profileAge}
+                                  onChange={(e) => setProfileAge(e.target.value)}
+                                  className="bg-slate-50 border-slate-200 text-xs rounded-xl focus:border-brandBlue text-slate-800" 
+                                  placeholder="Age" 
+                                  required 
+                                />
+                              </div>
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] font-bold text-slate-555 uppercase tracking-wider">Nationality</label>
+                                <Input 
+                                  type="text" 
+                                  value={profileNationality}
+                                  onChange={(e) => setProfileNationality(e.target.value)}
+                                  className="bg-slate-50 border-slate-200 text-xs rounded-xl focus:border-brandBlue text-slate-800" 
+                                  placeholder="Nationality" 
+                                  required 
+                                />
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="space-y-1.5">
                                 <label className="text-[10px] font-bold text-slate-555 uppercase tracking-wider">Designation / Profession</label>
                                 <Input 
                                   type="text" 
@@ -781,8 +1009,6 @@ export default function MemberClientPage() {
                                   required 
                                 />
                               </div>
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div className="space-y-1.5">
                                 <label className="text-[10px] font-bold text-slate-555 uppercase tracking-wider">Organization / University</label>
                                 <Input 
@@ -793,6 +1019,22 @@ export default function MemberClientPage() {
                                   placeholder="Institution Name" 
                                   required 
                                 />
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] font-bold text-slate-555 uppercase tracking-wider">Sector</label>
+                                <select 
+                                  value={profileSector}
+                                  onChange={(e) => setProfileSector(e.target.value)}
+                                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-brandBlue text-slate-800"
+                                >
+                                  <option value="Academic/Research">Academic/Research</option>
+                                  <option value="Business/Industry">Business/Industry</option>
+                                  <option value="Media/Press">Media/Press</option>
+                                  <option value="Government/Public Sector">Government/Public Sector</option>
+                                  <option value="Student">Student</option>
+                                </select>
                               </div>
                               <div className="space-y-1.5">
                                 <label className="text-[10px] font-bold text-slate-555 uppercase tracking-wider">Biography / Professional Profile</label>
@@ -849,29 +1091,55 @@ export default function MemberClientPage() {
                                   required 
                                 />
                               </div>
-                              <div className="space-y-1.5">
-                                <label className="text-[10px] font-bold text-slate-555 uppercase tracking-wider">Country of Residence</label>
-                                <Input 
-                                  type="text" 
-                                  value={profileCountry}
-                                  onChange={(e) => setProfileCountry(e.target.value)}
-                                  className="bg-slate-50 border-slate-200 text-xs rounded-xl focus:border-brandBlue text-slate-800" 
-                                  placeholder="Country" 
-                                  required 
-                                />
+                              <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-1.5">
+                                  <label className="text-[10px] font-bold text-slate-555 uppercase tracking-wider">City</label>
+                                  <Input 
+                                    type="text" 
+                                    value={profileCity}
+                                    onChange={(e) => setProfileCity(e.target.value)}
+                                    className="bg-slate-50 border-slate-200 text-xs rounded-xl focus:border-brandBlue text-slate-800" 
+                                    placeholder="City" 
+                                    required 
+                                  />
+                                </div>
+                                <div className="space-y-1.5">
+                                  <label className="text-[10px] font-bold text-slate-555 uppercase tracking-wider">Country of Residence</label>
+                                  <Input 
+                                    type="text" 
+                                    value={profileCountry}
+                                    onChange={(e) => setProfileCountry(e.target.value)}
+                                    className="bg-slate-50 border-slate-200 text-xs rounded-xl focus:border-brandBlue text-slate-800" 
+                                    placeholder="Country" 
+                                    required 
+                                  />
+                                </div>
                               </div>
                             </div>
                           </div>
 
-                          {/* Section 3: Event Preferences */}
+                          {/* Section 3: Event Preferences & Logistics */}
                           <div className="space-y-4 pt-2">
                             <h3 className="text-xs font-bold text-brandBlue uppercase tracking-wider border-b border-slate-100 pb-1.5 flex items-center gap-1.5">
                               <FileText className="size-4 shrink-0" />
-                              <span>3. Award Nomination Preferences</span>
+                              <span>3. Delegation, Events & Logistics</span>
                             </h3>
+                            
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div className="space-y-1.5">
-                                <label className="text-[10px] font-bold text-slate-555 uppercase tracking-wider">Nominated Award Category</label>
+                                <label className="text-[10px] font-bold text-slate-555 uppercase tracking-wider">Primary Registration Delegate Type (For Billing)</label>
+                                <select 
+                                  value={profileDelegateType}
+                                  onChange={(e) => setProfileDelegateType(e.target.value)}
+                                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-brandBlue text-slate-800"
+                                >
+                                  <option value="conference">Conference Delegate (₹5,000 + GST)</option>
+                                  <option value="business">Business Summit Delegate (₹10,000 + GST)</option>
+                                  <option value="awards">Awards & Cultural Ceremony Delegate (₹5,000 + GST)</option>
+                                </select>
+                              </div>
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] font-bold text-slate-555 uppercase tracking-wider">Nominated Award Category (Optional)</label>
                                 <select 
                                   value={profileCategory}
                                   onChange={(e) => setProfileCategory(e.target.value)}
@@ -883,16 +1151,116 @@ export default function MemberClientPage() {
                                   <option value="constitutional-rights">Constitutional Rights Advocacy Prize</option>
                                 </select>
                               </div>
-                              <div className="space-y-1.5">
-                                <label className="text-[10px] font-bold text-slate-555 uppercase tracking-wider">Special Requests / Dietary Requirements</label>
-                                <Input 
-                                  type="text" 
-                                  value={profileDietary}
-                                  onChange={(e) => setProfileDietary(e.target.value)}
-                                  className="bg-slate-50 border-slate-200 text-xs rounded-xl focus:border-brandBlue text-slate-800" 
-                                  placeholder="Dietary requests (e.g. Vegetarian, Halal) or accessibility requests" 
-                                />
+                            </div>
+
+                            <div className="space-y-2">
+                              <label className="text-[10px] font-bold text-slate-555 uppercase tracking-wider">Participation Categories (Check all that apply)</label>
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+                                {["Delegate", "Research Paper Presenter", "Business Delegate", "Award Ceremony Delegate", "Volunteer", "Sponsor/Partner", "Media Representative", "VIP/VVIP"].map(cat => (
+                                  <label key={cat} className="flex items-center space-x-2">
+                                    <input 
+                                      type="checkbox" 
+                                      checked={profileParticipationCategories.includes(cat)}
+                                      onChange={(e) => {
+                                        if (e.target.checked) setProfileParticipationCategories([...profileParticipationCategories, cat]);
+                                        else setProfileParticipationCategories(profileParticipationCategories.filter(c => c !== cat));
+                                      }}
+                                      className="rounded text-brandBlue focus:ring-brandBlue"
+                                    />
+                                    <span>{cat}</span>
+                                  </label>
+                                ))}
                               </div>
+                            </div>
+
+                            <div className="space-y-2">
+                              <label className="text-[10px] font-bold text-slate-555 uppercase tracking-wider">Event Day Selection (Check days attending)</label>
+                              <div className="flex flex-wrap gap-4 text-xs">
+                                {["Day 1 (Academic Conference)", "Day 2 (Business Summit)", "Day 3 (Awards Ceremony)"].map(day => (
+                                  <label key={day} className="flex items-center space-x-2">
+                                    <input 
+                                      type="checkbox" 
+                                      checked={profileEventDays.includes(day)}
+                                      onChange={(e) => {
+                                        if (e.target.checked) setProfileEventDays([...profileEventDays, day]);
+                                        else setProfileEventDays(profileEventDays.filter(d => d !== day));
+                                      }}
+                                      className="rounded text-brandBlue focus:ring-brandBlue"
+                                    />
+                                    <span>{day}</span>
+                                  </label>
+                                ))}
+                              </div>
+                            </div>
+
+                            <div className="space-y-1.5">
+                              <label className="text-[10px] font-bold text-slate-555 uppercase tracking-wider">Purpose & Interest in Event</label>
+                              <textarea 
+                                value={profilePurpose}
+                                onChange={(e) => setProfilePurpose(e.target.value)}
+                                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-brandBlue text-slate-800 min-h-[60px]"
+                                placeholder="Why are you attending? What are your key interests?"
+                              ></textarea>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-slate-100 pt-3">
+                              <div className="space-y-2">
+                                <label className="text-[10px] font-bold text-slate-555 uppercase tracking-wider">Logistics & Support Requirements</label>
+                                <div className="space-y-1.5 text-xs text-slate-700">
+                                  <label className="flex items-center space-x-2">
+                                    <input type="checkbox" checked={profileVisaSupport} onChange={(e) => setProfileVisaSupport(e.target.checked)} className="rounded text-brandBlue focus:ring-brandBlue" />
+                                    <span>Require Official Invitation Letter for Visa</span>
+                                  </label>
+                                  <label className="flex items-center space-x-2">
+                                    <input type="checkbox" checked={profileAccommodation} onChange={(e) => setProfileAccommodation(e.target.checked)} className="rounded text-brandBlue focus:ring-brandBlue" />
+                                    <span>Require Assistance with Accommodation/Logistics</span>
+                                  </label>
+                                  <label className="flex items-center space-x-2">
+                                    <input type="checkbox" checked={profileWheelchair} onChange={(e) => setProfileWheelchair(e.target.checked)} className="rounded text-brandBlue focus:ring-brandBlue" />
+                                    <span>Differently abled / Requires Wheelchair Support</span>
+                                  </label>
+                                </div>
+                              </div>
+                              <div className="space-y-3">
+                                <div className="space-y-1.5">
+                                  <label className="text-[10px] font-bold text-slate-555 uppercase tracking-wider">Package Tour Interest</label>
+                                  <select 
+                                    value={profilePackageTour}
+                                    onChange={(e) => setProfilePackageTour(e.target.value)}
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-brandBlue text-slate-800"
+                                  >
+                                    <option value="None">Not Interested / Managing my own</option>
+                                    <option value="From India">From India (8 Days)</option>
+                                    <option value="From Outside India">From Outside India (8 Days)</option>
+                                  </select>
+                                </div>
+                                <div className="space-y-1.5">
+                                  <label className="text-[10px] font-bold text-slate-555 uppercase tracking-wider">Dietary Notes</label>
+                                  <Input 
+                                    type="text" 
+                                    value={profileDietary}
+                                    onChange={(e) => setProfileDietary(e.target.value)}
+                                    className="bg-slate-50 border-slate-200 text-xs rounded-xl focus:border-brandBlue text-slate-800" 
+                                    placeholder="e.g. Vegetarian, Halal" 
+                                  />
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Legal Consent */}
+                            <div className="mt-6 pt-4 border-t border-slate-200">
+                              <label className="flex items-start space-x-3 p-3 bg-blue-50/50 border border-blue-100 rounded-xl cursor-pointer">
+                                <input 
+                                  type="checkbox" 
+                                  checked={profileLegalConsent} 
+                                  onChange={(e) => setProfileLegalConsent(e.target.checked)} 
+                                  className="mt-1 rounded text-brandBlue focus:ring-brandBlue size-4 shrink-0"
+                                  required
+                                />
+                                <span className="text-xs text-slate-700 leading-snug">
+                                  <strong>Legal Declaration:</strong> I have read and agree to the Terms and Conditions and the Event Legal Note. I confirm that all information provided is accurate and I accept full responsibility for my registration.
+                                </span>
+                              </label>
                             </div>
                           </div>
 
@@ -1098,7 +1466,7 @@ export default function MemberClientPage() {
                       </div>
                     </div>
 
-                    <div className="max-w-xl mx-auto">
+                    <div className="max-w-5xl mx-auto">
                       {memberData?.paymentStatus === 'Paid' ? (
                         <Card className="border-emerald-200 bg-emerald-50/20 p-6 rounded-2xl shadow-sm text-center space-y-4">
                           <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center mx-auto text-emerald-600">
@@ -1127,21 +1495,101 @@ export default function MemberClientPage() {
                             <p className="text-xs text-slate-400">Secure delegation fee payment process for nominees.</p>
                           </div>
 
-                          <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 flex justify-between items-center">
-                            <div className="space-y-0.5">
-                              <span className="text-[9px] font-mono text-slate-400 uppercase tracking-wider">Delegation Fee</span>
-                              <p className="text-xs font-bold text-slate-700">Dr. Ambedkar International Awards 2026</p>
+                          <div className="border border-slate-200 rounded-2xl p-5 space-y-6 bg-slate-50/50 shadow-inner">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                              {/* Left Side: A La Carte Options */}
+                              <div className="space-y-3">
+                                <div className="space-y-1 border-b border-slate-200 pb-2">
+                                  <h4 className="text-sm font-bold text-slate-800 uppercase tracking-wider">A La Carte Options</h4>
+                                  <p className="text-[10px] text-slate-500">Build a custom itinerary. These are mutually exclusive with packages.</p>
+                                </div>
+                                <div className="space-y-2 max-h-[28rem] overflow-y-auto pr-2 custom-scrollbar">
+                                  {[
+                                    { id: 'day_1', label: 'Day 1: International Conference', price: 5900 },
+                                    { id: 'day_2', label: 'Day 2: International Business Summit', price: 11800 },
+                                    { id: 'day_3', label: 'Day 3: International Awards', price: 5900 },
+                                    { id: 'ad_front_cover', label: 'Souvenir: Front Cover (Premium)', price: 500000 },
+                                    { id: 'ad_back_cover', label: 'Souvenir: Back Cover (Premium)', price: 200000 },
+                                    { id: 'ad_inside_cover', label: 'Souvenir: Inside Front/Back Cover', price: 150000 },
+                                    { id: 'ad_double_spread', label: 'Souvenir: Double Spread', price: 100000 },
+                                    { id: 'ad_full_page', label: 'Souvenir: Full Page', price: 50000 },
+                                    { id: 'ad_half_page', label: 'Souvenir: Half Page', price: 25000 },
+                                    { id: 'ad_quarter_page', label: 'Souvenir: Quarter Page', price: 15000 }
+                                  ].map(item => (
+                                    <label key={item.id} className="flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-white cursor-pointer hover:border-brandBlue transition-colors">
+                                      <div className="flex items-center gap-3 w-2/3">
+                                        <input 
+                                          type="checkbox" 
+                                          className="w-4 h-4 rounded text-brandBlue focus:ring-brandBlue border-slate-300"
+                                          checked={selectedAlaCarte.includes(item.id)}
+                                          onChange={() => handleAlaCarteToggle(item.id)}
+                                        />
+                                        <span className="text-xs font-semibold text-slate-700 leading-tight">{item.label}</span>
+                                      </div>
+                                      <span className="text-xs font-bold text-slate-900 w-1/3 text-right">₹{item.price.toLocaleString('en-IN')}</span>
+                                    </label>
+                                  ))}
+                                </div>
+                              </div>
+
+                              {/* Right Side: Tour Packages */}
+                              <div className="space-y-3">
+                                <div className="space-y-1 border-b border-slate-200 pb-2">
+                                  <h4 className="text-sm font-bold text-slate-800 uppercase tracking-wider">All-Inclusive Tour Packages</h4>
+                                  <p className="text-[10px] text-slate-500">Includes all event days registration fee (₹23,600). Select one package.</p>
+                                </div>
+                                <div className="space-y-2 max-h-[28rem] overflow-y-auto pr-2 custom-scrollbar">
+                                  {[
+                                    { id: 'pkg_1', label: 'Package 1 (Land + Visa + Medical Ins + Air + Reg)', price: 310000 },
+                                    { id: 'pkg_2', label: 'Package 2 (Land + Visa + Medical Ins + Air + Reg)', price: 235000 },
+                                    { id: 'pkg_3', label: 'Package 3 (Land Only + Reg)', price: 200501 },
+                                    { id: 'pkg_4', label: 'Package 4 (Land Only + Reg)', price: 131000 }
+                                  ].map(pkg => (
+                                    <label key={pkg.id} className="flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-white cursor-pointer hover:border-brandBlue transition-colors">
+                                      <div className="flex items-center gap-3">
+                                        <input 
+                                          type="radio" 
+                                          name="tour_package"
+                                          className="w-4 h-4 text-brandBlue focus:ring-brandBlue border-slate-300"
+                                          checked={selectedPackage === pkg.id}
+                                          onChange={() => handlePackageSelect(pkg.id)}
+                                        />
+                                        <span className="text-xs font-semibold text-slate-700">{pkg.label}</span>
+                                      </div>
+                                      <span className="text-xs font-bold text-brandBlue text-right">₹{pkg.price.toLocaleString('en-IN')}</span>
+                                    </label>
+                                  ))}
+                                </div>
+                              </div>
                             </div>
-                            <span className="text-xl font-black text-brandBlue font-mono">₹5,000</span>
+                            
+                            {/* Total Calculator */}
+                            <div className="space-y-2.5 border-t border-slate-300 pt-4 mt-6">
+                              <div className="flex justify-between items-center text-sm font-bold text-slate-900">
+                                <span className="flex flex-col">
+                                  <span>Total Amount Payable (+ 18% GST):</span>
+                                  <span className="text-[9px] font-normal text-slate-400 italic">Settled in INR base currency</span>
+                                </span>
+                                <span className="text-brandBlue text-xl font-black font-mono flex flex-col items-end">
+                                  <span>₹{calculateDynamicTotal().toLocaleString('en-IN')}</span>
+                                  {currency.code !== 'INR' && calculateDynamicTotal() > 0 && (
+                                    <span className="text-[10px] text-amber-600 font-semibold mt-0.5">
+                                      ~{currency.symbol}{(calculateDynamicTotal() / currency.rate).toFixed(2)} {currency.code}
+                                    </span>
+                                  )}
+                                </span>
+                              </div>
+                            </div>
                           </div>
 
                           <div className="space-y-4">
                             <Button 
-                              onClick={handlePayment} 
-                              className="w-full bg-brandBlue hover:bg-brandBlue/90 text-white font-bold h-12 rounded-xl text-xs uppercase tracking-wider shadow-md flex items-center justify-center gap-2"
+                              onClick={handlePayment}
+                              disabled={calculateDynamicTotal() === 0}
+                              className={`w-full font-bold h-12 rounded-xl text-xs uppercase tracking-wider shadow-md flex items-center justify-center gap-2 ${calculateDynamicTotal() > 0 ? 'bg-brandBlue hover:bg-brandBlue/90 text-white' : 'bg-slate-300 text-slate-500 cursor-not-allowed'}`}
                             >
                               <CreditCard className="size-4" />
-                              <span>Pay Delegation Fee via Razorpay</span>
+                              <span>{calculateDynamicTotal() > 0 ? `Pay ₹${calculateDynamicTotal().toLocaleString('en-IN')} via Razorpay` : 'Select items to pay'}</span>
                             </Button>
                             
                             <p className="text-[9px] text-slate-400 leading-relaxed text-center">
@@ -1207,16 +1655,25 @@ export default function MemberClientPage() {
                                 />
                               </div>
                               <div className="space-y-1.5">
-                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Conference Theme</label>
+                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Conference Theme / Sub-Theme</label>
                                 <select 
                                   value={subTheme}
                                   onChange={(e) => setSubTheme(e.target.value)}
                                   className="w-full bg-slate-55 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-brandBlue text-slate-800"
                                 >
-                                  <option value="equality">Reimagining Equality and Justice</option>
-                                  <option value="empowerment">Diaspora Empowerment & Global Alliances</option>
-                                  <option value="constitutionalism">Constitutional Values & Human Rights</option>
-                                  <option value="representation">Inclusive Development & Economic Partnerships</option>
+                                  <option value="primary" className="font-bold">Primary: Reimagining Equality and Justice...</option>
+                                  <optgroup label="Suggested Sub-Themes">
+                                    <option value="social-justice">Social Justice and Human Rights</option>
+                                    <option value="economic-inclusion">Economic Inclusion and Sustainable Development</option>
+                                    <option value="education-empowerment">Education as a Tool for Empowerment</option>
+                                    <option value="constitutional-values">Constitutional Values and Global Governance</option>
+                                    <option value="intersectionality">Intersectionality in Social Movements</option>
+                                    <option value="innovative-models">Innovative Models for Inclusive Societies</option>
+                                    <option value="ambedkar-literature">Ambedkar and Literature</option>
+                                    <option value="democracy-representation">Democracy, Representation, and Political Empowerment</option>
+                                    <option value="cultural-resistance">Ambedkarite Art and Cultural Resistance Movements</option>
+                                    <option value="national-security">Ambedkar and National Security and International Relations</option>
+                                  </optgroup>
                                 </select>
                               </div>
                             </div>

@@ -1,8 +1,43 @@
-import React from 'react';
+'use client';
+
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, User } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 import { ArrowLeft, ExternalLink, Calendar, MapPin, Mail, Briefcase, Users, Handshake } from 'lucide-react';
 
 export default function BusinessSummitPage() {
+  const [user, setUser] = useState<User | null>(null);
+  const [loadingAuth, setLoadingAuth] = useState(true);
+  const router = useRouter();
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setLoadingAuth(false);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const handleActionClick = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (user) {
+      router.push("/auth/member");
+    } else {
+      const provider = new GoogleAuthProvider();
+      try {
+        setLoadingAuth(true);
+        await signInWithPopup(auth, provider);
+        router.push("/auth/member");
+      } catch (err) {
+        console.error("Login failed:", err);
+      } finally {
+        setLoadingAuth(false);
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 font-sans">
       {/* Navbar Minimal */}
@@ -114,23 +149,54 @@ export default function BusinessSummitPage() {
             </div>
 
             <div className="bg-slate-900 p-6 rounded-2xl text-white shadow-xl">
-              <h3 className="font-bold text-lg mb-2">Application Guidelines</h3>
+              <h3 className="font-bold text-lg mb-2">Registration Portal</h3>
               <p className="text-slate-300 text-sm mb-6">Deadline: <strong className="text-emerald-400">31st May 2026</strong></p>
               
               <p className="text-sm text-slate-300 mb-4">
-                It is mandatory for all delegates to fill and submit the Google form below.
+                Register as a business delegate and secure your ticket through the portal.
               </p>
 
-              <a href="https://forms.gle/uuSAD1sqUiLCkjeg6" target="_blank" rel="noopener noreferrer" className="block w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white text-center font-bold rounded-xl transition-colors mb-3 flex items-center justify-center gap-2">
-                Submit Google Form <ExternalLink className="w-4 h-4" />
-              </a>
+              {loadingAuth ? (
+                <div className="w-full py-3 bg-emerald-500/70 text-white text-center font-bold rounded-xl text-sm">
+                  Checking Account...
+                </div>
+              ) : user ? (
+                <button onClick={handleActionClick} className="block w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white text-center font-bold rounded-xl transition-colors mb-3 flex items-center justify-center gap-2 text-sm">
+                  Go to Dashboard & Register <ExternalLink className="w-4 h-4" />
+                </button>
+              ) : (
+                <button onClick={handleActionClick} className="block w-full py-3 bg-amber-500 hover:bg-amber-600 text-slate-900 text-center font-bold rounded-xl transition-colors mb-3 flex items-center justify-center gap-2 text-sm">
+                  Login with Google to Register <ExternalLink className="w-4 h-4" />
+                </button>
+              )}
               
-              <div className="text-center text-xs text-slate-400">
+              <div className="text-center text-xs text-slate-400 border-t border-white/10 pt-4 mt-2">
                 <p>Or mail your application to:</p>
                 <a href="mailto:vishwaleaderbusiness@gmail.com" className="text-emerald-300 hover:text-white font-semibold flex items-center justify-center gap-1 mt-1">
                   <Mail className="w-3 h-3" /> vishwaleaderbusiness@gmail.com
                 </a>
               </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xl shadow-slate-200/50">
+              <h3 className="font-bold text-xs text-emerald-600 mb-3 uppercase tracking-widest">Delegation Registry Fee</h3>
+              <div className="space-y-2 mb-4">
+                <div className="flex justify-between text-xs text-slate-500">
+                  <span>Base Summit Fee:</span>
+                  <span className="font-semibold text-slate-700">₹10,000</span>
+                </div>
+                <div className="flex justify-between text-xs text-slate-500">
+                  <span>18% GST:</span>
+                  <span className="font-semibold text-slate-700">₹1,800</span>
+                </div>
+                <div className="border-t border-slate-150 pt-2 flex justify-between text-sm font-bold text-slate-800">
+                  <span>Total Payable:</span>
+                  <span className="text-emerald-600 font-mono text-base">₹11,800</span>
+                </div>
+              </div>
+              <p className="text-[10px] text-slate-400 bg-slate-50 p-3.5 rounded-xl border border-slate-100 leading-normal">
+                Note: Payable securely online via UPI, Cards, or Netbanking inside the Member Portal. International cards are supported (estimated in USD/GBP on checkout).
+              </p>
             </div>
 
           </div>

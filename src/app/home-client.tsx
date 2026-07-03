@@ -317,14 +317,14 @@ export default function HomeClientPage() {
                 
                 {/* CTA buttons for the three main calls */}
                 <div className="flex flex-col sm:flex-row flex-wrap gap-4 pt-4 w-full">
-                    <a id="btn-abstract" data-field="announcements.abstractLink" href="#conference" className="w-full sm:w-auto bg-brandBlue text-white font-bold px-6 py-4 rounded hover:bg-brandBlue/90 active:scale-[0.98] text-xs tracking-wider uppercase text-center transition-all shadow-md flex items-center justify-center gap-2">
+                    <a id="btn-abstract" data-field="announcements.abstractLink" href="#conference-details" className="w-full sm:w-auto bg-brandBlue text-white font-bold px-6 py-4 rounded hover:bg-brandBlue/90 active:scale-[0.98] text-xs tracking-wider uppercase text-center transition-all shadow-md flex items-center justify-center gap-2">
                         <i className="fa-solid fa-graduation-cap"></i> Submit Abstract
                     </a>
-                    <a id="btn-nomination" data-field="announcements.awardLink" href="#contact" className="w-full sm:w-auto bg-amber-500 text-brandDark font-bold px-6 py-4 rounded hover:bg-amber-400 active:scale-[0.98] text-xs tracking-wider uppercase text-center transition-all shadow-md flex items-center justify-center gap-2">
-                        <i className="fa-solid fa-trophy"></i> Nominate for Award
-                    </a>
-                    <a id="btn-business" data-field="announcements.businessLink" href="#contact" className="w-full sm:w-auto border border-slate-500 text-white bg-slate-900/60 font-bold px-6 py-4 rounded hover:bg-slate-800 active:scale-[0.98] text-xs tracking-wider uppercase text-center transition-all shadow-sm flex items-center justify-center gap-2">
+                    <a id="btn-business" data-field="announcements.businessLink" href="#business-summit" className="w-full sm:w-auto bg-amber-500 text-brandDark font-bold px-6 py-4 rounded hover:bg-amber-400 active:scale-[0.98] text-xs tracking-wider uppercase text-center transition-all shadow-md flex items-center justify-center gap-2">
                         <i className="fa-solid fa-briefcase"></i> Business Participation
+                    </a>
+                    <a id="btn-nomination" data-field="announcements.awardLink" href="#awards" className="w-full sm:w-auto border border-slate-500 text-white bg-slate-900/60 font-bold px-6 py-4 rounded hover:bg-slate-800 active:scale-[0.98] text-xs tracking-wider uppercase text-center transition-all shadow-sm flex items-center justify-center gap-2">
+                        <i className="fa-solid fa-trophy"></i> Nominate for Award
                     </a>
                 </div>
             </div>
@@ -544,117 +544,15 @@ export default function HomeClientPage() {
     </section>
 
     {/* Calling for Articles / SOAS Conference Section */}
-    <section id="conference" className="py-20 md:py-24 bg-slate-50 border-b border-slate-200/60">
+    <section id="schedule" className="py-20 md:py-24 bg-slate-50 border-b border-slate-200/60">
         <div className="max-w-7xl mx-auto px-6">
-            {/* Header */}
-            <div className="max-w-4xl mb-16 space-y-4">
-                <span className="text-xs font-bold tracking-widest text-brandBlue uppercase">Academic Invitation</span>
-                <h2 className="font-display text-3xl md:text-4xl font-black tracking-tight text-slate-900">
-                    Calling for Articles: SOAS University Conference 2026
-                </h2>
-                <p className="text-slate-600 leading-relaxed text-sm md:text-base">
-                    Held on the eve of the <strong>Vishwa Leader Dr. B. R. Ambedkar International Awards 2026</strong> in London, UK. The organizing committee invites scholars, researchers, and activists to submit abstracts and full research papers for the academic conference at <strong>SOAS University of London</strong>.
+            {/* Event Schedule Header */}
+            <div className="max-w-3xl mb-12 space-y-4 text-center mx-auto">
+                <span className="text-xs font-bold tracking-widest text-brandBlue uppercase">Event Schedule</span>
+                <h2 className="font-display text-3xl md:text-4xl font-black tracking-tight text-slate-900">Three-Day London Event Schedule</h2>
+                <p className="text-slate-500 leading-relaxed text-sm">
+                    Overview of the main academic, business, and award events taking place in London from September 18th to September 20th, 2026.
                 </p>
-            </div>
-
-            {/* Seminar Details Cards */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start mb-16">
-                {/* Theme and Topics Grid (Left 8 cols) */}
-                <div className="lg:col-span-8 space-y-8">
-                    <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm">
-                        <span className="text-[10px] font-bold text-brandBlue uppercase bg-brandBlue/5 px-2.5 py-1 rounded">Primary Theme</span>
-                        <h3 className="font-display text-2xl font-black text-slate-900 mt-3 mb-6" data-field="conference.primaryTheme">
-                            "Reimagining Equality and Justice: Dr. B. R. Ambedkar's Vision in the 21st Century"
-                        </h3>
-
-                        {/* 6 Sub-Themes */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="flex gap-4">
-                                <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-brandBlue shrink-0 border border-slate-200"><i className="fa-solid fa-people-group"></i></div>
-                                <div>
-                                    <h4 className="font-bold text-slate-800 text-sm">Innovative Solutions for Inclusive Societies</h4>
-                                    <p className="text-xs text-slate-500 leading-relaxed mt-1">Proposing new ideas and practical solutions to foster equality and address modern governance issues.</p>
-                                </div>
-                            </div>
-                            <div className="flex gap-4">
-                                <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-brandBlue shrink-0 border border-slate-200"><i className="fa-solid fa-scale-balanced"></i></div>
-                                <div>
-                                    <h4 className="font-bold text-slate-800 text-sm">Social Justice and Human Rights</h4>
-                                    <p className="text-xs text-slate-500 leading-relaxed mt-1">Exploration of Ambedkar's perspectives on justice and their relevance to contemporary human rights.</p>
-                                </div>
-                            </div>
-                            <div className="flex gap-4">
-                                <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-brandBlue shrink-0 border border-slate-200"><i className="fa-solid fa-chart-line"></i></div>
-                                <div>
-                                    <h4 className="font-bold text-slate-800 text-sm">Economic Inclusion & Sustainable Development</h4>
-                                    <p className="text-xs text-slate-500 leading-relaxed mt-1">Critical analysis of Ambedkar's economic vision, including inclusive growth and economic equality.</p>
-                                </div>
-                            </div>
-                            <div className="flex gap-4">
-                                <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-brandBlue shrink-0 border border-slate-200"><i className="fa-solid fa-book"></i></div>
-                                <div>
-                                    <h4 className="font-bold text-slate-800 text-sm">Education as a Tool for Empowerment</h4>
-                                    <p className="text-xs text-slate-500 leading-relaxed mt-1">Examining education as a cornerstone for empowerment and social transformation of marginalized communities.</p>
-                                </div>
-                            </div>
-                            <div className="flex gap-4">
-                                <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-brandBlue shrink-0 border border-slate-200"><i className="fa-solid fa-landmark"></i></div>
-                                <div>
-                                    <h4 className="font-bold text-slate-800 text-sm">Constitutional Values & Global Governance</h4>
-                                    <p className="text-xs text-slate-500 leading-relaxed mt-1">Investigating Ambedkar's constitutional principles (democracy, rule of law, fraternity) and their impact on global governance structures.</p>
-                                </div>
-                            </div>
-                            <div className="flex gap-4">
-                                <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-brandBlue shrink-0 border border-slate-200"><i className="fa-solid fa-earth-americas"></i></div>
-                                <div>
-                                    <h4 className="font-bold text-slate-800 text-sm">Diaspora Mobilization and Transnational Advocacy</h4>
-                                    <p className="text-xs text-slate-500 leading-relaxed mt-1">Analyzing the role of global diaspora collectives in advocating for constitutional protections, human rights, and political representation.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Important Information Panel (Right 4 cols) */}
-                <div className="lg:col-span-4 space-y-6">
-                    {/* Key Deadlines */}
-                    <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-                        <h4 className="font-display font-bold text-slate-900 border-b border-slate-100 pb-3 mb-4 uppercase text-xs tracking-wider">Conference Calendar</h4>
-                        <div className="space-y-4 text-xs">
-                            <div className="flex justify-between items-center py-2 border-b border-slate-100">
-                                <div>
-                                    <p className="font-bold text-slate-800">Abstract Submission</p>
-                                    <p className="text-slate-400 mt-0.5">Late abstract submissions accepted until</p>
-                                </div>
-                                <span className="bg-brandBlue/10 text-brandBlue font-bold px-2 py-1 rounded">30 July 2026</span>
-                            </div>
-                            <div className="flex justify-between items-center py-2 border-b border-slate-100">
-                                <div>
-                                    <p className="font-bold text-slate-800">Acceptance Notification</p>
-                                    <p className="text-slate-400 mt-0.5">Author review decisions released</p>
-                                </div>
-                                <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold px-2 py-1 rounded">10 August 2026</span>
-                            </div>
-                            <div className="flex justify-between items-center py-2">
-                                <div>
-                                    <p className="font-bold text-slate-800">Full Paper Submission</p>
-                                    <p className="text-slate-400 mt-0.5">Submit final camera-ready drafts</p>
-                                </div>
-                                <span className="bg-amber-500/10 text-amber-700 font-bold px-2 py-1 rounded">31 August 2026</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Quick guidelines */}
-                    <div className="bg-slate-900 text-white border border-slate-800 rounded-2xl p-6 shadow-sm">
-                        <h4 className="font-display font-bold text-white border-b border-slate-800 pb-3 mb-4 uppercase text-xs tracking-wider">Submission Guidelines</h4>
-                        <ul className="space-y-3.5 text-xs">
-                            <li className="flex items-start gap-2.5"><i className="fa-solid fa-circle-check text-amber-400 mt-0.5"></i> <span><strong>Abstracts:</strong> Limit to 300 words with 4-5 keywords specifying research area.</span></li>
-                            <li className="flex items-start gap-2.5"><i className="fa-solid fa-circle-check text-amber-400 mt-0.5"></i> <span><strong>Co-authors:</strong> Up to 3 co-authors are permitted per paper submission.</span></li>
-                            <li className="flex items-start gap-2.5"><i className="fa-solid fa-circle-check text-amber-400 mt-0.5"></i> <span><strong>Submission Format:</strong> Submit drafts in DOC/DOCX format with author profiles.</span></li>
-                        </ul>
-                    </div>
-                </div>
             </div>
 
             {/* Timeline / Cards Layout */}
@@ -677,7 +575,7 @@ export default function HomeClientPage() {
                         </div>
                     </div>
                     <div className="p-6 pt-0">
-                        <a data-field="announcements.abstractLink" href="#conference" target="_blank" className="block text-center border border-slate-250 text-slate-700 bg-slate-50 hover:bg-brandBlue hover:text-white hover:border-brandBlue font-bold py-3 rounded text-xs uppercase tracking-wider transition-all">
+                        <a data-field="announcements.abstractLink" href="/call-for-papers" className="block text-center border border-slate-250 text-slate-700 bg-slate-50 hover:bg-brandBlue hover:text-white hover:border-brandBlue font-bold py-3 rounded text-xs uppercase tracking-wider transition-all">
                             Submit Abstract
                         </a>
                     </div>
@@ -705,7 +603,7 @@ export default function HomeClientPage() {
                         </div>
                     </div>
                     <div className="p-6 pt-0">
-                        <a data-field="announcements.businessLink" href="#contact" target="_blank" className="block text-center border border-slate-250 text-slate-700 bg-slate-50 hover:bg-brandBlue hover:text-white hover:border-brandBlue font-bold py-3 rounded text-xs uppercase tracking-wider transition-all">
+                        <a data-field="announcements.businessLink" href="/business-summit" className="block text-center border border-slate-250 text-slate-700 bg-slate-50 hover:bg-brandBlue hover:text-white hover:border-brandBlue font-bold py-3 rounded text-xs uppercase tracking-wider transition-all">
                             Register for Summit
                         </a>
                     </div>
@@ -733,8 +631,126 @@ export default function HomeClientPage() {
                         </div>
                     </div>
                     <div className="p-6 pt-0">
-                        <a data-field="announcements.awardLink" href="#contact" target="_blank" className="block text-center border border-slate-250 text-slate-700 bg-slate-50 hover:bg-brandBlue hover:text-white hover:border-brandBlue font-bold py-3 rounded text-xs uppercase tracking-wider transition-all">
+                        <a data-field="announcements.awardLink" href="/awards" className="block text-center border border-slate-250 text-slate-700 bg-slate-50 hover:bg-brandBlue hover:text-white hover:border-brandBlue font-bold py-3 rounded text-xs uppercase tracking-wider transition-all">
                             Nominate / Attend
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {/* Academic Conference Section */}
+    <section id="conference-details" className="py-20 md:py-24 bg-white border-b border-slate-200/60">
+        <div className="max-w-7xl mx-auto px-6">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+                <div className="lg:col-span-7 order-1 lg:order-2 space-y-6">
+                    <span className="text-xs font-bold tracking-widest text-brandBlue uppercase">Academic Invitation</span>
+                    <h2 className="font-display text-3xl md:text-4xl font-black tracking-tight text-slate-900">
+                        International Academic Conference
+                    </h2>
+                    <h3 className="text-lg font-bold text-slate-700 -mt-3">Call for Abstracts and Papers</h3>
+                    <p className="text-slate-600 leading-relaxed text-sm md:text-base">
+                        Held on the eve of the <strong>Vishwa Leader Dr. B. R. Ambedkar International Awards 2026</strong> in London, UK. The organizing committee invites scholars, researchers, and activists to submit abstracts and full research papers for the academic conference at <strong>SOAS University of London</strong>.
+                    </p>
+                    <p className="text-slate-655 leading-relaxed text-sm">
+                        Featuring sessions on social justice, human rights, economic inclusion, and constitutional values, reimagining Dr. B. R. Ambedkar's vision in the 21st century.
+                    </p>
+                    <div className="flex flex-wrap gap-4 pt-2">
+                        <a href="/call-for-papers" className="bg-brandBlue text-white font-bold px-6 py-3 rounded hover:bg-brandBlue/90 text-xs uppercase tracking-wider transition-all shadow-sm">
+                            Read More & Details
+                        </a>
+                        <a href="/auth/member" className="border border-slate-350 text-slate-700 bg-white hover:bg-slate-50 font-bold px-6 py-3 rounded text-xs uppercase tracking-wider transition-all">
+                            Submit Abstract
+                        </a>
+                    </div>
+                </div>
+                <div className="lg:col-span-5 order-2 lg:order-1">
+                    <div className="bg-slate-50 border border-slate-200 rounded-2xl p-8 space-y-4 shadow-sm">
+                        <h4 className="font-display font-bold text-slate-900 text-sm uppercase tracking-wide">Key Focus Areas</h4>
+                        <ul className="space-y-3 text-xs text-slate-600">
+                            <li className="flex gap-2"><i className="fa-solid fa-graduation-cap text-brandBlue mt-0.5"></i> <span>Social Justice & Human Rights Protection</span></li>
+                            <li className="flex gap-2"><i className="fa-solid fa-graduation-cap text-brandBlue mt-0.5"></i> <span>Economic Inclusion & Sustainable Growth</span></li>
+                            <li className="flex gap-2"><i className="fa-solid fa-graduation-cap text-brandBlue mt-0.5"></i> <span>Constitutional Values & Global Governance</span></li>
+                            <li className="flex gap-2"><i className="fa-solid fa-graduation-cap text-brandBlue mt-0.5"></i> <span>Diaspora Mobilization & Advocacy</span></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {/* Business Summit Section */}
+    <section id="business-summit" className="py-20 md:py-24 bg-slate-50 border-b border-slate-200/60">
+        <div className="max-w-7xl mx-auto px-6">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+                <div className="lg:col-span-7 space-y-6">
+                    <span className="text-xs font-bold tracking-widest text-brandBlue uppercase">Business Participation</span>
+                    <h2 className="font-display text-3xl md:text-4xl font-black tracking-tight text-slate-900">
+                        International Business Summit & WLCC Networking 2026
+                    </h2>
+                    <p className="text-slate-600 leading-relaxed text-sm md:text-base">
+                        In association with the <strong>Global Bahujan Business Council (GBBC)</strong>, <strong>Dr. Ambedkar Chamber of Commerce (DACC)</strong>, and the <strong>WLCC (West London Chamber of Commerce)</strong>, the Business Summit connects global diaspora entrepreneurs, corporate partners, and institutional investors.
+                    </p>
+                    <p className="text-slate-655 leading-relaxed text-sm">
+                        Featuring sessions on inclusive trade, venture funding, technology integration, and cross-border partnerships to empower business leaders and scale social enterprises globally.
+                    </p>
+                    <div className="flex flex-wrap gap-4 pt-2">
+                        <a href="/business-summit" className="bg-brandBlue text-white font-bold px-6 py-3 rounded hover:bg-brandBlue/90 text-xs uppercase tracking-wider transition-all shadow-sm">
+                            Read More & Details
+                        </a>
+                        <a href="/auth/member" className="border border-slate-350 text-slate-700 bg-white hover:bg-slate-50 font-bold px-6 py-3 rounded text-xs uppercase tracking-wider transition-all">
+                            Register as Business Delegate
+                        </a>
+                    </div>
+                </div>
+                <div className="lg:col-span-5">
+                    <div className="bg-slate-50 border border-slate-200 rounded-2xl p-8 space-y-4 shadow-sm">
+                        <h4 className="font-display font-bold text-slate-900 text-sm uppercase tracking-wide">Key Focus Areas</h4>
+                        <ul className="space-y-3 text-xs text-slate-600">
+                            <li className="flex gap-2"><i className="fa-solid fa-circle-check text-brandBlue mt-0.5"></i> <span>Global Diaspora Networking & WLCC Partnerships</span></li>
+                            <li className="flex gap-2"><i className="fa-solid fa-circle-check text-brandBlue mt-0.5"></i> <span>Venture Capital & Social Impact Funding Panels</span></li>
+                            <li className="flex gap-2"><i className="fa-solid fa-circle-check text-brandBlue mt-0.5"></i> <span>Inclusive Business Models & Supply Chain Diversity</span></li>
+                            <li className="flex gap-2"><i className="fa-solid fa-circle-check text-brandBlue mt-0.5"></i> <span>Cross-border Trade & Compliance Forums</span></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {/* Awards Ceremony Section */}
+    <section id="awards" className="py-20 md:py-24 bg-white border-b border-slate-200/60">
+        <div className="max-w-7xl mx-auto px-6">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+                <div className="lg:col-span-5 order-2 lg:order-1">
+                    <div className="bg-white border border-slate-200 rounded-2xl p-8 space-y-4 shadow-sm">
+                        <h4 className="font-display font-bold text-slate-900 text-sm uppercase tracking-wide">Award Categories</h4>
+                        <ul className="space-y-3 text-xs text-slate-600">
+                            <li className="flex gap-2"><i className="fa-solid fa-trophy text-amber-500 mt-0.5"></i> <span>Dr. Ambedkar International Award (Socio-Economic Reforms)</span></li>
+                            <li className="flex gap-2"><i className="fa-solid fa-trophy text-amber-500 mt-0.5"></i> <span>International Socio-Cultural Leadership Award</span></li>
+                            <li className="flex gap-2"><i className="fa-solid fa-trophy text-amber-500 mt-0.5"></i> <span>Young Leader Academic Excellence Award</span></li>
+                            <li className="flex gap-2"><i className="fa-solid fa-trophy text-amber-500 mt-0.5"></i> <span>Constitutional Rights Advocacy Prize</span></li>
+                        </ul>
+                    </div>
+                </div>
+                <div className="lg:col-span-7 order-1 lg:order-2 space-y-6">
+                    <span className="text-xs font-bold tracking-widest text-brandBlue uppercase">Recognition & Culture</span>
+                    <h2 className="font-display text-3xl md:text-4xl font-black tracking-tight text-slate-900">
+                        Dr. Ambedkar International Awards & Cultural Ceremony 2026
+                    </h2>
+                    <p className="text-slate-600 leading-relaxed text-sm md:text-base">
+                        A grand celebration hosted at the <strong>Greenwood Theatre (Guys Campus, King's College London)</strong>. Celebrating outstanding contributions in social justice, research, human rights, and community empowerment.
+                    </p>
+                    <p className="text-slate-655 leading-relaxed text-sm">
+                        The event features international award distributions, cultural performances showcasing Dalit and Bahujan artistic heritage, and a grand celebratory banquet dinner.
+                    </p>
+                    <div className="flex flex-wrap gap-4 pt-2">
+                        <a href="/awards" className="bg-brandBlue text-white font-bold px-6 py-3 rounded hover:bg-brandBlue/90 text-xs uppercase tracking-wider transition-all shadow-sm">
+                            Read More & Details
+                        </a>
+                        <a href="/auth/member" className="border border-slate-350 text-slate-700 bg-white hover:bg-slate-50 font-bold px-6 py-3 rounded text-xs uppercase tracking-wider transition-all">
+                            Nominate for Award
                         </a>
                     </div>
                 </div>
@@ -754,18 +770,17 @@ export default function HomeClientPage() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Advertisements */}
-                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-8 shadow-sm">
-                    <h3 className="font-display text-xl font-bold text-slate-900 mb-4">Souvenir Advertisement Rates</h3>
-                    <ul className="space-y-3 text-sm text-slate-600 mb-6">
-                        <li className="flex justify-between border-b border-slate-200 pb-2"><span>Front Cover (Premium)</span><span className="font-bold">₹500,000/-</span></li>
-                        <li className="flex justify-between border-b border-slate-200 pb-2"><span>Back Cover (Premium)</span><span className="font-bold">₹200,000/-</span></li>
-                        <li className="flex justify-between border-b border-slate-200 pb-2"><span>Inside Front/Back Cover</span><span className="font-bold">₹150,000/-</span></li>
-                        <li className="flex justify-between border-b border-slate-200 pb-2"><span>Double Spread</span><span className="font-bold">₹100,000/-</span></li>
-                        <li className="flex justify-between border-b border-slate-200 pb-2"><span>Full Page</span><span className="font-bold">₹50,000/-</span></li>
-                        <li className="flex justify-between border-b border-slate-200 pb-2"><span>Half Page</span><span className="font-bold">₹25,000/-</span></li>
-                        <li className="flex justify-between border-b border-slate-200 pb-2"><span>Quarter Page</span><span className="font-bold">₹15,000/-</span></li>
-                    </ul>
-                    <a href="#contact" className="block text-center bg-amber-500 text-brandDark font-bold py-3 rounded text-xs uppercase tracking-wider transition-colors hover:bg-amber-400">Book Advertisement</a>
+                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-8 shadow-sm flex flex-col justify-center items-center text-center">
+                    <div className="w-16 h-16 rounded-full bg-brandBlue/10 flex items-center justify-center mb-6">
+                        <i className="fa-solid fa-rectangle-ad text-2xl text-brandBlue"></i>
+                    </div>
+                    <h3 className="font-display text-xl font-bold text-slate-900 mb-4">Explore Advertising & Registration Packages</h3>
+                    <p className="text-sm text-slate-600 mb-8 leading-relaxed max-w-sm">
+                        Discover comprehensive delegate event passes, all-inclusive tour packages, and premium advertising opportunities in our Official Souvenir publication.
+                    </p>
+                    <a href="/pricing" className="inline-block bg-brandBlue text-white font-bold py-3 px-8 rounded-xl text-xs uppercase tracking-wider transition-all hover:bg-brandBlue/90 hover:shadow-lg shadow-brandBlue/20">
+                        View Detailed Pricing
+                    </a>
                 </div>
                 {/* Souvenir Articles */}
                 <div className="bg-slate-50 border border-slate-200 rounded-2xl p-8 shadow-sm flex flex-col justify-between">

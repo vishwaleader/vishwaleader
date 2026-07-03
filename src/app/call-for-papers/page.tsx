@@ -1,5 +1,10 @@
-import React from 'react';
+'use client';
+
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, User } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 import { ArrowLeft, BookOpen, MapPin, Calendar, Mail, FileText, ExternalLink, GraduationCap, CheckCircle2 } from 'lucide-react';
 
 const subThemes = [
@@ -16,6 +21,36 @@ const subThemes = [
 ];
 
 export default function CallForPapersPage() {
+  const [user, setUser] = useState<User | null>(null);
+  const [loadingAuth, setLoadingAuth] = useState(true);
+  const router = useRouter();
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setLoadingAuth(false);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const handleActionClick = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (user) {
+      router.push("/auth/member");
+    } else {
+      const provider = new GoogleAuthProvider();
+      try {
+        setLoadingAuth(true);
+        await signInWithPopup(auth, provider);
+        router.push("/auth/member");
+      } catch (err) {
+        console.error("Login failed:", err);
+      } finally {
+        setLoadingAuth(false);
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 font-sans pb-20">
       {/* Navbar Minimal */}
@@ -146,9 +181,19 @@ export default function CallForPapersPage() {
                 </div>
               </div>
 
-              <a href="https://forms.gle/aWAEDNKLSbV6ms9eA" target="_blank" rel="noopener noreferrer" className="block w-full py-3 bg-brandBlue hover:bg-blue-600 text-white text-center font-bold rounded-xl transition-colors mb-3 flex items-center justify-center gap-2">
-                Submit Registration Form <ExternalLink className="w-4 h-4" />
-              </a>
+              {loadingAuth ? (
+                <div className="w-full py-3 bg-brandBlue/70 text-white text-center font-bold rounded-xl text-sm">
+                  Checking Account...
+                </div>
+              ) : user ? (
+                <button onClick={handleActionClick} className="block w-full py-3 bg-brandBlue hover:bg-blue-600 text-white text-center font-bold rounded-xl transition-colors mb-3 flex items-center justify-center gap-2 text-sm">
+                  Go to Dashboard & Register <ExternalLink className="w-4 h-4" />
+                </button>
+              ) : (
+                <button onClick={handleActionClick} className="block w-full py-3 bg-amber-500 hover:bg-amber-600 text-slate-900 text-center font-bold rounded-xl transition-colors mb-3 flex items-center justify-center gap-2 text-sm">
+                  Login with Google to Register <ExternalLink className="w-4 h-4" />
+                </button>
+              )}
               
               <div className="text-center text-xs text-slate-400 border-t border-white/10 pt-4 mt-2">
                 <p>Email abstracts & papers to:</p>
@@ -159,14 +204,24 @@ export default function CallForPapersPage() {
             </div>
 
             <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xl">
-              <h3 className="font-bold text-sm text-slate-800 mb-3 uppercase tracking-widest text-brandBlue">Submission Fee</h3>
-              <p className="text-2xl font-black text-slate-900 mb-4">₹ 5,000/-</p>
-              <div className="space-y-1 text-xs text-slate-600 bg-slate-50 p-4 rounded-xl border border-slate-100">
-                <p><span className="font-bold text-slate-800">Bank Name:</span> Union Bank of India</p>
-                <p><span className="font-bold text-slate-800">A/c no:</span> 023811100002652</p>
-                <p><span className="font-bold text-slate-800">IFSC Code:</span> UBIN0802387</p>
-                <p><span className="font-bold text-slate-800">Company:</span> Vishwa Leader Techmedia Pvt. Ltd.</p>
+              <h3 className="font-bold text-xs text-brandBlue mb-3 uppercase tracking-widest">Delegation Registry Fee</h3>
+              <div className="space-y-2 mb-4">
+                <div className="flex justify-between text-xs text-slate-500">
+                  <span>Base Conference Fee:</span>
+                  <span className="font-semibold text-slate-700">₹5,000</span>
+                </div>
+                <div className="flex justify-between text-xs text-slate-500">
+                  <span>18% GST:</span>
+                  <span className="font-semibold text-slate-700">₹900</span>
+                </div>
+                <div className="border-t border-slate-150 pt-2 flex justify-between text-sm font-bold text-slate-800">
+                  <span>Total Payable:</span>
+                  <span className="text-brandBlue font-mono text-base">₹5,900</span>
+                </div>
               </div>
+              <p className="text-[10px] text-slate-400 bg-slate-50 p-3.5 rounded-xl border border-slate-100 leading-normal">
+                Note: Payable securely online via UPI, Cards, or Netbanking inside the Member Portal. International cards are supported (estimated in USD/GBP on checkout).
+              </p>
             </div>
 
           </div>
