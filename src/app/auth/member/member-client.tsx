@@ -1,9 +1,11 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { auth, db } from "@/lib/firebase";
-import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut, User } from "firebase/auth";
+import { auth, db, storage } from "@/lib/firebase";
+import { onAuthStateChanged, signOut, User, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs, addDoc, deleteDoc } from "firebase/firestore";
+import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import { createRazorpayOrder, verifyRazorpayPayment } from "@/app/actions/paymentActions";
 import Preloader from "@/components/Preloader";
 import { 
   Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter 
@@ -22,13 +24,21 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow
 } from "@/components/ui/table";
 import { 
-  LayoutDashboard, User as UserIcon, FileText, LogOut, Search, 
-  MapPin, Plus, Trash2, CheckCircle, Clock 
+  LayoutDashboard, User as UserIcon, FileText, LogOut, 
+  MapPin, Plus, Trash2, CheckCircle, Clock, Upload, ShieldAlert, CreditCard, Camera, FileCheck 
 } from "lucide-react";
+
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
 
 export default function MemberClientPage() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  
+  // Registration and Firestore user document state
   const [memberData, setMemberData] = useState<any>({
     name: "",
     email: "",
@@ -37,19 +47,42 @@ export default function MemberClientPage() {
     organization: "Independent Scholar",
     country: "India",
     phone: "",
-    bio: "Delegate participating in Vishwa Leader research panels."
+    bio: "Delegate participating in Vishwa Leader research panels.",
+    passportNumber: "",
+    fullAddress: "",
+    nominationCategory: "ambedkar-awards",
+    dietaryNotes: "",
+    paymentStatus: "Unpaid",
+    headshotUrl: "",
+    passportScanUrl: "",
+    evidenceUrl: ""
   });
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'profile' | 'submissions'>('dashboard');
+  
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'registration' | 'uploads' | 'payment' | 'submissions'>('dashboard');
 
-  // Profile forms state
+  // Registration form field states
   const [profileName, setProfileName] = useState("");
   const [profileDesignation, setProfileDesignation] = useState("");
   const [profileOrganization, setProfileOrganization] = useState("");
-  const [profileCountry, setProfileCountry] = useState("");
   const [profilePhone, setProfilePhone] = useState("");
   const [profileBio, setProfileBio] = useState("");
+  const [profilePassport, setProfilePassport] = useState("");
+  const [profileAddress, setProfileAddress] = useState("");
+  const [profileCategory, setProfileCategory] = useState("ambedkar-awards");
+  const [profileDietary, setProfileDietary] = useState("");
+  const [profileCountry, setProfileCountry] = useState("India");
 
-  // Submissions state
+  // File Upload statuses
+  const [headshotUploading, setHeadshotUploading] = useState(false);
+  const [headshotProgress, setHeadshotProgress] = useState(0);
+
+  const [passportUploading, setPassportUploading] = useState(false);
+  const [passportProgress, setPassportProgress] = useState(0);
+
+  const [evidenceUploading, setEvidenceUploading] = useState(false);
+  const [evidenceProgress, setEvidenceProgress] = useState(0);
+
+  // Submissions lists states
   const [submissions, setSubmissions] = useState<any[]>([]);
   const [showSubForm, setShowSubForm] = useState(false);
   const [subTitle, setSubTitle] = useState("");
@@ -75,7 +108,6 @@ export default function MemberClientPage() {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
       if (currentUser) {
-        // Set loading false immediately to prevent preloader stuck during database fetches
         setLoading(false);
 
         // Fetch or create user document in firestore with local catch fallbacks
@@ -84,7 +116,7 @@ export default function MemberClientPage() {
           const docSnap = await getDoc(userRef);
           if (docSnap.exists()) {
             const data = docSnap.data();
-            setMemberData(data);
+            setMemberData((prev: any) => ({ ...prev, ...data }));
           } else {
             const newMember = {
               name: currentUser.displayName || "",
@@ -96,7 +128,15 @@ export default function MemberClientPage() {
               organization: "Independent Scholar",
               country: "India",
               phone: "",
-              bio: "Delegate participating in Vishwa Leader research panels."
+              bio: "Delegate participating in Vishwa Leader research panels.",
+              passportNumber: "",
+              fullAddress: "",
+              nominationCategory: "ambedkar-awards",
+              dietaryNotes: "",
+              paymentStatus: "Unpaid",
+              headshotUrl: "",
+              passportScanUrl: "",
+              evidenceUrl: ""
             };
             await setDoc(userRef, newMember);
             setMemberData(newMember);
@@ -114,7 +154,15 @@ export default function MemberClientPage() {
             organization: "Independent Scholar",
             country: "India",
             phone: "",
-            bio: "Delegate participating in Vishwa Leader research panels."
+            bio: "Delegate participating in Vishwa Leader research panels.",
+            passportNumber: "",
+            fullAddress: "",
+            nominationCategory: "ambedkar-awards",
+            dietaryNotes: "",
+            paymentStatus: "Unpaid",
+            headshotUrl: "",
+            passportScanUrl: "",
+            evidenceUrl: ""
           });
         }
       } else {
@@ -131,9 +179,13 @@ export default function MemberClientPage() {
       setProfileName(memberData.name || "");
       setProfileDesignation(memberData.designation || "Member Delegate");
       setProfileOrganization(memberData.organization || "Independent Scholar");
-      setProfileCountry(memberData.country || "India");
       setProfilePhone(memberData.phone || "");
-      setProfileBio(memberData.bio || "Delegate participating in Vishwa Leader research panels.");
+      setProfileBio(memberData.bio || "");
+      setProfilePassport(memberData.passportNumber || "");
+      setProfileAddress(memberData.fullAddress || "");
+      setProfileCategory(memberData.nominationCategory || "ambedkar-awards");
+      setProfileDietary(memberData.dietaryNotes || "");
+      setProfileCountry(memberData.country || "India");
     }
   }, [memberData]);
 
@@ -156,6 +208,162 @@ export default function MemberClientPage() {
     fetchSubmissions();
   }, [user]);
 
+  // Dynamic Razorpay SDK loader
+  const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
+  // Launch secure payment gateway checkout
+  const handlePayment = async () => {
+    if (!user) return;
+    const scriptLoaded = await loadRazorpayScript();
+    if (!scriptLoaded) {
+      alert("Could not load payment gateway script. Please verify your connection.");
+      return;
+    }
+
+    // 1. Create order on the secure Server Action
+    const feeINR = 5000; // Registration fee amount in INR
+    const result = await createRazorpayOrder(feeINR);
+
+    if (!result.success || !result.order) {
+      alert(result.error || "Could not generate order order-id from checkout gateway.");
+      return;
+    }
+
+    const { order } = result;
+
+    // 2. Configure payment options with transaction verification callback
+    const options = {
+      key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+      amount: order.amount,
+      currency: order.currency,
+      name: "Vishwa Leader Tech Media Pvt Ltd",
+      description: "Dr. B. R. Ambedkar International Awards 2026 Registration",
+      order_id: order.id,
+      handler: async function (response: any) {
+        setLoading(true);
+        try {
+          // 3. Verify Razorpay response signature securely on the server side
+          const verifyRes = await verifyRazorpayPayment(
+            response.razorpay_payment_id,
+            response.razorpay_order_id,
+            response.razorpay_signature,
+            user.uid
+          );
+          if (verifyRes.success) {
+            setMemberData((prev: any) => ({ 
+              ...prev, 
+              paymentStatus: "Paid", 
+              paymentId: response.razorpay_payment_id,
+              paymentOrderId: response.razorpay_order_id 
+            }));
+            showToast("Payment completed and verified successfully!");
+          } else {
+            alert(`Signature verification failed: ${verifyRes.error}`);
+          }
+        } catch (e: any) {
+          alert(`Verification error: ${e.message}`);
+        } finally {
+          setLoading(false);
+        }
+      },
+      prefill: {
+        name: profileName || user.displayName || "",
+        email: user.email || "",
+        contact: profilePhone || ""
+      },
+      theme: {
+        color: "#2563eb"
+      }
+    };
+
+    const rzp = new window.Razorpay(options);
+    rzp.open();
+  };
+
+  // Firebase Storage upload helper
+  const uploadFileToStorage = (file: File, type: 'headshot' | 'passportScan' | 'evidence') => {
+    if (!user) return;
+    
+    // Set status
+    if (type === 'headshot') { setHeadshotUploading(true); setHeadshotProgress(0); }
+    if (type === 'passportScan') { setPassportUploading(true); setPassportProgress(0); }
+    if (type === 'evidence') { setEvidenceUploading(true); setEvidenceProgress(0); }
+
+    const storagePath = `users/${user.uid}/${type}_${Date.now()}_${file.name}`;
+    const storageRef = ref(storage, storagePath);
+    const uploadTask = uploadBytesResumable(storageRef, file);
+
+    uploadTask.on('state_changed', 
+      (snapshot) => {
+        const progress = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+        if (type === 'headshot') setHeadshotProgress(progress);
+        if (type === 'passportScan') setPassportProgress(progress);
+        if (type === 'evidence') setEvidenceProgress(progress);
+      }, 
+      (error) => {
+        console.error("Storage upload error:", error);
+        showToast("File upload failed.");
+        if (type === 'headshot') setHeadshotUploading(false);
+        if (type === 'passportScan') setPassportUploading(false);
+        if (type === 'evidence') setEvidenceUploading(false);
+      }, 
+      async () => {
+        try {
+          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+          
+          // Save link directly to Firestore delegate profile
+          const userRef = doc(db, "users", user.uid);
+          const updateField = type === 'headshot' ? 'headshotUrl' : type === 'passportScan' ? 'passportScanUrl' : 'evidenceUrl';
+          
+          await updateDoc(userRef, { [updateField]: downloadURL });
+          setMemberData((prev: any) => ({ ...prev, [updateField]: downloadURL }));
+          showToast("Document loaded and registered successfully!");
+        } catch (e) {
+          console.error("Error setting firestore link:", e);
+        } finally {
+          if (type === 'headshot') setHeadshotUploading(false);
+          if (type === 'passportScan') setPassportUploading(false);
+          if (type === 'evidence') setEvidenceUploading(false);
+        }
+      }
+    );
+  };
+
+  // Save delegate details form
+  const handleSaveRegistration = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+    try {
+      const userRef = doc(db, "users", user.uid);
+      const updatedData = {
+        name: profileName,
+        designation: profileDesignation,
+        organization: profileOrganization,
+        phone: profilePhone,
+        bio: profileBio,
+        passportNumber: profilePassport,
+        fullAddress: profileAddress,
+        nominationCategory: profileCategory,
+        dietaryNotes: profileDietary,
+        country: profileCountry
+      };
+      await updateDoc(userRef, updatedData);
+      setMemberData((prev: any) => ({ ...prev, ...updatedData }));
+      showToast("Delegate registration updated successfully!");
+    } catch (err) {
+      console.error("Error saving delegate form:", err);
+      showToast("Failed to save registration.");
+    }
+  };
+
   // Google Login action
   const handleGoogleLogin = async () => {
     const provider = new GoogleAuthProvider();
@@ -171,29 +379,6 @@ export default function MemberClientPage() {
   const handleLogout = async () => {
     await signOut(auth);
     showToast("Signed out successfully.");
-  };
-
-  // Update profile handler
-  const handleSaveProfile = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user) return;
-    try {
-      const userRef = doc(db, "users", user.uid);
-      const updatedData = {
-        name: profileName,
-        designation: profileDesignation,
-        organization: profileOrganization,
-        country: profileCountry,
-        phone: profilePhone,
-        bio: profileBio
-      };
-      await updateDoc(userRef, updatedData);
-      setMemberData((prev: any) => ({ ...prev, ...updatedData }));
-      showToast("Profile details updated successfully!");
-    } catch (err) {
-      console.error("Error updating profile:", err);
-      showToast("Failed to save profile settings.");
-    }
   };
 
   // Add paper submission handler
@@ -331,16 +516,44 @@ export default function MemberClientPage() {
                       </SidebarMenuItem>
                       <SidebarMenuItem>
                         <SidebarMenuButton 
-                          isActive={activeTab === 'profile'} 
-                          onClick={() => setActiveTab('profile')}
+                          isActive={activeTab === 'registration'} 
+                          onClick={() => setActiveTab('registration')}
                           className={`w-full justify-start text-xs font-medium py-2 px-3 rounded-lg transition-all ${
-                            activeTab === 'profile' 
+                            activeTab === 'registration' 
                               ? 'bg-slate-100 text-slate-900 font-semibold' 
                               : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                           }`}
                         >
                           <UserIcon className="size-4 shrink-0 mr-2 text-brandBlue" />
-                          <span>Edit Profile Settings</span>
+                          <span>Delegate Registration</span>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                      <SidebarMenuItem>
+                        <SidebarMenuButton 
+                          isActive={activeTab === 'uploads'} 
+                          onClick={() => setActiveTab('uploads')}
+                          className={`w-full justify-start text-xs font-medium py-2 px-3 rounded-lg transition-all ${
+                            activeTab === 'uploads' 
+                              ? 'bg-slate-100 text-slate-900 font-semibold' 
+                              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                          }`}
+                        >
+                          <Upload className="size-4 shrink-0 mr-2 text-brandBlue" />
+                          <span>Document Uploads</span>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                      <SidebarMenuItem>
+                        <SidebarMenuButton 
+                          isActive={activeTab === 'payment'} 
+                          onClick={() => setActiveTab('payment')}
+                          className={`w-full justify-start text-xs font-medium py-2 px-3 rounded-lg transition-all ${
+                            activeTab === 'payment' 
+                              ? 'bg-slate-100 text-slate-900 font-semibold' 
+                              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                          }`}
+                        >
+                          <CreditCard className="size-4 shrink-0 mr-2 text-brandBlue" />
+                          <span>Registration Payment</span>
                         </SidebarMenuButton>
                       </SidebarMenuItem>
                       <SidebarMenuItem>
@@ -402,7 +615,9 @@ export default function MemberClientPage() {
                       <BreadcrumbItem>
                         <BreadcrumbPage className="text-slate-900 capitalize font-semibold">
                           {activeTab === 'dashboard' && 'Dashboard Overview'}
-                          {activeTab === 'profile' && 'Profile Settings'}
+                          {activeTab === 'registration' && 'Delegate Registration'}
+                          {activeTab === 'uploads' && 'Document Upload Center'}
+                          {activeTab === 'payment' && 'Fee Payment Gate'}
                           {activeTab === 'submissions' && 'Abstract Submissions'}
                         </BreadcrumbPage>
                       </BreadcrumbItem>
@@ -415,7 +630,7 @@ export default function MemberClientPage() {
                     <p className="text-xs font-bold text-slate-800">{memberData?.name || user.displayName || "Delegate"}</p>
                     <p className="text-[9px] text-slate-400 font-mono">Member ID: VL-2026-{(user.uid.substring(0, 4)).toUpperCase()}</p>
                   </div>
-                  <img src={user.photoURL || "https://placehold.co/100x100"} alt="" className="w-8 h-8 rounded-full border border-slate-200 object-cover" />
+                  <img src={memberData?.headshotUrl || user.photoURL || "https://placehold.co/100x100"} alt="" className="w-8 h-8 rounded-full border border-slate-200 object-cover" />
                 </div>
               </header>
 
@@ -428,7 +643,7 @@ export default function MemberClientPage() {
                     <div className="flex items-center justify-between border-b border-slate-200 pb-4">
                       <div>
                         <h2 className="text-2xl font-black font-display text-slate-900 uppercase tracking-tight">Overview Dashboard</h2>
-                        <p className="text-xs text-slate-500 mt-0.5 font-medium">Welcome back! Review your active credentials and details below.</p>
+                        <p className="text-xs text-slate-550 mt-0.5 font-medium">Welcome back! Review your active credentials and details below.</p>
                       </div>
                     </div>
 
@@ -456,7 +671,7 @@ export default function MemberClientPage() {
                           <div className="flex gap-4 items-center my-3 relative z-10">
                             <div className="relative shrink-0">
                               <img 
-                                src={user.photoURL || "https://placehold.co/150x150/0a1e4b/ffffff?text=User"} 
+                                src={memberData?.headshotUrl || user.photoURL || "https://placehold.co/150x150/0a1e4b/ffffff?text=User"} 
                                 className="w-14 h-14 rounded-xl object-cover border border-white/20 shadow-md bg-slate-950" 
                                 alt="" 
                               />
@@ -481,9 +696,9 @@ export default function MemberClientPage() {
                               </div>
                             </div>
                             <div className="space-y-0.5 text-right">
-                              <div className="text-[7px] font-bold text-slate-600 uppercase tracking-wider">Member Since</div>
-                              <div className="text-[10px] font-mono font-bold text-slate-350">
-                                {memberData?.joinedAt ? new Date(memberData.joinedAt).toLocaleDateString(undefined, {month: 'short', year: 'numeric'}) : '2026'}
+                              <div className="text-[7px] font-bold text-slate-600 uppercase tracking-wider">Registration Status</div>
+                              <div className={`text-[10px] font-bold uppercase tracking-wider ${memberData?.paymentStatus === 'Paid' ? 'text-emerald-500' : 'text-rose-500'}`}>
+                                {memberData?.paymentStatus === 'Paid' ? 'Paid / Active' : 'Pending Payment'}
                               </div>
                             </div>
                           </div>
@@ -496,18 +711,22 @@ export default function MemberClientPage() {
                           <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500">Membership Summary</h3>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 space-y-1">
-                              <span className="text-[10px] uppercase font-bold text-slate-550">Registered Submissions</span>
+                              <span className="text-[10px] uppercase font-bold text-slate-550">Paper Submissions</span>
                               <p className="text-2xl font-black text-slate-800">{submissions.length}</p>
                             </div>
                             <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 space-y-1">
-                              <span className="text-[10px] uppercase font-bold text-slate-550">Official Designation</span>
-                              <p className="text-xs font-bold text-slate-800 line-clamp-1 mt-1.5">{memberData?.designation || "Member Delegate"}</p>
+                              <span className="text-[10px] uppercase font-bold text-slate-550">Verification Status</span>
+                              {memberData?.passportNumber ? (
+                                <Badge className="bg-emerald-100 hover:bg-emerald-100 text-emerald-800 font-bold border-0 mt-2 block w-fit text-[9px] uppercase tracking-wide">Verified Details</Badge>
+                              ) : (
+                                <Badge className="bg-amber-100 hover:bg-amber-100 text-amber-800 font-bold border-0 mt-2 block w-fit text-[9px] uppercase tracking-wide">Awaiting Details</Badge>
+                              )}
                             </div>
                           </div>
                           
                           <div className="space-y-1 border-t border-slate-100 pt-4">
-                            <span className="text-[10px] uppercase font-bold text-slate-550 block">Short Bio / Profile Statement</span>
-                            <p className="text-xs text-slate-600 leading-relaxed italic">{memberData?.bio || "No biography provided. Click 'Edit Profile Settings' in the sidebar navigation to define one."}</p>
+                            <span className="text-[10px] uppercase font-bold text-slate-555 block">Professional Bio</span>
+                            <p className="text-xs text-slate-600 leading-relaxed italic">{memberData?.bio || "No bio summary configured. Click 'Delegate Registration' tab in the sidebar menu to update your registration fields."}</p>
                           </div>
                         </Card>
                       </div>
@@ -515,100 +734,423 @@ export default function MemberClientPage() {
                   </div>
                 )}
 
-                {/* ═════════════════════ TAB: PROFILE SETTINGS ═════════════════════ */}
-                {activeTab === 'profile' && (
+                {/* ═════════════════════ TAB: DELEGATE REGISTRATION FORM ═════════════════════ */}
+                {activeTab === 'registration' && (
                   <div className="space-y-6">
                     <div className="flex items-center justify-between border-b border-slate-200 pb-4">
                       <div>
-                        <h2 className="text-2xl font-black font-display text-slate-900 uppercase tracking-tight">Edit Profile</h2>
-                        <p className="text-xs text-slate-550 mt-0.5 font-medium">Customize your delegate details saved in the registry.</p>
+                        <h2 className="text-2xl font-black font-display text-slate-900 uppercase tracking-tight">Delegate Registration</h2>
+                        <p className="text-xs text-slate-500 mt-0.5 font-medium">Provide detailed contact, passport, and event details to finalize delegation registry.</p>
                       </div>
                     </div>
 
-                    <Card className="border-slate-200 bg-white max-w-2xl rounded-2xl shadow-sm">
+                    <Card className="border-slate-200 bg-white rounded-2xl shadow-sm">
                       <CardHeader>
-                        <CardTitle className="text-sm font-bold uppercase tracking-wider text-slate-500">Membership profile information</CardTitle>
+                        <CardTitle className="text-sm font-bold uppercase tracking-wider text-slate-500">Detailed Registration Document</CardTitle>
+                        <CardDescription className="text-xs text-slate-450">This information will be used for award certificate print and travel logs.</CardDescription>
                       </CardHeader>
                       <CardContent>
-                        <form onSubmit={handleSaveProfile} className="space-y-4">
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-1.5">
-                              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Full Name</label>
-                              <Input 
-                                type="text" 
-                                value={profileName}
-                                onChange={(e) => setProfileName(e.target.value)}
-                                className="bg-slate-50 border-slate-200 text-xs rounded-xl focus:border-brandBlue text-slate-800 focus:ring-1 focus:ring-brandBlue outline-none placeholder:text-slate-400" 
-                                placeholder="Full Name" 
-                                required 
-                              />
+                        <form onSubmit={handleSaveRegistration} className="space-y-6">
+                          
+                          {/* Section 1: Professional Details */}
+                          <div className="space-y-4">
+                            <h3 className="text-xs font-bold text-brandBlue uppercase tracking-wider border-b border-slate-100 pb-1.5 flex items-center gap-1.5">
+                              <UserIcon className="size-4 shrink-0" />
+                              <span>1. Professional Credentials</span>
+                            </h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] font-bold text-slate-550 uppercase tracking-wider">Full Name (For Certificate)</label>
+                                <Input 
+                                  type="text" 
+                                  value={profileName}
+                                  onChange={(e) => setProfileName(e.target.value)}
+                                  className="bg-slate-50 border-slate-200 text-xs rounded-xl focus:border-brandBlue text-slate-800" 
+                                  placeholder="Full Name" 
+                                  required 
+                                />
+                              </div>
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] font-bold text-slate-555 uppercase tracking-wider">Designation / Profession</label>
+                                <Input 
+                                  type="text" 
+                                  value={profileDesignation}
+                                  onChange={(e) => setProfileDesignation(e.target.value)}
+                                  className="bg-slate-50 border-slate-200 text-xs rounded-xl focus:border-brandBlue text-slate-800" 
+                                  placeholder="Profession / Job Title" 
+                                  required 
+                                />
+                              </div>
                             </div>
-                            <div className="space-y-1.5">
-                              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Designation / Profession</label>
-                              <Input 
-                                type="text" 
-                                value={profileDesignation}
-                                onChange={(e) => setProfileDesignation(e.target.value)}
-                                className="bg-slate-50 border-slate-200 text-xs rounded-xl focus:border-brandBlue text-slate-800 focus:ring-1 focus:ring-brandBlue outline-none placeholder:text-slate-400" 
-                                placeholder="Profession / Job Title" 
-                                required 
-                              />
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] font-bold text-slate-555 uppercase tracking-wider">Organization / University</label>
+                                <Input 
+                                  type="text" 
+                                  value={profileOrganization}
+                                  onChange={(e) => setProfileOrganization(e.target.value)}
+                                  className="bg-slate-50 border-slate-200 text-xs rounded-xl focus:border-brandBlue text-slate-800" 
+                                  placeholder="Institution Name" 
+                                  required 
+                                />
+                              </div>
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] font-bold text-slate-555 uppercase tracking-wider">Biography / Professional Profile</label>
+                                <Input 
+                                  type="text" 
+                                  value={profileBio}
+                                  onChange={(e) => setProfileBio(e.target.value)}
+                                  className="bg-slate-50 border-slate-200 text-xs rounded-xl focus:border-brandBlue text-slate-800" 
+                                  placeholder="Brief summary of achievements" 
+                                />
+                              </div>
                             </div>
                           </div>
 
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-1.5">
-                              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Organization / University</label>
-                              <Input 
-                                type="text" 
-                                value={profileOrganization}
-                                onChange={(e) => setProfileOrganization(e.target.value)}
-                                className="bg-slate-50 border-slate-200 text-xs rounded-xl focus:border-brandBlue text-slate-800 focus:ring-1 focus:ring-brandBlue outline-none placeholder:text-slate-400" 
-                                placeholder="Organization Name" 
-                                required 
-                              />
+                          {/* Section 2: Contact & Travel Info */}
+                          <div className="space-y-4 pt-2">
+                            <h3 className="text-xs font-bold text-brandBlue uppercase tracking-wider border-b border-slate-100 pb-1.5 flex items-center gap-1.5">
+                              <MapPin className="size-4 shrink-0" />
+                              <span>2. Address & Travel Details</span>
+                            </h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] font-bold text-slate-555 uppercase tracking-wider">Passport Number (For Visa Support)</label>
+                                <Input 
+                                  type="text" 
+                                  value={profilePassport}
+                                  onChange={(e) => setProfilePassport(e.target.value)}
+                                  className="bg-slate-50 border-slate-200 text-xs rounded-xl focus:border-brandBlue text-slate-800" 
+                                  placeholder="Enter Passport Number" 
+                                />
+                              </div>
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] font-bold text-slate-555 uppercase tracking-wider">Contact Number (WhatsApp Enabled)</label>
+                                <Input 
+                                  type="text" 
+                                  value={profilePhone}
+                                  onChange={(e) => setProfilePhone(e.target.value)}
+                                  className="bg-slate-50 border-slate-200 text-xs rounded-xl focus:border-brandBlue text-slate-800" 
+                                  placeholder="e.g. +91 9876543210" 
+                                  required 
+                                />
+                              </div>
                             </div>
-                            <div className="space-y-1.5">
-                              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Phone number</label>
-                              <Input 
-                                type="text" 
-                                value={profilePhone}
-                                onChange={(e) => setProfilePhone(e.target.value)}
-                                className="bg-slate-50 border-slate-200 text-xs rounded-xl focus:border-brandBlue text-slate-800 focus:ring-1 focus:ring-brandBlue outline-none placeholder:text-slate-400" 
-                                placeholder="Phone number" 
-                              />
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] font-bold text-slate-555 uppercase tracking-wider">Full Residential / Postal Address</label>
+                                <Input 
+                                  type="text" 
+                                  value={profileAddress}
+                                  onChange={(e) => setProfileAddress(e.target.value)}
+                                  className="bg-slate-50 border-slate-200 text-xs rounded-xl focus:border-brandBlue text-slate-800" 
+                                  placeholder="Street, Landmark, City, State" 
+                                  required 
+                                />
+                              </div>
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] font-bold text-slate-555 uppercase tracking-wider">Country of Residence</label>
+                                <Input 
+                                  type="text" 
+                                  value={profileCountry}
+                                  onChange={(e) => setProfileCountry(e.target.value)}
+                                  className="bg-slate-50 border-slate-200 text-xs rounded-xl focus:border-brandBlue text-slate-800" 
+                                  placeholder="Country" 
+                                  required 
+                                />
+                              </div>
                             </div>
                           </div>
 
-                          <div className="space-y-1.5">
-                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Country of Residence</label>
-                            <Input 
-                              type="text" 
-                              value={profileCountry}
-                              onChange={(e) => setProfileCountry(e.target.value)}
-                              className="bg-slate-50 border-slate-200 text-xs rounded-xl focus:border-brandBlue text-slate-800 focus:ring-1 focus:ring-brandBlue outline-none placeholder:text-slate-400" 
-                              placeholder="Country Name" 
-                              required 
-                            />
+                          {/* Section 3: Event Preferences */}
+                          <div className="space-y-4 pt-2">
+                            <h3 className="text-xs font-bold text-brandBlue uppercase tracking-wider border-b border-slate-100 pb-1.5 flex items-center gap-1.5">
+                              <FileText className="size-4 shrink-0" />
+                              <span>3. Award Nomination Preferences</span>
+                            </h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] font-bold text-slate-555 uppercase tracking-wider">Nominated Award Category</label>
+                                <select 
+                                  value={profileCategory}
+                                  onChange={(e) => setProfileCategory(e.target.value)}
+                                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-brandBlue text-slate-800"
+                                >
+                                  <option value="ambedkar-awards">Dr. B. R. Ambedkar International Awards</option>
+                                  <option value="sociocultural-leadership">International Socio-Cultural Leadership Award</option>
+                                  <option value="young-leader-academic">Young Leader Academic Excellence Award</option>
+                                  <option value="constitutional-rights">Constitutional Rights Advocacy Prize</option>
+                                </select>
+                              </div>
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] font-bold text-slate-555 uppercase tracking-wider">Special Requests / Dietary Requirements</label>
+                                <Input 
+                                  type="text" 
+                                  value={profileDietary}
+                                  onChange={(e) => setProfileDietary(e.target.value)}
+                                  className="bg-slate-50 border-slate-200 text-xs rounded-xl focus:border-brandBlue text-slate-800" 
+                                  placeholder="Dietary requests (e.g. Vegetarian, Halal) or accessibility requests" 
+                                />
+                              </div>
+                            </div>
                           </div>
 
-                          <div className="space-y-1.5">
-                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Short Biography Statement</label>
-                            <textarea 
-                              value={profileBio}
-                              onChange={(e) => setProfileBio(e.target.value)}
-                              rows={3}
-                              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-brandBlue focus:ring-1 focus:ring-brandBlue text-slate-800 placeholder:text-slate-400"
-                              placeholder="Tell the registry about your background, publications, or research fields..."
-                            />
-                          </div>
-
-                          <Button type="submit" className="w-full bg-brandBlue hover:bg-brandBlue/90 text-white font-bold h-11 rounded-xl text-xs uppercase tracking-wider">
-                            Save Profile Settings
+                          <Button type="submit" className="w-full bg-brandBlue hover:bg-brandBlue/90 text-white font-bold h-11 rounded-xl text-xs uppercase tracking-wider shadow-md">
+                            Save Registry Details
                           </Button>
                         </form>
                       </CardContent>
                     </Card>
+                  </div>
+                )}
+
+                {/* ═════════════════════ TAB: DOCUMENT UPLOADS ═════════════════════ */}
+                {activeTab === 'uploads' && (
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between border-b border-slate-200 pb-4">
+                      <div>
+                        <h2 className="text-2xl font-black font-display text-slate-900 uppercase tracking-tight">Document Upload Center</h2>
+                        <p className="text-xs text-slate-550 mt-0.5 font-medium">Securely upload photos, passport scans, and supporting documents to Firebase Storage.</p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      
+                      {/* Card 1: Professional Headshot */}
+                      <Card className="border-slate-200 bg-white p-5 rounded-2xl flex flex-col justify-between shadow-sm">
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">1. Professional Headshot</span>
+                            <Camera className="size-4 text-brandBlue" />
+                          </div>
+                          
+                          {memberData?.headshotUrl ? (
+                            <div className="flex justify-center py-2">
+                              <img src={memberData.headshotUrl} className="w-24 h-24 rounded-full border border-slate-200 object-cover shadow-sm bg-slate-50" alt="Headshot" />
+                            </div>
+                          ) : (
+                            <div className="h-24 w-full bg-slate-50 border border-dashed border-slate-200 rounded-xl flex items-center justify-center text-[10px] text-slate-400">
+                              No image uploaded
+                            </div>
+                          )}
+
+                          <p className="text-[10px] text-slate-500 leading-normal text-center">Upload a high-quality passport size headshot for the booklet.</p>
+                        </div>
+                        
+                        <div className="pt-4 border-t border-slate-100 mt-4 space-y-3">
+                          {headshotUploading ? (
+                            <div className="space-y-1">
+                              <div className="flex justify-between text-[9px] font-mono text-slate-500">
+                                <span>Uploading...</span>
+                                <span>{headshotProgress}%</span>
+                              </div>
+                              <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                                <div className="bg-brandBlue h-full rounded-full transition-all" style={{ width: `${headshotProgress}%` }}></div>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="relative w-full">
+                              <input 
+                                type="file" 
+                                accept="image/*" 
+                                onChange={(e) => {
+                                  if (e.target.files && e.target.files[0]) {
+                                    uploadFileToStorage(e.target.files[0], 'headshot');
+                                  }
+                                }}
+                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
+                              />
+                              <Button className="w-full bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold py-2 rounded-xl flex items-center justify-center gap-1.5 border border-slate-200">
+                                <Upload className="size-3.5" />
+                                <span>Choose Image</span>
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </Card>
+
+                      {/* Card 2: Passport Scan Copy */}
+                      <Card className="border-slate-200 bg-white p-5 rounded-2xl flex flex-col justify-between shadow-sm">
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">2. Passport Scan Copy</span>
+                            <FileText className="size-4 text-brandBlue" />
+                          </div>
+
+                          {memberData?.passportScanUrl ? (
+                            <div className="h-24 w-full bg-emerald-50/50 border border-emerald-100 rounded-xl flex flex-col items-center justify-center p-3 text-center space-y-1">
+                              <FileCheck className="size-6 text-emerald-500" />
+                              <span className="text-[9px] font-bold text-emerald-700 uppercase">Passport Copy Uploaded</span>
+                              <a href={memberData.passportScanUrl} target="_blank" className="text-[9px] font-extrabold text-brandBlue hover:underline uppercase tracking-wide pt-1">
+                                Download Scanned Copy
+                              </a>
+                            </div>
+                          ) : (
+                            <div className="h-24 w-full bg-slate-50 border border-dashed border-slate-200 rounded-xl flex items-center justify-center text-[10px] text-slate-400">
+                              Awaiting passport PDF or image
+                            </div>
+                          )}
+
+                          <p className="text-[10px] text-slate-500 leading-normal text-center">Required for visa invitation letters and international checks.</p>
+                        </div>
+
+                        <div className="pt-4 border-t border-slate-100 mt-4 space-y-3">
+                          {passportUploading ? (
+                            <div className="space-y-1">
+                              <div className="flex justify-between text-[9px] font-mono text-slate-500">
+                                <span>Uploading...</span>
+                                <span>{passportProgress}%</span>
+                              </div>
+                              <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                                <div className="bg-brandBlue h-full rounded-full transition-all" style={{ width: `${passportProgress}%` }}></div>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="relative w-full">
+                              <input 
+                                type="file" 
+                                accept="application/pdf,image/*" 
+                                onChange={(e) => {
+                                  if (e.target.files && e.target.files[0]) {
+                                    uploadFileToStorage(e.target.files[0], 'passportScan');
+                                  }
+                                }}
+                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
+                              />
+                              <Button className="w-full bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold py-2 rounded-xl flex items-center justify-center gap-1.5 border border-slate-200">
+                                <Upload className="size-3.5" />
+                                <span>Choose Document</span>
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </Card>
+
+                      {/* Card 3: Supporting Evidence */}
+                      <Card className="border-slate-200 bg-white p-5 rounded-2xl flex flex-col justify-between shadow-sm">
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">3. Supporting Evidence</span>
+                            <FileText className="size-4 text-brandBlue" />
+                          </div>
+
+                          {memberData?.evidenceUrl ? (
+                            <div className="h-24 w-full bg-emerald-50/50 border border-emerald-100 rounded-xl flex flex-col items-center justify-center p-3 text-center space-y-1">
+                              <FileCheck className="size-6 text-emerald-500" />
+                              <span className="text-[9px] font-bold text-emerald-700 uppercase">Supporting Files Loaded</span>
+                              <a href={memberData.evidenceUrl} target="_blank" className="text-[9px] font-extrabold text-brandBlue hover:underline uppercase tracking-wide pt-1">
+                                Download Submitted Evidence
+                              </a>
+                            </div>
+                          ) : (
+                            <div className="h-24 w-full bg-slate-50 border border-dashed border-slate-200 rounded-xl flex items-center justify-center text-[10px] text-slate-400">
+                              Upload proof files
+                            </div>
+                          )}
+
+                          <p className="text-[10px] text-slate-500 leading-normal text-center">Evidence, files, essays, or references for the award nomination.</p>
+                        </div>
+
+                        <div className="pt-4 border-t border-slate-100 mt-4 space-y-3">
+                          {evidenceUploading ? (
+                            <div className="space-y-1">
+                              <div className="flex justify-between text-[9px] font-mono text-slate-500">
+                                <span>Uploading...</span>
+                                <span>{evidenceProgress}%</span>
+                              </div>
+                              <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                                <div className="bg-brandBlue h-full rounded-full transition-all" style={{ width: `${evidenceProgress}%` }}></div>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="relative w-full">
+                              <input 
+                                type="file" 
+                                accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" 
+                                onChange={(e) => {
+                                  if (e.target.files && e.target.files[0]) {
+                                    uploadFileToStorage(e.target.files[0], 'evidence');
+                                  }
+                                }}
+                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
+                              />
+                              <Button className="w-full bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold py-2 rounded-xl flex items-center justify-center gap-1.5 border border-slate-200">
+                                <Upload className="size-3.5" />
+                                <span>Choose Proof Files</span>
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </Card>
+
+                    </div>
+                  </div>
+                )}
+
+                {/* ═════════════════════ TAB: REGISTRATION PAYMENT PORTAL ═════════════════════ */}
+                {activeTab === 'payment' && (
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between border-b border-slate-200 pb-4">
+                      <div>
+                        <h2 className="text-2xl font-black font-display text-slate-900 uppercase tracking-tight">Registration Payment</h2>
+                        <p className="text-xs text-slate-500 mt-0.5 font-medium">Verify registration fees and trigger payments securely using Razorpay gateway.</p>
+                      </div>
+                    </div>
+
+                    <div className="max-w-xl mx-auto">
+                      {memberData?.paymentStatus === 'Paid' ? (
+                        <Card className="border-emerald-200 bg-emerald-50/20 p-6 rounded-2xl shadow-sm text-center space-y-4">
+                          <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center mx-auto text-emerald-600">
+                            <CheckCircle className="size-6" />
+                          </div>
+                          <div className="space-y-1">
+                            <h3 className="text-lg font-black font-display text-emerald-800 uppercase tracking-tight">Payment Verified</h3>
+                            <p className="text-xs text-emerald-600">Your registration fee has been successfully verified on the server.</p>
+                          </div>
+                          <div className="border-t border-emerald-100/50 pt-4 text-left grid grid-cols-2 gap-y-2 text-[10px] font-mono text-slate-600">
+                            <span className="font-bold text-slate-550 uppercase">Transaction ID:</span>
+                            <span className="text-right text-slate-800">{memberData.paymentId || "N/A"}</span>
+                            <span className="font-bold text-slate-550 uppercase">Order ID:</span>
+                            <span className="text-right text-slate-800">{memberData.paymentOrderId || "N/A"}</span>
+                            <span className="font-bold text-slate-550 uppercase">Status:</span>
+                            <span className="text-right text-emerald-600 font-bold uppercase">PAID & VERIFIED</span>
+                          </div>
+                        </Card>
+                      ) : (
+                        <Card className="border-slate-200 bg-white p-6 rounded-2xl shadow-sm space-y-6">
+                          <div className="text-center space-y-2">
+                            <div className="w-12 h-12 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center mx-auto text-brandBlue shadow-sm">
+                              <CreditCard className="size-5" />
+                            </div>
+                            <h3 className="text-base font-bold uppercase tracking-wider text-slate-800 pt-1">Ambedkar Awards Delegation Fee</h3>
+                            <p className="text-xs text-slate-400">Secure delegation fee payment process for nominees.</p>
+                          </div>
+
+                          <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 flex justify-between items-center">
+                            <div className="space-y-0.5">
+                              <span className="text-[9px] font-mono text-slate-400 uppercase tracking-wider">Delegation Fee</span>
+                              <p className="text-xs font-bold text-slate-700">Dr. Ambedkar International Awards 2026</p>
+                            </div>
+                            <span className="text-xl font-black text-brandBlue font-mono">₹5,000</span>
+                          </div>
+
+                          <div className="space-y-4">
+                            <Button 
+                              onClick={handlePayment} 
+                              className="w-full bg-brandBlue hover:bg-brandBlue/90 text-white font-bold h-12 rounded-xl text-xs uppercase tracking-wider shadow-md flex items-center justify-center gap-2"
+                            >
+                              <CreditCard className="size-4" />
+                              <span>Pay Delegation Fee via Razorpay</span>
+                            </Button>
+                            
+                            <p className="text-[9px] text-slate-400 leading-relaxed text-center">
+                              * Payments are encrypted and securely verified using digital signature handlers on the server side before updating active user flags.
+                            </p>
+                          </div>
+                        </Card>
+                      )}
+                    </div>
                   </div>
                 )}
 
@@ -618,7 +1160,7 @@ export default function MemberClientPage() {
                     <div className="flex items-center justify-between border-b border-slate-200 pb-4">
                       <div>
                         <h2 className="text-2xl font-black font-display text-slate-900 uppercase tracking-tight">SOAS Conference Submissions</h2>
-                        <p className="text-xs text-slate-550 mt-0.5 font-medium">Submit abstracts and manage co-authors for the upcoming London Summit.</p>
+                        <p className="text-xs text-slate-555 mt-0.5 font-medium">Submit abstracts and manage co-authors for the upcoming London Summit.</p>
                       </div>
                       
                       {!showSubForm && (
@@ -647,7 +1189,7 @@ export default function MemberClientPage() {
                                 type="text" 
                                 value={subTitle}
                                 onChange={(e) => setSubTitle(e.target.value)}
-                                className="bg-slate-50 border-slate-200 text-xs rounded-xl focus:border-brandBlue text-slate-800 focus:ring-1 focus:ring-brandBlue placeholder:text-slate-400" 
+                                className="bg-slate-55 border-slate-200 text-xs rounded-xl focus:border-brandBlue text-slate-800 focus:ring-1 focus:ring-brandBlue placeholder:text-slate-400" 
                                 placeholder="Paper Title" 
                                 required 
                               />
@@ -660,7 +1202,7 @@ export default function MemberClientPage() {
                                   type="text" 
                                   value={subAuthors}
                                   onChange={(e) => setSubAuthors(e.target.value)}
-                                  className="bg-slate-50 border-slate-200 text-xs rounded-xl focus:border-brandBlue text-slate-800 focus:ring-1 focus:ring-brandBlue placeholder:text-slate-400" 
+                                  className="bg-slate-55 border-slate-200 text-xs rounded-xl focus:border-brandBlue text-slate-800 focus:ring-1 focus:ring-brandBlue placeholder:text-slate-400" 
                                   placeholder="e.g. Dr. John Smith, Prof. Jane Doe" 
                                 />
                               </div>
@@ -669,7 +1211,7 @@ export default function MemberClientPage() {
                                 <select 
                                   value={subTheme}
                                   onChange={(e) => setSubTheme(e.target.value)}
-                                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-brandBlue text-slate-800"
+                                  className="w-full bg-slate-55 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-brandBlue text-slate-800"
                                 >
                                   <option value="equality">Reimagining Equality and Justice</option>
                                   <option value="empowerment">Diaspora Empowerment & Global Alliances</option>
@@ -743,7 +1285,7 @@ export default function MemberClientPage() {
                                     </div>
                                   </TableCell>
                                   <TableCell className="capitalize text-slate-600 text-xs py-4">{sub.theme}</TableCell>
-                                  <TableCell className="text-slate-500 font-mono text-[10px] py-4">{sub.fileName || "AbstractDraft.docx"}</TableCell>
+                                  <TableCell className="text-slate-555 font-mono text-[10px] py-4">{sub.fileName || "AbstractDraft.docx"}</TableCell>
                                   <TableCell className="py-4">
                                     {sub.status === 'pending' ? (
                                       <Badge variant="outline" className="text-amber-600 border-amber-500/20 bg-amber-500/5 text-[8px] font-bold tracking-widest uppercase">
