@@ -157,7 +157,7 @@ export default function HomeClientPage() {
                         <img 
                             src={user.photoURL || "https://placehold.co/100x100/0a1e4b/ffffff?text=User"} 
                             alt="Profile" 
-                            className="w-8 h-8 rounded-full object-cover shrink-0" 
+                            className="w-11 h-11 rounded-full object-cover shrink-0" 
                         />
                         <i className={`fa-solid fa-chevron-down text-[8px] text-slate-500 mr-2 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} id="nav-status-chevron"></i>
                     </button>
@@ -272,7 +272,7 @@ export default function HomeClientPage() {
                         <img 
                             src={user.photoURL || "https://placehold.co/100x100/0a1e4b/ffffff?text=User"} 
                             alt="Profile" 
-                            className="w-8 h-8 rounded-full object-cover shrink-0 border border-slate-200" 
+                            className="w-11 h-11 rounded-full object-cover shrink-0 border border-slate-200" 
                         />
                         <div className="overflow-hidden flex-1">
                             <p id="mobile-display-name" className="text-xs font-bold text-slate-900 truncate">{user.displayName || 'User'}</p>
