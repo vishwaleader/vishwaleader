@@ -160,10 +160,10 @@ export default function AdminClientPage() {
       limit(25)
     );
     const unsubActivity = onSnapshot(actQ, (snapshot) => {
-      const events = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      const events: any[] = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
       // Only toast on subsequent updates, not initial load
       if (!isFirstActivityLoad && events.length > 0) {
-        const latest = events[0];
+        const latest: any = events[0];
         const msg = latest.type === 'profile_updated'
           ? `✏️ ${latest.userName || 'A member'} updated their profile`
           : latest.type === 'user_joined'
