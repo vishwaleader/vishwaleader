@@ -58,26 +58,29 @@ export default function BusinessSummitPage() {
         </div>
       </header>
 
-      <main className="pt-32 pb-16 md:pt-40 md:pb-20 px-6 max-w-7xl mx-auto">
+      <main className="pb-16 md:pb-20">
         
-        {/* Header Section */}
-        <section className="text-center mb-24 max-w-3xl mx-auto">
-          <h1 className="text-4xl md:text-5xl font-semibold text-slate-900 tracking-tight mb-4">
-            International Business Summit
-          </h1>
-          <p className="text-slate-500 text-base md:text-lg mb-10">
-            On the Eve of the Vishwa Leader Dr. B. R. Ambedkar International Awards 2026
-          </p>
-          <div className="bg-slate-50 border border-slate-200 rounded-xl p-8 shadow-sm">
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Summit Theme</p>
-            <p className="text-lg md:text-xl font-serif text-slate-900 italic">
-              "Business as a Driver of Social Change: Realizing Dr. Ambedkar's Vision in Today's Economy"
+        {/* Hero Section */}
+        <div className="bg-brandBlue relative overflow-hidden pt-32 pb-20 md:pt-40 md:pb-24 mb-16">
+          <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] mix-blend-overlay"></div>
+          <div className="max-w-4xl mx-auto px-6 text-center relative z-10">
+            <h1 className="text-4xl md:text-5xl font-semibold text-white tracking-tight mb-4">
+              International Business Summit
+            </h1>
+            <p className="text-blue-100 text-base md:text-lg mb-10 max-w-2xl mx-auto">
+              On the Eve of the Vishwa Leader Dr. B. R. Ambedkar International Awards 2026
             </p>
+            <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-8 shadow-sm max-w-3xl mx-auto">
+              <p className="text-xs font-bold text-amber-400 uppercase tracking-widest mb-3">Summit Theme</p>
+              <p className="text-lg md:text-xl font-serif text-white italic">
+                "Business as a Driver of Social Change: Realizing Dr. Ambedkar's Vision in Today's Economy"
+              </p>
+            </div>
           </div>
-        </section>
+        </div>
 
         {/* Content Grids */}
-        <div className="grid md:grid-cols-3 gap-8 items-start">
+        <div className="grid md:grid-cols-3 gap-8 items-start px-6 max-w-7xl mx-auto">
           
           {/* Main Content (Left) */}
           <div className="md:col-span-2 space-y-8">

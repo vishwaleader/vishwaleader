@@ -58,24 +58,27 @@ export default function AwardsPage() {
         </div>
       </header>
 
-      <main className="pt-32 pb-16 md:pt-40 md:pb-20 px-6 max-w-7xl mx-auto">
+      <main className="pb-16 md:pb-20">
         
-        {/* Header Section */}
-        <section className="text-center mb-24 max-w-3xl mx-auto">
-          <div className="inline-flex items-center justify-center gap-2 px-4 py-1.5 rounded-full bg-slate-100 text-slate-600 text-xs font-bold uppercase tracking-widest border border-slate-200 mb-6">
-            <Trophy className="w-4 h-4 text-slate-900" />
-            Applications Now Open
+        {/* Hero Section */}
+        <div className="bg-brandBlue relative overflow-hidden pt-32 pb-20 md:pt-40 md:pb-24 mb-16">
+          <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] mix-blend-overlay"></div>
+          <div className="max-w-4xl mx-auto px-6 text-center relative z-10">
+            <div className="inline-flex items-center justify-center gap-2 px-4 py-1.5 rounded-full bg-white/10 text-white text-xs font-bold uppercase tracking-widest border border-white/20 mb-6 backdrop-blur-sm">
+              <Trophy className="w-4 h-4 text-amber-400" />
+              Applications Now Open
+            </div>
+            <h1 className="text-4xl md:text-5xl font-semibold text-white tracking-tight mb-4 leading-tight">
+              Vishwa Leader Dr. B. R. Ambedkar International Awards 2026
+            </h1>
+            <p className="text-blue-100 text-base md:text-lg max-w-2xl mx-auto">
+              Honoring individuals and organizations making exceptional contributions to social justice, equality, and human rights.
+            </p>
           </div>
-          <h1 className="text-4xl md:text-5xl font-semibold text-slate-900 tracking-tight mb-4 leading-tight">
-            Vishwa Leader Dr. B. R. Ambedkar International Awards 2026
-          </h1>
-          <p className="text-slate-500 text-base md:text-lg">
-            Honoring individuals and organizations making exceptional contributions to social justice, equality, and human rights.
-          </p>
-        </section>
+        </div>
 
         {/* Content Grids */}
-        <div className="grid md:grid-cols-3 gap-8 items-start">
+        <div className="grid md:grid-cols-3 gap-8 items-start px-6 max-w-7xl mx-auto">
           
           {/* Main Content (Left) */}
           <div className="md:col-span-2 space-y-8">
