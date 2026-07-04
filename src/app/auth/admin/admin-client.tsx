@@ -722,14 +722,13 @@ export default function AdminClientPage() {
                   {/* Actual Live Google Sheet Embed */}
                   <div className="flex-1 min-h-[450px] relative bg-slate-100 border-b border-slate-200">
                     <iframe
-                      src="https://docs.google.com/spreadsheets/d/1pgCCDMM3UK6Shi4tmoa6k2rzmYhlhhNqly7YVB4T98Y/edit?rm=minimal"
+                      src="https://docs.google.com/spreadsheets/d/1pgCCDMM3UK6Shi4tmoa6k2rzmYhlhhNqly7YVB4T98Y/preview"
                       className="w-full h-[450px] border-none"
-                      allow="clipboard-write"
                       title="Google Sheet Database"
                     />
                     <div className="absolute top-2 right-2">
                       <a 
-                        href="https://docs.google.com/spreadsheets/d/1pgCCDMM3UK6Shi4tmoa6k2rzmYhlhhNqly7YVB4T98Y/edit?usp=sharing" 
+                        href="https://docs.google.com/spreadsheets/d/1pgCCDMM3UK6Shi4tmoa6k2rzmYhlhhNqly7YVB4T98Y/view" 
                         target="_blank" 
                         rel="noopener noreferrer"
                         className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[9px] uppercase tracking-wider px-2 py-1 rounded shadow flex items-center gap-1 transition-all hover:scale-[1.02]"
