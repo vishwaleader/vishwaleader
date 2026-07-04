@@ -25,10 +25,11 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/
 // Firebase imports
 import { auth, db } from "@/lib/firebase";
 import { onAuthStateChanged, signOut, User } from "firebase/auth";
-import { collection, onSnapshot, query, doc, updateDoc } from "firebase/firestore";
+import { collection, onSnapshot, query, doc, updateDoc, orderBy, limit } from "firebase/firestore";
 import { loginAsAdmin, logoutAdmin, checkAdminSession } from "@/app/actions/adminAuth";
 import * as XLSX from "xlsx";
 import { exportToGoogleSheets } from "@/app/actions/googleSheets";
+import { serverTimestamp } from "firebase/firestore";
 
 const chartData = [
   { month: "January", visitors: 186, inquiries: 80 },
@@ -50,6 +51,29 @@ const chartConfig = {
   },
 }
 
+// ─── Admin Toast System ────────────────────────────────────────────────────────
+function AdminToast({ toasts }: { toasts: { id: number; message: string; type: 'info' | 'success' | 'activity' }[] }) {
+  return (
+    <div className="fixed top-4 right-4 z-[99999] flex flex-col gap-2 pointer-events-none">
+      {toasts.map(t => (
+        <div
+          key={t.id}
+          className={`flex items-start gap-3 px-4 py-3 rounded-xl shadow-2xl border backdrop-blur-sm min-w-[300px] max-w-[380px] animate-slide-in-right pointer-events-auto ${
+            t.type === 'activity' ? 'bg-emerald-950/95 border-emerald-500/30 text-emerald-50' :
+            t.type === 'success' ? 'bg-blue-950/95 border-blue-500/30 text-blue-50' :
+            'bg-slate-900/95 border-slate-600/30 text-slate-50'
+          }`}
+        >
+          <div className={`mt-0.5 w-2 h-2 rounded-full flex-shrink-0 animate-pulse ${
+            t.type === 'activity' ? 'bg-emerald-400' : t.type === 'success' ? 'bg-blue-400' : 'bg-slate-400'
+          }`} />
+          <p className="text-xs font-medium leading-relaxed">{t.message}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function AdminClientPage() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -62,6 +86,21 @@ export default function AdminClientPage() {
   // Firestore Data State
   const [inquiries, setInquiries] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
+  const [activityFeed, setActivityFeed] = useState<any[]>([]);
+
+  // Admin Toast State
+  const [adminToasts, setAdminToasts] = useState<{ id: number; message: string; type: 'info' | 'success' | 'activity' }[]>([]);
+  const toastCounterRef = React.useRef(0);
+
+  const showAdminToast = (message: string, type: 'info' | 'success' | 'activity' = 'info') => {
+    const id = ++toastCounterRef.current;
+    setAdminToasts(prev => [...prev, { id, message, type }]);
+    setTimeout(() => setAdminToasts(prev => prev.filter(t => t.id !== id)), 5000);
+  };
+
+  // Track previous user count to detect new registrations
+  const prevUserCountRef = React.useRef<number | null>(null);
+  const prevUserIdsRef = React.useRef<Set<string>>(new Set());
 
   // Editing User States
   const [editingUser, setEditingUser] = useState<any>(null);
@@ -85,89 +124,66 @@ export default function AdminClientPage() {
   useEffect(() => {
     if (!user) return;
     
-    // Listen to users
+    // ── Real-time: Users collection ───────────────────────────────────────────
     const usersQ = query(collection(db, "users"));
     const unsubUsers = onSnapshot(usersQ, (snapshot) => {
-      setUsers(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      const updatedUsers = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      
+      // Detect brand new users and toast the admin
+      const currentIds = new Set(updatedUsers.map((u: any) => u.id));
+      if (prevUserIdsRef.current.size > 0) {
+        updatedUsers.forEach((u: any) => {
+          if (!prevUserIdsRef.current.has(u.id)) {
+            showAdminToast(`🟢 New member registered: ${u.name || u.email || 'Unknown'}`, 'activity');
+          }
+        });
+      }
+      prevUserIdsRef.current = currentIds;
+      setUsers(updatedUsers);
     }, (error) => {
-      console.warn("Firestore offline error (safely ignored):", error.message);
-      setUsers([
-        {
-          id: "test-uid-123",
-          name: "Yash Ramteke",
-          email: "iamyash.creator@gmail.com",
-          phone: "+91 98765 43210",
-          designation: "Academic Delegate",
-          organization: "SOAS London University",
-          sector: "Academic/Research",
-          country: "United Kingdom",
-          gender: "Male",
-          age: "34",
-          nationality: "British",
-          city: "London",
-          delegateType: "conference",
-          nominationCategory: "ambedkar-awards",
-          packageTour: "Tour Package A",
-          visaSupport: true,
-          accommodationSupport: true,
-          paymentStatus: "Paid",
-          role: "member",
-          joinedAt: "2026-07-04T08:00:00Z"
-        },
-        {
-          id: "test-uid-456",
-          name: "Yash ramteke",
-          email: "yashramteke55555@gmail.com",
-          phone: "+1 234 567 8900",
-          designation: "Corporate Participant",
-          organization: "TechMedia Corp",
-          sector: "Corporate/Business",
-          country: "United States",
-          gender: "Female",
-          age: "28",
-          nationality: "American",
-          city: "New York",
-          delegateType: "business",
-          nominationCategory: "business-summit",
-          packageTour: "None",
-          visaSupport: false,
-          accommodationSupport: false,
-          paymentStatus: "Unpaid",
-          role: "member",
-          joinedAt: "2026-07-03T12:00:00Z"
-        }
-      ]);
+      console.warn("Firestore users listener error:", error.message);
     });
 
-    // Listen to inquiries
+    // ── Real-time: Inquiries collection ──────────────────────────────────────
     const inqQ = query(collection(db, "inquiries"));
     const unsubInq = onSnapshot(inqQ, (snapshot) => {
-      setInquiries(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      setInquiries(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
     }, (error) => {
-      console.warn("Firestore offline error (safely ignored):", error.message);
-      setInquiries([
-        {
-          id: "inq-1",
-          name: "John Doe",
-          email: "johndoe@example.com",
-          category: "General Information Inquiry",
-          message: "Could you please provide details about the venue of the SOAS 2026 Conference?",
-          createdAt: "2026-07-04T05:00:00Z"
-        },
-        {
-          id: "inq-2",
-          name: "Jane Smith",
-          email: "janesmith@example.com",
-          category: "Dr. Ambedkar Awards - Attendee Registration",
-          message: "I would like to nominate our director for the Dr. Ambedkar International Award.",
-          createdAt: "2026-07-04T06:00:00Z"
-        }
-      ]);
+      console.warn("Firestore inquiries listener error:", error.message);
+    });
+
+    // ── Real-time: Activity Feed ──────────────────────────────────────────────
+    let isFirstActivityLoad = true;
+    const actQ = query(
+      collection(db, "adminActivity"),
+      orderBy("timestamp", "desc"),
+      limit(25)
+    );
+    const unsubActivity = onSnapshot(actQ, (snapshot) => {
+      const events = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      // Only toast on subsequent updates, not initial load
+      if (!isFirstActivityLoad && events.length > 0) {
+        const latest = events[0];
+        const msg = latest.type === 'profile_updated'
+          ? `✏️ ${latest.userName || 'A member'} updated their profile`
+          : latest.type === 'user_joined'
+          ? `🎉 ${latest.userName || 'Someone'} just joined as a member`
+          : latest.type === 'payment_made'
+          ? `💳 ${latest.userName || 'A member'} completed payment`
+          : `⚡ Activity: ${latest.type}`;
+        showAdminToast(msg, 'activity');
+      }
+      isFirstActivityLoad = false;
+      setActivityFeed(events);
+    }, (error) => {
+      // adminActivity collection may not exist yet — silently ignore
+      console.warn("Firestore activity listener (non-fatal):", error.message);
     });
 
     return () => {
       unsubUsers();
       unsubInq();
+      unsubActivity();
     };
   }, [user]);
 
@@ -319,6 +335,8 @@ export default function AdminClientPage() {
   return (
     <>
       <Preloader loading={false} />
+      {/* Global Admin Toast */}
+      <AdminToast toasts={adminToasts} />
       <div className="animate-fade-in-slow w-full flex min-h-screen">
         <SidebarProvider>
           <Sidebar variant="inset" collapsible="icon" className="border-r border-border">
@@ -446,6 +464,11 @@ export default function AdminClientPage() {
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
+            {/* LIVE badge */}
+            <span className="ml-2 flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              Live
+            </span>
           </div>
           <div className="ml-auto flex items-center gap-4">
             <div className="relative">
@@ -562,28 +585,46 @@ export default function AdminClientPage() {
                 </Card>
                 <Card className="col-span-3">
                   <CardHeader>
-                    <CardTitle>Recent Users Activity</CardTitle>
+                    <CardTitle className="flex items-center gap-2">
+                      Live Activity Feed
+                      <span className="flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full">
+                        <span className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
+                        Real-time
+                      </span>
+                    </CardTitle>
                     <CardDescription>
-                      You have {totalUsers} registered members.
+                      Live member events — updates instantly
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-8">
-                      {users.slice(0, 5).map((u, i) => (
-                        <div key={i} className="flex items-center">
-                          <Avatar className="h-9 w-9">
-                            <AvatarImage src="/avatars/01.png" alt="Avatar" />
-                            <AvatarFallback>{u.name?.charAt(0) || 'U'}</AvatarFallback>
-                          </Avatar>
-                          <div className="ml-4 space-y-1">
-                            <p className="text-sm font-medium leading-none">{u.name || "Anonymous User"}</p>
-                            <p className="text-sm text-muted-foreground">{u.email}</p>
-                          </div>
+                    <div className="space-y-3 max-h-[260px] overflow-y-auto pr-1">
+                      {activityFeed.length === 0 && (
+                        <div className="text-center py-6">
+                          <div className="w-8 h-8 rounded-full border-2 border-slate-200 border-t-emerald-500 animate-spin mx-auto mb-3" />
+                          <p className="text-xs text-muted-foreground">Listening for live activity...</p>
                         </div>
-                      ))}
-                      {users.length === 0 && (
-                        <p className="text-sm text-muted-foreground">No recent user activity.</p>
                       )}
+                      {activityFeed.map((event: any, i) => {
+                        const icons: Record<string, string> = {
+                          user_joined: '🎉',
+                          profile_updated: '✏️',
+                          payment_made: '💳',
+                          file_uploaded: '📎',
+                        };
+                        const icon = icons[event.type] || '⚡';
+                        const ts = event.timestamp?.toDate ? event.timestamp.toDate() : new Date(event.timestamp || Date.now());
+                        const timeStr = ts.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                        return (
+                          <div key={event.id || i} className="flex items-start gap-3 p-2.5 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors">
+                            <div className="text-base flex-shrink-0 mt-0.5">{icon}</div>
+                            <div className="min-w-0 flex-1">
+                              <p className="text-xs font-semibold text-slate-800 truncate">{event.userName || 'Unknown member'}</p>
+                              <p className="text-[10px] text-slate-500 capitalize">{(event.type || '').replace(/_/g, ' ')}</p>
+                            </div>
+                            <span className="text-[9px] text-slate-400 font-mono flex-shrink-0 mt-0.5">{timeStr}</span>
+                          </div>
+                        );
+                      })}
                     </div>
                   </CardContent>
                 </Card>
@@ -660,29 +701,55 @@ export default function AdminClientPage() {
                     <CardDescription>Manage registered platform members</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-4">
-                      {users.map((u, i) => (
-                        <div key={i} className="flex items-center justify-between border-b pb-4 last:border-0">
-                          <div className="flex items-center">
-                            <Avatar className="h-9 w-9">
-                              <AvatarFallback>{u.name?.charAt(0) || 'U'}</AvatarFallback>
-                            </Avatar>
-                            <div className="ml-4 space-y-1">
-                              <p className="text-sm font-medium leading-none">{u.name || "Anonymous User"}</p>
-                              <p className="text-sm text-muted-foreground">{u.email}</p>
+                    <div className="space-y-3">
+                      {users.map((u: any, i) => {
+                        // Consider online if lastSeen within 10 minutes or isOnline flag set
+                        const isOnline = u.isOnline === true || (
+                          u.lastSeen?.toDate &&
+                          (Date.now() - u.lastSeen.toDate().getTime()) < 10 * 60 * 1000
+                        );
+                        return (
+                          <div key={i} className="flex items-center justify-between border-b pb-3 last:border-0">
+                            <div className="flex items-center gap-3">
+                              <div className="relative">
+                                <Avatar className="h-9 w-9">
+                                  <AvatarFallback>{u.name?.charAt(0) || 'U'}</AvatarFallback>
+                                </Avatar>
+                                {/* Online presence dot */}
+                                <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${
+                                  isOnline ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300'
+                                }`} title={isOnline ? 'Online now' : 'Offline'} />
+                              </div>
+                              <div className="space-y-0.5">
+                                <div className="flex items-center gap-2">
+                                  <p className="text-sm font-medium leading-none">{u.name || "Anonymous User"}</p>
+                                  {isOnline && (
+                                    <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-full uppercase tracking-wide">Online</span>
+                                  )}
+                                  {u.paymentStatus === 'Paid' && (
+                                    <span className="text-[9px] font-bold text-blue-600 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded-full uppercase tracking-wide">Paid</span>
+                                  )}
+                                </div>
+                                <p className="text-xs text-muted-foreground">{u.email}</p>
+                                {u.organization && <p className="text-[10px] text-slate-400">{u.organization} · {u.country}</p>}
+                              </div>
                             </div>
+                            <Button 
+                              onClick={() => setEditingUser(u)} 
+                              variant={editingUser?.id === u.id ? "default" : "outline"} 
+                              size="sm"
+                              className="text-xs"
+                            >
+                              View Details
+                            </Button>
                           </div>
-                          <Button 
-                            onClick={() => setEditingUser(u)} 
-                            variant={editingUser?.id === u.id ? "default" : "outline"} 
-                            size="sm"
-                          >
-                            Edit User
-                          </Button>
-                        </div>
-                      ))}
+                        );
+                      })}
                       {users.length === 0 && (
-                        <p className="text-sm text-muted-foreground">No users found.</p>
+                        <div className="text-center py-8">
+                          <div className="w-6 h-6 rounded-full border-2 border-slate-200 border-t-blue-500 animate-spin mx-auto mb-3" />
+                          <p className="text-sm text-muted-foreground">Waiting for members to register...</p>
+                        </div>
                       )}
                     </div>
                   </CardContent>
@@ -722,13 +789,14 @@ export default function AdminClientPage() {
                   {/* Actual Live Google Sheet Embed */}
                   <div className="flex-1 min-h-[450px] relative bg-slate-100 border-b border-slate-200">
                     <iframe
-                      src="https://docs.google.com/spreadsheets/d/1pgCCDMM3UK6Shi4tmoa6k2rzmYhlhhNqly7YVB4T98Y/preview"
+                      src="https://docs.google.com/spreadsheets/d/1pgCCDMM3UK6Shi4tmoa6k2rzmYhlhhNqly7YVB4T98Y/edit?rm=minimal"
                       className="w-full h-[450px] border-none"
+                      allow="clipboard-write"
                       title="Google Sheet Database"
                     />
                     <div className="absolute top-2 right-2">
                       <a 
-                        href="https://docs.google.com/spreadsheets/d/1pgCCDMM3UK6Shi4tmoa6k2rzmYhlhhNqly7YVB4T98Y/view" 
+                        href="https://docs.google.com/spreadsheets/d/1pgCCDMM3UK6Shi4tmoa6k2rzmYhlhhNqly7YVB4T98Y/edit?usp=sharing" 
                         target="_blank" 
                         rel="noopener noreferrer"
                         className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[9px] uppercase tracking-wider px-2 py-1 rounded shadow flex items-center gap-1 transition-all hover:scale-[1.02]"

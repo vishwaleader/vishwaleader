@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { auth, db, storage } from "@/lib/firebase";
 import { onAuthStateChanged, signOut, User, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
-import { doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs, addDoc, deleteDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs, addDoc, deleteDoc, serverTimestamp } from "firebase/firestore";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { createDynamicOrder, verifyDynamicPayment } from "@/app/actions/paymentActions";
 import Preloader from "@/components/Preloader";
@@ -224,7 +224,24 @@ export default function MemberClientPage() {
             };
             await setDoc(userRef, newMember);
             setMemberData(newMember);
+            // Log join activity for admin feed
+            try {
+              await addDoc(collection(db, 'adminActivity'), {
+                type: 'user_joined',
+                userId: currentUser.uid,
+                userName: newMember.name || currentUser.email,
+                userEmail: currentUser.email,
+                timestamp: serverTimestamp()
+              });
+            } catch (_) {}
           }
+          // Mark user as online with presence
+          try {
+            await updateDoc(doc(db, 'users', currentUser.uid), {
+              isOnline: true,
+              lastSeen: serverTimestamp()
+            });
+          } catch (_) {}
         } catch (e) {
           console.error("Error fetching firestore document:", e);
           // Set standard defaults so dashboard is NEVER blank
@@ -445,6 +462,17 @@ export default function MemberClientPage() {
           
           await updateDoc(userRef, { [updateField]: downloadURL });
           setMemberData((prev: any) => ({ ...prev, [updateField]: downloadURL }));
+          // Log file upload to admin activity feed
+          try {
+            await addDoc(collection(db, 'adminActivity'), {
+              type: 'file_uploaded',
+              userId: user.uid,
+              userName: memberData?.name || user.displayName || user.email,
+              userEmail: user.email,
+              fileType: type,
+              timestamp: serverTimestamp()
+            });
+          } catch (_) {}
           showToast("Document loaded and registered successfully!");
         } catch (e) {
           console.error("Error setting firestore link:", e);
@@ -497,6 +525,16 @@ export default function MemberClientPage() {
       };
       await updateDoc(userRef, updatedData);
       setMemberData((prev: any) => ({ ...prev, ...updatedData }));
+      // Log profile update to admin activity feed
+      try {
+        await addDoc(collection(db, 'adminActivity'), {
+          type: 'profile_updated',
+          userId: user.uid,
+          userName: profileName || user.displayName || user.email,
+          userEmail: user.email,
+          timestamp: serverTimestamp()
+        });
+      } catch (_) {}
       showToast("Delegate registration updated successfully!");
     } catch (err) {
       console.error("Error saving delegate form:", err);
@@ -517,6 +555,14 @@ export default function MemberClientPage() {
 
   // Sign out action
   const handleLogout = async () => {
+    if (user) {
+      try {
+        await updateDoc(doc(db, 'users', user.uid), {
+          isOnline: false,
+          lastSeen: serverTimestamp()
+        });
+      } catch (_) {}
+    }
     await signOut(auth);
     showToast("Signed out successfully.");
   };
