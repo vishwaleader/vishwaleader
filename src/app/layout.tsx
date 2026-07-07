@@ -22,6 +22,9 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "https://vishwaleader.com",
   },
+  verification: {
+    google: "q4N3KTI45z79rdxu0McdajvAh4hQG3v4IjnIhMMCYyE",
+  },
 };
 
 export default function RootLayout({
