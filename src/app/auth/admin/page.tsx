@@ -1,11 +1,9 @@
 import AdminClientPage from "./admin-client";
 import { Suspense } from "react";
-import { cookies } from "next/headers";
 
+export const dynamic = "force-dynamic";
 
-
-export default async function Page() {
-  await cookies();
+export default function Page() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
       <AdminClientPage />
