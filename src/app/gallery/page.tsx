@@ -187,17 +187,17 @@ export default function GalleryPage() {
             </button>
 
             {/* Main Landscape Fitted Widescreen Image */}
-            <div className="flex flex-col items-center justify-center w-full max-w-4xl max-h-full px-8 md:px-16">
-              <div className="relative aspect-video w-full max-w-2xl overflow-hidden rounded-2xl border border-slate-900 shadow-2xl bg-black">
+            <div className="flex flex-col items-center justify-center w-full max-w-4xl max-h-full px-6 md:px-16 min-h-0">
+              <div className="relative w-full aspect-video max-w-2xl overflow-hidden rounded-2xl border border-slate-900 shadow-2xl bg-black shrink-0 flex items-center justify-center">
                 <img 
                   id="lightbox-img" 
                   src={galleryItems[lightboxIndex].src} 
                   alt={galleryItems[lightboxIndex].title} 
-                  className="w-full h-full object-cover" 
+                  className="absolute inset-0 w-full h-full object-contain" 
                 />
               </div>
               
-              <div className="mt-4 max-w-xl text-center px-2 md:px-4">
+              <div className="mt-4 max-w-xl text-center px-2 md:px-4 shrink-0">
                 <h4 className="font-bold text-white text-sm md:text-base leading-snug">{galleryItems[lightboxIndex].title}</h4>
                 <p className="text-[11px] text-slate-400 font-light mt-1 leading-relaxed">{galleryItems[lightboxIndex].desc}</p>
                 <div className="flex gap-1.5 justify-center mt-2.5">
