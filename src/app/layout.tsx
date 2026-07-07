@@ -23,7 +23,10 @@ export const metadata: Metadata = {
     canonical: "https://vishwaleader.com",
   },
   verification: {
-    google: "q4N3KTI45z79rdxu0McdajvAh4hQG3v4IjnIhMMCYyE",
+    google: [
+      "q4N3KTI45z79rdxu0McdajvAh4hQG3v4IjnIhMMCYyE",
+      "KRXML02ICZ_2HeuT9VZ2RtAbeZrYog9Hlxygc9Llup8"
+    ],
   },
 };
 
