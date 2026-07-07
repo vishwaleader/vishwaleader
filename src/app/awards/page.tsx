@@ -47,7 +47,7 @@ export default function AwardsPage() {
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <a href="/" className="flex items-center gap-2">
             <img src="/assets/images/vishwaleader-logo-hd.png" alt="Vishwa Leader" className="h-7 w-auto object-contain" />
-            <span className="font-sans font-bold tracking-tight text-sm text-slate-900">Vishwa Leader</span>
+            <span translate="no" className="notranslate font-sans font-bold tracking-tight text-sm text-slate-900">Vishwa Leader</span>
           </a>
           <div className="flex gap-6 text-sm font-medium text-slate-500 hidden md:flex">
             <a href="/" className="hover:text-slate-900 transition-colors">Home</a>
@@ -69,7 +69,7 @@ export default function AwardsPage() {
               Applications Now Open
             </div>
             <h1 className="text-4xl md:text-5xl font-semibold text-white tracking-tight mb-4 leading-tight">
-              Vishwa Leader Dr. B. R. Ambedkar International Awards 2026
+              <span translate="no" className="notranslate">Vishwa Leader</span> Dr. B. R. Ambedkar International Awards 2026
             </h1>
             <p className="text-blue-100 text-base md:text-lg max-w-2xl mx-auto">
               Honoring individuals and organizations making exceptional contributions to social justice, equality, and human rights.
@@ -88,7 +88,7 @@ export default function AwardsPage() {
                 <Info className="w-5 h-5 text-slate-400" /> About the Awards
               </h2>
               <p className="text-slate-600 text-sm leading-relaxed text-justify">
-                We are delighted to announce the Vishwa Leader Dr. B. R. Ambedkar International Awards 2026, scheduled to be held in London. This prestigious global event aims to honour individuals and organizations making exceptional contributions to social justice, equality, human rights, education, economic empowerment, and community development, inspired by the timeless principles of Dr. B. R. Ambedkar.
+                We are delighted to announce the <span translate="no" className="notranslate">Vishwa Leader</span> Dr. B. R. Ambedkar International Awards 2026, scheduled to be held in London. This prestigious global event aims to honour individuals and organizations making exceptional contributions to social justice, equality, human rights, education, economic empowerment, and community development, inspired by the timeless principles of Dr. B. R. Ambedkar.
               </p>
             </div>
 

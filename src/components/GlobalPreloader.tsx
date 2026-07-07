@@ -1,12 +1,34 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import Preloader from "./Preloader";
 
 export default function GlobalPreloader() {
   const [loading, setLoading] = useState(true);
+  const pathname = usePathname();
+  
+  // Use state to detect domain on client-side mount to avoid hydration errors
+  const [isComingSoon, setIsComingSoon] = useState(false);
 
   useEffect(() => {
+    const isProductionDomain = window.location.hostname === 'vishwaleader.com' || window.location.hostname === 'www.vishwaleader.com';
+    // The middleware rewrites the main page to /coming-soon.
+    // If we are on production domain and not on an admin/api route, we are on the coming soon page.
+    if (isProductionDomain && !window.location.pathname.startsWith('/admin') && !window.location.pathname.startsWith('/api')) {
+      setIsComingSoon(true);
+    } else if (pathname === '/coming-soon') {
+      setIsComingSoon(true);
+    }
+  }, [pathname]);
+
+  useEffect(() => {
+    // If we are on the coming-soon page, never stop loading.
+    if (isComingSoon) {
+      setLoading(true);
+      return;
+    }
+
     const handleLoad = () => {
       // Small visual padding delay of 800ms to allow smooth hydration and visual settle
       setTimeout(() => setLoading(false), 800);
@@ -24,7 +46,7 @@ export default function GlobalPreloader() {
         clearTimeout(timer);
       };
     }
-  }, []);
+  }, [isComingSoon]);
 
-  return <Preloader loading={loading} />;
+  return <Preloader loading={loading} isComingSoon={isComingSoon} />;
 }

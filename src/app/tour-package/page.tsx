@@ -104,7 +104,7 @@ export default function TourPackagePage() {
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <a href="/" className="flex items-center gap-2">
             <img src="/assets/images/vishwaleader-logo-hd.png" alt="Vishwa Leader" className="h-7 w-auto object-contain" />
-            <span className="font-sans font-bold tracking-tight text-sm text-slate-900">Vishwa Leader</span>
+            <span translate="no" className="notranslate font-sans font-bold tracking-tight text-sm text-slate-900">Vishwa Leader</span>
           </a>
           <div className="flex gap-6 text-sm font-medium text-slate-500 hidden md:flex">
             <a href="/" className="hover:text-slate-900 transition-colors">Home</a>
@@ -204,7 +204,7 @@ export default function TourPackagePage() {
                 <p><span className="font-medium text-white">A/c no:</span> 023811100002652</p>
                 <p><span className="font-medium text-white">IFSC Code:</span> UBIN0802387</p>
                 <p><span className="font-medium text-white">Bank:</span> Union Bank of India</p>
-                <p><span className="font-medium text-white">Company:</span> M/s. VISHWA LEADER TECHMEDIA PRIVATE LIMITED</p>
+                <p><span className="font-medium text-white">Company:</span> M/s. <span translate="no" className="notranslate">VISHWA LEADER</span> TECHMEDIA PRIVATE LIMITED</p>
               </div>
             </div>
 

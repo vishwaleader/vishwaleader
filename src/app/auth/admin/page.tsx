@@ -1,7 +1,12 @@
 import AdminClientPage from "./admin-client";
+import { Suspense } from "react";
 
-export const unstable_instant = false;
+export const dynamic = "force-dynamic";
 
 export default function Page() {
-  return <AdminClientPage />;
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AdminClientPage />
+    </Suspense>
+  );
 }

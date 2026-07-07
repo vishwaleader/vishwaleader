@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import Script from "next/script";
+import { usePathname } from "next/navigation";
 import { Globe, Search, ChevronDown, X } from "lucide-react";
 
 declare global {
@@ -131,6 +132,17 @@ export default function GoogleTranslate() {
   const [showAll, setShowAll] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [isComingSoon, setIsComingSoon] = useState(false);
+  const pathname = usePathname();
+
+  useEffect(() => {
+    const isProd = window.location.hostname === 'vishwaleader.com' || window.location.hostname === 'www.vishwaleader.com';
+    if ((isProd && !window.location.pathname.startsWith('/admin') && !window.location.pathname.startsWith('/api')) || pathname === '/coming-soon') {
+      setIsComingSoon(true);
+    } else {
+      setIsComingSoon(false);
+    }
+  }, [pathname]);
 
   useEffect(() => {
     window.googleTranslateElementInit = () => {
@@ -174,6 +186,10 @@ export default function GoogleTranslate() {
     lang.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  if (isComingSoon) {
+    return null;
+  }
+
   return (
     <>
       <div className="fixed bottom-4 right-4 z-[9999]" ref={dropdownRef}>
@@ -199,7 +215,7 @@ export default function GoogleTranslate() {
                   <button
                     key={lang.code}
                     onClick={() => handleLanguageSelect(lang.code)}
-                    className="w-full text-left px-3 py-2 hover:bg-blue-50 hover:text-blue-600 rounded-md transition-colors"
+                    className="notranslate w-full text-left px-3 py-2 hover:bg-blue-50 hover:text-blue-600 rounded-md transition-colors"
                   >
                     {lang.name}
                   </button>
@@ -237,7 +253,7 @@ export default function GoogleTranslate() {
                       <button
                         key={lang.code}
                         onClick={() => handleLanguageSelect(lang.code)}
-                        className="w-full text-left px-3 py-2 hover:bg-blue-50 hover:text-blue-600 rounded-md transition-colors"
+                        className="notranslate w-full text-left px-3 py-2 hover:bg-blue-50 hover:text-blue-600 rounded-md transition-colors"
                       >
                         {lang.name}
                       </button>

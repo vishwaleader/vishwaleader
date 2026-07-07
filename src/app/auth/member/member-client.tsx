@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { auth, db, storage } from "@/lib/firebase";
 import { onAuthStateChanged, signOut, User, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
@@ -34,6 +34,91 @@ declare global {
     Razorpay: any;
   }
 }
+
+
+const COUNTRIES_LIST = [
+  "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina", "Armenia", "Australia", "Austria",
+  "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia",
+  "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei", "Bulgaria", "Burkina Faso", "Burundi", "Cabo Verde", "Cambodia",
+  "Cameroon", "Canada", "Central African Republic", "Chad", "Chile", "China", "Colombia", "Comoros", "Congo, Democratic Republic of the",
+  "Congo, Republic of the", "Costa Rica", "Croatia", "Cuba", "Cyprus", "Czech Republic", "Denmark", "Djibouti", "Dominica",
+  "Dominican Republic", "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia", "Eswatini", "Ethiopia",
+  "Fiji", "Finland", "France", "Gabon", "Gambia", "Georgia", "Germany", "Ghana", "Greece", "Grenada", "Guatemala", "Guinea",
+  "Guinea-Bissau", "Guyana", "Haiti", "Honduras", "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland",
+  "Israel", "Italy", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Korea, North", "Korea, South", "Kosovo",
+  "Kuwait", "Kyrgyzstan", "Laos", "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya", "Liechtenstein", "Lithuania", "Luxembourg",
+  "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta", "Marshall Islands", "Mauritania", "Mauritius", "Mexico",
+  "Micronesia", "Moldova", "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar", "Namibia", "Nauru", "Nepal",
+  "Netherlands", "New Zealand", "Nicaragua", "Niger", "Nigeria", "North Macedonia", "Norway", "Oman", "Pakistan", "Palau",
+  "Palestine", "Panama", "Papua New Guinea", "Paraguay", "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Romania",
+  "Russia", "Rwanda", "Saint Kitts and Nevis", "Saint Lucia", "Saint Vincent and the Grenadines", "Samoa", "San Marino",
+  "Sao Tome and Principe", "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore", "Slovakia",
+  "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Sudan", "Spain", "Sri Lanka", "Sudan", "Suriname",
+  "Sweden", "Switzerland", "Syria", "Taiwan", "Tajikistan", "Tanzania", "Thailand", "Timor-Leste", "Togo", "Tonga",
+  "Trinidad and Tobago", "Tunisia", "Turkey", "Turkmenistan", "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates",
+  "United Kingdom", "United States", "Uruguay", "Uzbekistan", "Vanuatu", "Vatican City", "Venezuela", "Vietnam", "Yemen",
+  "Zambia", "Zimbabwe"
+];
+
+const PHONE_CODES_LIST = [
+  "+91 (India)", "+1 (USA/Canada)", "+44 (UK)", "+61 (Australia)", "+971 (UAE)", "+49 (Germany)", "+33 (France)", "+81 (Japan)",
+  "+86 (China)", "+27 (South Africa)", "+65 (Singapore)", "+64 (New Zealand)", "+39 (Italy)", "+34 (Spain)", "+41 (Switzerland)",
+  "+46 (Sweden)", "+31 (Netherlands)", "+55 (Brazil)", "+52 (Mexico)", "+7 (Russia/Kazakhstan)", "+20 (Egypt)", "+234 (Nigeria)",
+  "+254 (Kenya)"
+];
+
+const AutocompleteInput = ({ value, onChange, options, placeholder, required, className }: any) => {
+  const [showDropdown, setShowDropdown] = useState(false);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  
+  const filteredOptions = options.filter((opt: string) => opt.toLowerCase().includes(value.toLowerCase()));
+
+  useEffect(() => {
+    const handleClickOutside = (event: any) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div ref={wrapperRef} className="relative w-full">
+      <Input
+        type="text"
+        value={value}
+        onChange={(e: any) => {
+          onChange(e);
+          setShowDropdown(true);
+        }}
+        onFocus={() => setShowDropdown(true)}
+        className={className}
+        placeholder={placeholder}
+        required={required}
+        autoComplete="off"
+      />
+      {showDropdown && filteredOptions.length > 0 && (
+        <ul className="absolute z-[100] w-full mt-1 max-h-48 overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-lg text-xs text-slate-800">
+          {filteredOptions.map((opt: string, i: number) => (
+            <li 
+              key={i} 
+              className="px-3 py-2 hover:bg-slate-100 cursor-pointer transition-colors duration-150"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => {
+                const finalValue = opt.split(' (')[0];
+                onChange({ target: { value: finalValue } });
+                setShowDropdown(false);
+              }}
+            >
+              {opt}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+};
 
 export default function MemberClientPage() {
   const searchParams = useSearchParams();
@@ -72,7 +157,7 @@ export default function MemberClientPage() {
     paymentStatus: "Unpaid",
     legalConsent: false,
     headshotUrl: "",
-    passportScanUrl: "",
+    passportFrontUrl: "", passportBackUrl: "",
     evidenceUrl: ""
   });
   
@@ -122,6 +207,7 @@ export default function MemberClientPage() {
   const [profileAge, setProfileAge] = useState("");
   const [profileNationality, setProfileNationality] = useState("");
   const [profileCity, setProfileCity] = useState("");
+  const [profileState, setProfileState] = useState("");
   const [profileWheelchair, setProfileWheelchair] = useState(false);
   const [profileDesignation, setProfileDesignation] = useState("");
   const [profileOrganization, setProfileOrganization] = useState("");
@@ -146,15 +232,17 @@ export default function MemberClientPage() {
   const [headshotUploading, setHeadshotUploading] = useState(false);
   const [headshotProgress, setHeadshotProgress] = useState(0);
 
-  const [passportUploading, setPassportUploading] = useState(false);
-  const [passportProgress, setPassportProgress] = useState(0);
+  const [passportFrontUploading, setPassportFrontUploading] = useState(false);
+  const [passportFrontProgress, setPassportFrontProgress] = useState(0);
+  const [passportBackUploading, setPassportBackUploading] = useState(false);
+  const [passportBackProgress, setPassportBackProgress] = useState(0);
 
   const [evidenceUploading, setEvidenceUploading] = useState(false);
   const [evidenceProgress, setEvidenceProgress] = useState(0);
 
   // Submissions lists states
   const [submissions, setSubmissions] = useState<any[]>([]);
-  const [showSubForm, setShowSubForm] = useState(false);
+  const [showSubForm, setShowSubForm] = useState(true);
   const [subTitle, setSubTitle] = useState("");
   const [subAuthors, setSubAuthors] = useState("");
   const [subTheme, setSubTheme] = useState("primary");
@@ -219,7 +307,7 @@ export default function MemberClientPage() {
               paymentStatus: "Unpaid",
               legalConsent: false,
               headshotUrl: "",
-              passportScanUrl: "",
+              passportFrontUrl: "", passportBackUrl: "",
               evidenceUrl: ""
             };
             await setDoc(userRef, newMember);
@@ -276,7 +364,7 @@ export default function MemberClientPage() {
             paymentStatus: "Unpaid",
             legalConsent: false,
             headshotUrl: "",
-            passportScanUrl: "",
+            passportFrontUrl: "", passportBackUrl: "",
             evidenceUrl: ""
           });
         }
@@ -296,6 +384,7 @@ export default function MemberClientPage() {
       setProfileAge(memberData.age || "");
       setProfileNationality(memberData.nationality || "");
       setProfileCity(memberData.city || "");
+      setProfileState(memberData.state || "");
       setProfileWheelchair(memberData.wheelchairSupport || false);
       setProfileDesignation(memberData.designation || "Member Delegate");
       setProfileOrganization(memberData.organization || "Independent Scholar");
@@ -426,12 +515,13 @@ export default function MemberClientPage() {
   };
 
   // Firebase Storage upload helper
-  const uploadFileToStorage = (file: File, type: 'headshot' | 'passportScan' | 'evidence') => {
+  const uploadFileToStorage = (file: File, type: 'headshot' | 'passportFront' | 'passportBack' | 'evidence') => {
     if (!user) return;
     
     // Set status
     if (type === 'headshot') { setHeadshotUploading(true); setHeadshotProgress(0); }
-    if (type === 'passportScan') { setPassportUploading(true); setPassportProgress(0); }
+    if (type === 'passportFront') { setPassportFrontUploading(true); setPassportFrontProgress(0); }
+    if (type === 'passportBack') { setPassportBackUploading(true); setPassportBackProgress(0); }
     if (type === 'evidence') { setEvidenceUploading(true); setEvidenceProgress(0); }
 
     const storagePath = `users/${user.uid}/${type}_${Date.now()}_${file.name}`;
@@ -442,14 +532,16 @@ export default function MemberClientPage() {
       (snapshot) => {
         const progress = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
         if (type === 'headshot') setHeadshotProgress(progress);
-        if (type === 'passportScan') setPassportProgress(progress);
+        if (type === 'passportFront') setPassportFrontProgress(progress);
+        if (type === 'passportBack') setPassportBackProgress(progress);
         if (type === 'evidence') setEvidenceProgress(progress);
       }, 
       (error) => {
         console.error("Storage upload error:", error);
         showToast("File upload failed.");
         if (type === 'headshot') setHeadshotUploading(false);
-        if (type === 'passportScan') setPassportUploading(false);
+        if (type === 'passportFront') setPassportFrontUploading(false);
+        if (type === 'passportBack') setPassportBackUploading(false);
         if (type === 'evidence') setEvidenceUploading(false);
       }, 
       async () => {
@@ -458,7 +550,10 @@ export default function MemberClientPage() {
           
           // Save link directly to Firestore delegate profile
           const userRef = doc(db, "users", user.uid);
-          const updateField = type === 'headshot' ? 'headshotUrl' : type === 'passportScan' ? 'passportScanUrl' : 'evidenceUrl';
+          const updateField = type === 'headshot' ? 'headshotUrl' : 
+                          type === 'passportFront' ? 'passportFrontUrl' : 
+                          type === 'passportBack' ? 'passportBackUrl' : 
+                          'evidenceUrl';
           
           await updateDoc(userRef, { [updateField]: downloadURL });
           setMemberData((prev: any) => ({ ...prev, [updateField]: downloadURL }));
@@ -478,7 +573,8 @@ export default function MemberClientPage() {
           console.error("Error setting firestore link:", e);
         } finally {
           if (type === 'headshot') setHeadshotUploading(false);
-          if (type === 'passportScan') setPassportUploading(false);
+          if (type === 'passportFront') setPassportFrontUploading(false);
+        if (type === 'passportBack') setPassportBackUploading(false);
           if (type === 'evidence') setEvidenceUploading(false);
         }
       }
@@ -503,6 +599,7 @@ export default function MemberClientPage() {
         age: profileAge,
         nationality: profileNationality,
         city: profileCity,
+        state: profileState,
         wheelchairSupport: profileWheelchair,
         designation: profileDesignation,
         organization: profileOrganization,
@@ -801,7 +898,7 @@ export default function MemberClientPage() {
                           }`}
                         >
                           <FileText className="size-4 shrink-0 mr-2 text-brandBlue" />
-                          <span>SOAS Submissions</span>
+                          <span>Abstract Submissions</span>
                         </SidebarMenuButton>
                       </SidebarMenuItem>
                     </SidebarMenu>
@@ -864,7 +961,7 @@ export default function MemberClientPage() {
                     <p className="text-xs font-bold text-slate-800">{memberData?.name || user.displayName || "Delegate"}</p>
                     <p className="text-[9px] text-slate-400 font-mono">Member ID: VL-2026-{(user.uid.substring(0, 4)).toUpperCase()}</p>
                   </div>
-                  <img src={memberData?.headshotUrl || user.photoURL || "https://placehold.co/100x100"} alt="" className="w-8 h-8 rounded-full border border-slate-200 object-cover" />
+                  <img src={memberData?.headshotUrl || user.photoURL || "https://placehold.co/100x100"} referrerPolicy="no-referrer" alt="" className="w-8 h-8 rounded-full border border-slate-200 object-cover" />
                 </div>
               </header>
 
@@ -905,7 +1002,7 @@ export default function MemberClientPage() {
                           <div className="flex gap-4 items-center my-3 relative z-10">
                             <div className="relative shrink-0">
                               <img 
-                                src={memberData?.headshotUrl || user.photoURL || "https://placehold.co/150x150/0a1e4b/ffffff?text=User"} 
+                                src={memberData?.headshotUrl || user.photoURL || "https://placehold.co/150x150/0a1e4b/ffffff?text=User"} referrerPolicy="no-referrer" 
                                 className="w-14 h-14 rounded-xl object-cover border border-white/20 shadow-md bg-slate-950" 
                                 alt="" 
                               />
@@ -986,6 +1083,8 @@ export default function MemberClientPage() {
                       <CardContent>
                         <form onSubmit={handleSaveRegistration} className="space-y-6">
                           
+                          
+                          
                           {/* Section 1: Personal & Professional Details */}
                           <div className="space-y-4">
                             <h3 className="text-xs font-bold text-brandBlue uppercase tracking-wider border-b border-slate-100 pb-1.5 flex items-center gap-1.5">
@@ -1033,13 +1132,13 @@ export default function MemberClientPage() {
                               </div>
                               <div className="space-y-1.5">
                                 <label className="text-[10px] font-bold text-slate-555 uppercase tracking-wider">Nationality</label>
-                                <Input 
-                                  type="text" 
-                                  value={profileNationality}
-                                  onChange={(e) => setProfileNationality(e.target.value)}
+                                <AutocompleteInput 
+                                  value={profileNationality} 
+                                  onChange={(e: any) => setProfileNationality(e.target.value)} 
                                   className="bg-slate-50 border-slate-200 text-xs rounded-xl focus:border-brandBlue text-slate-800" 
                                   placeholder="Nationality" 
-                                  required 
+                                  required={true} 
+                                  options={COUNTRIES_LIST} 
                                 />
                               </div>
                             </div>
@@ -1075,11 +1174,14 @@ export default function MemberClientPage() {
                                   onChange={(e) => setProfileSector(e.target.value)}
                                   className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-brandBlue text-slate-800"
                                 >
-                                  <option value="Academic/Research">Academic/Research</option>
-                                  <option value="Business/Industry">Business/Industry</option>
-                                  <option value="Media/Press">Media/Press</option>
-                                  <option value="Government/Public Sector">Government/Public Sector</option>
+                                  <option value="Academic / Research">Academic / Research</option>
+                                  <option value="Business / Industry">Business / Industry</option>
+                                  <option value="NGO / Social Sector">NGO / Social Sector</option>
+                                  <option value="Media / Press">Media / Press</option>
+                                  <option value="Arts & Culture">Arts & Culture</option>
+                                  <option value="Government / Public Sector">Government / Public Sector</option>
                                   <option value="Student">Student</option>
+                                  <option value="Other">Other:</option>
                                 </select>
                               </div>
                               <div className="space-y-1.5">
@@ -1114,18 +1216,18 @@ export default function MemberClientPage() {
                               </div>
                               <div className="space-y-1.5">
                                 <label className="text-[10px] font-bold text-slate-555 uppercase tracking-wider">Contact Number (WhatsApp Enabled)</label>
-                                <Input 
-                                  type="text" 
-                                  value={profilePhone}
-                                  onChange={(e) => setProfilePhone(e.target.value)}
+                                <AutocompleteInput 
+                                  value={profilePhone} 
+                                  onChange={(e: any) => setProfilePhone(e.target.value)} 
                                   className="bg-slate-50 border-slate-200 text-xs rounded-xl focus:border-brandBlue text-slate-800" 
                                   placeholder="e.g. +91 9876543210" 
-                                  required 
+                                  required={true} 
+                                  options={PHONE_CODES_LIST} 
                                 />
                               </div>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-4">
                               <div className="space-y-1.5">
                                 <label className="text-[10px] font-bold text-slate-555 uppercase tracking-wider">Full Residential / Postal Address</label>
                                 <Input 
@@ -1133,11 +1235,23 @@ export default function MemberClientPage() {
                                   value={profileAddress}
                                   onChange={(e) => setProfileAddress(e.target.value)}
                                   className="bg-slate-50 border-slate-200 text-xs rounded-xl focus:border-brandBlue text-slate-800" 
-                                  placeholder="Street, Landmark, City, State" 
+                                  placeholder="Street, Landmark" 
                                   required 
                                 />
                               </div>
-                              <div className="grid grid-cols-2 gap-4">
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div className="space-y-1.5">
+                                  <label className="text-[10px] font-bold text-slate-555 uppercase tracking-wider">State / Province</label>
+                                  <Input 
+                                    type="text" 
+                                    value={profileState}
+                                    onChange={(e) => setProfileState(e.target.value)}
+                                    className="bg-slate-50 border-slate-200 text-xs rounded-xl focus:border-brandBlue text-slate-800" 
+                                    placeholder="State" 
+                                    required 
+                                    autoComplete="address-level1"
+                                  />
+                                </div>
                                 <div className="space-y-1.5">
                                   <label className="text-[10px] font-bold text-slate-555 uppercase tracking-wider">City</label>
                                   <Input 
@@ -1147,17 +1261,18 @@ export default function MemberClientPage() {
                                     className="bg-slate-50 border-slate-200 text-xs rounded-xl focus:border-brandBlue text-slate-800" 
                                     placeholder="City" 
                                     required 
+                                    autoComplete="address-level2" 
                                   />
                                 </div>
                                 <div className="space-y-1.5">
                                   <label className="text-[10px] font-bold text-slate-555 uppercase tracking-wider">Country of Residence</label>
-                                  <Input 
-                                    type="text" 
-                                    value={profileCountry}
-                                    onChange={(e) => setProfileCountry(e.target.value)}
+                                  <AutocompleteInput 
+                                    value={profileCountry} 
+                                    onChange={(e: any) => setProfileCountry(e.target.value)} 
                                     className="bg-slate-50 border-slate-200 text-xs rounded-xl focus:border-brandBlue text-slate-800" 
                                     placeholder="Country" 
-                                    required 
+                                    required={true} 
+                                    options={COUNTRIES_LIST} 
                                   />
                                 </div>
                               </div>
@@ -1384,58 +1499,65 @@ export default function MemberClientPage() {
                         </div>
                       </Card>
 
-                      {/* Card 2: Passport Scan Copy */}
+                      {/* Card 2: Passport Front */}
                       <Card className="border-slate-200 bg-white p-5 rounded-2xl flex flex-col justify-between shadow-sm">
                         <div className="space-y-4">
                           <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">2. Passport Scan Copy</span>
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">2. Passport Front</span>
                             <FileText className="size-4 text-brandBlue" />
                           </div>
-
-                          {memberData?.passportScanUrl ? (
+                          {memberData?.passportFrontUrl ? (
                             <div className="h-24 w-full bg-emerald-50/50 border border-emerald-100 rounded-xl flex flex-col items-center justify-center p-3 text-center space-y-1">
                               <FileCheck className="size-6 text-emerald-500" />
-                              <span className="text-[9px] font-bold text-emerald-700 uppercase">Passport Copy Uploaded</span>
-                              <a href={memberData.passportScanUrl} target="_blank" className="text-[9px] font-extrabold text-brandBlue hover:underline uppercase tracking-wide pt-1">
-                                Download Scanned Copy
-                              </a>
+                              <span className="text-[9px] font-bold text-emerald-700 uppercase">Uploaded</span>
+                              <a href={memberData.passportFrontUrl} target="_blank" className="text-[9px] font-extrabold text-brandBlue hover:underline uppercase tracking-wide pt-1">View File</a>
                             </div>
                           ) : (
-                            <div className="h-24 w-full bg-slate-50 border border-dashed border-slate-200 rounded-xl flex items-center justify-center text-[10px] text-slate-400">
-                              Awaiting passport PDF or image
-                            </div>
+                            <div className="h-24 w-full bg-slate-50 border border-dashed border-slate-200 rounded-xl flex items-center justify-center text-[10px] text-slate-400">Awaiting front copy</div>
                           )}
-
-                          <p className="text-[10px] text-slate-500 leading-normal text-center">Required for visa invitation letters and international checks.</p>
                         </div>
-
                         <div className="pt-4 border-t border-slate-100 mt-4 space-y-3">
-                          {passportUploading ? (
+                          {passportFrontUploading ? (
                             <div className="space-y-1">
-                              <div className="flex justify-between text-[9px] font-mono text-slate-500">
-                                <span>Uploading...</span>
-                                <span>{passportProgress}%</span>
-                              </div>
-                              <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-                                <div className="bg-brandBlue h-full rounded-full transition-all" style={{ width: `${passportProgress}%` }}></div>
-                              </div>
+                              <div className="flex justify-between text-[9px] font-mono text-slate-500"><span>Uploading...</span><span>{passportFrontProgress}%</span></div>
+                              <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden"><div className="bg-brandBlue h-full rounded-full transition-all" style={{ width: `${passportFrontProgress}%` }}></div></div>
                             </div>
                           ) : (
                             <div className="relative w-full">
-                              <input 
-                                type="file" 
-                                accept="application/pdf,image/*" 
-                                onChange={(e) => {
-                                  if (e.target.files && e.target.files[0]) {
-                                    uploadFileToStorage(e.target.files[0], 'passportScan');
-                                  }
-                                }}
-                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
-                              />
-                              <Button className="w-full bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold py-2 rounded-xl flex items-center justify-center gap-1.5 border border-slate-200">
-                                <Upload className="size-3.5" />
-                                <span>Choose Document</span>
-                              </Button>
+                              <input type="file" accept="application/pdf,image/*" onChange={(e) => { if (e.target.files && e.target.files[0]) uploadFileToStorage(e.target.files[0], 'passportFront'); }} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                              <Button className="w-full bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold py-2 rounded-xl flex items-center justify-center gap-1.5 border border-slate-200"><Upload className="size-3.5" /><span>Upload Front</span></Button>
+                            </div>
+                          )}
+                        </div>
+                      </Card>
+
+                      {/* Card 3: Passport Back */}
+                      <Card className="border-slate-200 bg-white p-5 rounded-2xl flex flex-col justify-between shadow-sm">
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">3. Passport Back</span>
+                            <FileText className="size-4 text-brandBlue" />
+                          </div>
+                          {memberData?.passportBackUrl ? (
+                            <div className="h-24 w-full bg-emerald-50/50 border border-emerald-100 rounded-xl flex flex-col items-center justify-center p-3 text-center space-y-1">
+                              <FileCheck className="size-6 text-emerald-500" />
+                              <span className="text-[9px] font-bold text-emerald-700 uppercase">Uploaded</span>
+                              <a href={memberData.passportBackUrl} target="_blank" className="text-[9px] font-extrabold text-brandBlue hover:underline uppercase tracking-wide pt-1">View File</a>
+                            </div>
+                          ) : (
+                            <div className="h-24 w-full bg-slate-50 border border-dashed border-slate-200 rounded-xl flex items-center justify-center text-[10px] text-slate-400">Awaiting back copy</div>
+                          )}
+                        </div>
+                        <div className="pt-4 border-t border-slate-100 mt-4 space-y-3">
+                          {passportBackUploading ? (
+                            <div className="space-y-1">
+                              <div className="flex justify-between text-[9px] font-mono text-slate-500"><span>Uploading...</span><span>{passportBackProgress}%</span></div>
+                              <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden"><div className="bg-brandBlue h-full rounded-full transition-all" style={{ width: `${passportBackProgress}%` }}></div></div>
+                            </div>
+                          ) : (
+                            <div className="relative w-full">
+                              <input type="file" accept="application/pdf,image/*" onChange={(e) => { if (e.target.files && e.target.files[0]) uploadFileToStorage(e.target.files[0], 'passportBack'); }} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                              <Button className="w-full bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold py-2 rounded-xl flex items-center justify-center gap-1.5 border border-slate-200"><Upload className="size-3.5" /><span>Upload Back</span></Button>
                             </div>
                           )}
                         </div>
@@ -1445,7 +1567,7 @@ export default function MemberClientPage() {
                       <Card className="border-slate-200 bg-white p-5 rounded-2xl flex flex-col justify-between shadow-sm">
                         <div className="space-y-4">
                           <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">3. Supporting Evidence</span>
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">6. Supporting Evidence</span>
                             <FileText className="size-4 text-brandBlue" />
                           </div>
 
@@ -1656,16 +1778,6 @@ export default function MemberClientPage() {
                         <h2 className="text-2xl font-black font-display text-slate-900 uppercase tracking-tight">SOAS Conference Submissions</h2>
                         <p className="text-xs text-slate-555 mt-0.5 font-medium">Submit abstracts and manage co-authors for the upcoming London Summit.</p>
                       </div>
-                      
-                      {!showSubForm && (
-                        <Button 
-                          onClick={() => setShowSubForm(true)}
-                          className="bg-brandBlue/10 hover:bg-brandBlue/20 text-brandBlue hover:text-brandBlue font-bold px-4 py-2 text-xs rounded-xl flex items-center gap-1.5 transition-all"
-                        >
-                          <Plus className="size-4" />
-                          <span>New Submission Draft</span>
-                        </Button>
-                      )}
                     </div>
 
                     {/* New Draft Form Panel */}
@@ -1736,27 +1848,30 @@ export default function MemberClientPage() {
                               />
                             </div>
 
-                            <div className="space-y-1.5">
-                              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">File Name reference (e.g. abstract_draft.pdf)</label>
-                              <Input 
-                                type="text" 
-                                value={subFileName}
-                                onChange={(e) => setSubFileName(e.target.value)}
-                                className="bg-slate-55 border-slate-200 text-xs rounded-xl focus:border-brandBlue text-slate-800 focus:ring-1 focus:ring-brandBlue placeholder:text-slate-400" 
-                                placeholder="e.g. global_alliances_draft.pdf" 
-                              />
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">File Name reference (e.g. abstract_draft.pdf)</label>
+                                <Input 
+                                  type="text" 
+                                  value={subFileName}
+                                  onChange={(e) => setSubFileName(e.target.value)}
+                                  className="bg-slate-55 border-slate-200 text-xs rounded-xl focus:border-brandBlue text-slate-800 focus:ring-1 focus:ring-brandBlue placeholder:text-slate-400" 
+                                  placeholder="e.g. global_alliances_draft.pdf" 
+                                />
+                              </div>
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Upload PDF / Paper</label>
+                                <Input 
+                                  type="file" 
+                                  accept=".pdf,.doc,.docx"
+                                  className="bg-slate-55 border-slate-200 text-xs rounded-xl focus:border-brandBlue text-slate-800 focus:ring-1 focus:ring-brandBlue cursor-pointer file:text-brandBlue file:font-bold file:border-0 file:bg-brandBlue/10 file:px-3 file:py-1 file:rounded-lg file:mr-3 file:text-xs" 
+                                />
+                              </div>
                             </div>
 
                             <div className="flex gap-2 pt-2">
                               <Button type="submit" className="flex-grow bg-brandBlue hover:bg-brandBlue/90 text-white font-bold h-10 rounded-xl text-xs uppercase tracking-wider">
                                 Register Submission Document
-                              </Button>
-                              <Button 
-                                type="button" 
-                                onClick={() => setShowSubForm(false)}
-                                className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold h-10 px-5 rounded-xl text-xs uppercase tracking-wider"
-                              >
-                                Cancel
                               </Button>
                             </div>
                           </form>
@@ -1834,7 +1949,7 @@ export default function MemberClientPage() {
 
               {/* Corporate Footer */}
               <footer className="border-t border-slate-200 bg-white py-6 text-center text-[10px] text-slate-500 font-normal">
-                <p>© 2026 Vishwa Leader Techmedia Private Limited. All Rights Reserved.</p>
+                <p>© 2026 <span translate="no" className="notranslate">Vishwa Leader</span> Techmedia Private Limited. All Rights Reserved.</p>
               </footer>
 
             </SidebarInset>

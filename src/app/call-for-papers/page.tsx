@@ -61,7 +61,7 @@ export default function CallForPapersPage() {
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <a href="/" className="flex items-center gap-2">
             <img src="/assets/images/vishwaleader-logo-hd.png" alt="Vishwa Leader" className="h-7 w-auto object-contain" />
-            <span className="font-sans font-bold tracking-tight text-sm text-slate-900">Vishwa Leader</span>
+            <span translate="no" className="notranslate font-sans font-bold tracking-tight text-sm text-slate-900">Vishwa Leader</span>
           </a>
           <div className="flex gap-6 text-sm font-medium text-slate-500 hidden md:flex">
             <a href="/" className="hover:text-slate-900 transition-colors">Home</a>

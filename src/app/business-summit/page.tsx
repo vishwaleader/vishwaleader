@@ -47,7 +47,7 @@ export default function BusinessSummitPage() {
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <a href="/" className="flex items-center gap-2">
             <img src="/assets/images/vishwaleader-logo-hd.png" alt="Vishwa Leader" className="h-7 w-auto object-contain" />
-            <span className="font-sans font-bold tracking-tight text-sm text-slate-900">Vishwa Leader</span>
+            <span translate="no" className="notranslate font-sans font-bold tracking-tight text-sm text-slate-900">Vishwa Leader</span>
           </a>
           <div className="flex gap-6 text-sm font-medium text-slate-500 hidden md:flex">
             <a href="/" className="hover:text-slate-900 transition-colors">Home</a>
@@ -68,7 +68,7 @@ export default function BusinessSummitPage() {
               International Business Summit
             </h1>
             <p className="text-blue-100 text-base md:text-lg mb-10 max-w-2xl mx-auto">
-              On the Eve of the Vishwa Leader Dr. B. R. Ambedkar International Awards 2026
+              On the Eve of the <span translate="no" className="notranslate">Vishwa Leader</span> Dr. B. R. Ambedkar International Awards 2026
             </p>
             <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-8 shadow-sm max-w-3xl mx-auto">
               <p className="text-xs font-bold text-amber-400 uppercase tracking-widest mb-3">Summit Theme</p>
@@ -91,7 +91,7 @@ export default function BusinessSummitPage() {
               </h2>
               <div className="text-slate-600 text-sm leading-relaxed space-y-4">
                 <p>
-                  The Organising Committee of the Vishwa Leader Dr. B. R. Ambedkar International Awards 2026 cordially invites business leaders, entrepreneurs, investors, corporate executives, startup founders, industry professionals, and social enterprises from across the world to participate in the Vishwa Leader Dr. B. R. Ambedkar International Business Summit, to be held in London, UK on 19th September 2026.
+                  The Organising Committee of the <span translate="no" className="notranslate">Vishwa Leader</span> Dr. B. R. Ambedkar International Awards 2026 cordially invites business leaders, entrepreneurs, investors, corporate executives, startup founders, industry professionals, and social enterprises from across the world to participate in the <span translate="no" className="notranslate">Vishwa Leader</span> Dr. B. R. Ambedkar International Business Summit, to be held in London, UK on 19th September 2026.
                 </p>
                 <p>
                   Held as a key component of the international celebrations preceding the Awards Ceremony, the Business Summit serves as a global platform for strategic dialogue, cross-border collaboration, innovation, and inclusive economic growth, inspired by the economic and social philosophy of Dr. B. R. Ambedkar. The Summit seeks to bridge commerce with conscience by promoting ethical leadership, entrepreneurship, sustainable business practices, and social responsibility in a rapidly evolving global economy.

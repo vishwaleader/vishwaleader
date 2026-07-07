@@ -21,7 +21,7 @@ export default function AdvertisePage() {
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <a href="/" className="flex items-center gap-2">
             <img src="/assets/images/vishwaleader-logo-hd.png" alt="Vishwa Leader" className="h-7 w-auto object-contain" />
-            <span className="font-sans font-bold tracking-tight text-sm text-slate-900">Vishwa Leader</span>
+            <span translate="no" className="notranslate font-sans font-bold tracking-tight text-sm text-slate-900">Vishwa Leader</span>
           </a>
           <div className="flex gap-6 text-sm font-medium text-slate-500 hidden md:flex">
             <a href="/" className="hover:text-slate-900 transition-colors">Home</a>
@@ -43,7 +43,7 @@ export default function AdvertisePage() {
               Advertise With Us
             </h1>
             <p className="text-blue-100 text-base md:text-lg max-w-2xl mx-auto">
-              Place your advertisement in the Official Souvenir of the Vishwa Leader Dr. B. R. Ambedkar International Awards 2026.
+              Place your advertisement in the Official Souvenir of the <span translate="no" className="notranslate">Vishwa Leader</span> Dr. B. R. Ambedkar International Awards 2026.
             </p>
           </div>
         </div>
@@ -129,7 +129,7 @@ export default function AdvertisePage() {
                 <p><span className="font-semibold text-slate-900 block mb-0.5">A/c no</span> 023811100002652</p>
                 <p><span className="font-semibold text-slate-900 block mb-0.5">IFSC Code</span> UBIN0802387</p>
                 <p><span className="font-semibold text-slate-900 block mb-0.5">Branch</span> Damodar Park, Ghatkopar West</p>
-                <p><span className="font-semibold text-slate-900 block mb-0.5">Company</span> M/s. VISHWA LEADER TECHMEDIA PVT LTD</p>
+                <p><span className="font-semibold text-slate-900 block mb-0.5">Company</span> M/s. <span translate="no" className="notranslate">VISHWA LEADER</span> TECHMEDIA PVT LTD</p>
               </div>
             </div>
 

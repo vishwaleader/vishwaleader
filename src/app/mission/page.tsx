@@ -39,7 +39,7 @@ export default function MissionPage() {
           
           <div className="max-w-4xl mx-auto px-6 text-center relative z-10">
             <span className="text-xs font-bold tracking-widest text-amber-400 uppercase mb-4 block drop-shadow-md">The Larger Vision</span>
-            <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-black leading-tight tracking-tight mb-6 drop-shadow-lg">
+            <h1 className="font-display text-[38px] md:text-[50px] lg:text-[63px] font-black leading-tight tracking-tight mb-6 drop-shadow-lg">
               Our Global Mission
             </h1>
             <p className="text-slate-200 text-base md:text-xl leading-relaxed font-light drop-shadow-md">
@@ -52,7 +52,7 @@ export default function MissionPage() {
         <main className="flex-grow max-w-4xl mx-auto px-6 py-12 md:py-20">
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 md:p-12 prose prose-slate prose-lg max-w-none">
             <p className="lead text-xl md:text-2xl font-medium text-slate-800 leading-relaxed mb-8">
-              Many people have asked us an important question: <strong className="text-brandBlue italic">“Why are we organizing the Vishwa Leader Dr. B. R. Ambedkar International Awards in London and not in India?”</strong>
+              Many people have asked us an important question: <strong className="text-brandBlue italic">“Why are we organizing the <span translate="no" className="notranslate">Vishwa Leader</span> Dr. B. R. Ambedkar International Awards in London and not in India?”</strong>
             </p>
             
             <p>
@@ -112,7 +112,7 @@ export default function MissionPage() {
             </div>
 
             <p>
-              Beginning in <strong>2026, the Vishwa Leader Dr. B. R. Ambedkar International Awards</strong> will be organized <strong>once every two years in different countries</strong>. By taking this platform across nations, we will connect the global Ambedkarite diaspora and diverse communities under one shared vision of justice and human dignity.
+              Beginning in <strong>2026, the <span translate="no" className="notranslate">Vishwa Leader</span> Dr. B. R. Ambedkar International Awards</strong> will be organized <strong>once every two years in different countries</strong>. By taking this platform across nations, we will connect the global Ambedkarite diaspora and diverse communities under one shared vision of justice and human dignity.
             </p>
 
             <h3 className="text-xl font-bold text-slate-900 mt-8 mb-4 font-display uppercase tracking-tight">This is not only about awards. This is about:</h3>
@@ -214,6 +214,9 @@ export default function MissionPage() {
             <div className="text-center pt-8 border-t border-slate-200">
               <p className="text-2xl font-black text-brandBlue uppercase tracking-widest font-display">
                 Jai Bhim. Jai Hind.
+              </p>
+              <p className="mt-4 text-xl font-bold text-slate-800">
+                - Shirish B. Ramteke
               </p>
             </div>
 
