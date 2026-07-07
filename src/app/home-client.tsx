@@ -1,35 +1,51 @@
 "use client";
 import { useState, useEffect } from "react";
 import { auth, db } from "@/lib/firebase";
-import { onAuthStateChanged, signOut, User } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
+import { onAuthStateChanged, signOut, User, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { doc, getDoc, collection, addDoc, getDocs, query, orderBy, serverTimestamp, limit } from "firebase/firestore";
 import { checkAdminSession, logoutAdmin } from "@/app/actions/adminAuth";
+import { getTestimonials } from "@/app/actions/testimonials";
 
 const magazineCoversList = [
-  { src: '1001702539.jpg', title: 'April 2016 Cover', date: 'Apr 2016' },
-  { src: '1001702550.jpg', title: 'December 2016 Cover', date: 'Dec 2016' },
-  { src: '1001702555.jpg', title: 'August 2013 Cover', date: 'Aug 2013' },
-  { src: 'December Cover 09.jpg', title: 'December 2009 Cover', date: 'Dec 2009' },
-  { src: 'Nov cover 09.jpg', title: 'November 2009 Cover', date: 'Nov 2009' },
-  { src: 'Oct Issue Cover 09.jpg', title: 'October 2009 Cover', date: 'Oct 2009' },
-  { src: 'April  Issue Cover 10.jpg', title: 'April 2010 Cover', date: 'Apr 2010' },
-  { src: 'Augst Issue Cover 10.jpg', title: 'August 2010 Cover', date: 'Aug 2010' },
-  { src: 'Feb Issue Cover10.jpg', title: 'February 2010 Cover', date: 'Feb 2010' },
-  { src: 'July Issue Cover 10.jpg', title: 'July 2010 Cover', date: 'Jul 2010' },
-  { src: 'June Issue Cover 10.jpg', title: 'June 2010 Cover', date: 'Jun 2010' },
-  { src: 'March Issue Cover 10.jpg', title: 'March 2010 Cover', date: 'Mar 2010' },
-  { src: 'May Issue Cover 10.jpg', title: 'May 2010 Cover', date: 'May 2010' },
-  { src: 'November Cover 10.jpg', title: 'November 2010 Cover', date: 'Nov 2010' },
-  { src: 'Sep Cover 10.jpg', title: 'September 2010 Cover', date: 'Sep 2010' },
-  { src: 'April  2011 Cover.jpg', title: 'April 2011 Cover', date: 'Apr 2011' },
-  { src: 'Augst  2011 Cover.jpg', title: 'August 2011 Cover', date: 'Aug 2011' },
-  { src: 'Dec 2011 Cover.jpg', title: 'December 2011 Cover', date: 'Dec 2011' },
-  { src: 'February 2011 Cover.jpg', title: 'February 2011 Cover', date: 'Feb 2011' },
-  { src: 'March  2011 Cover.jpg', title: 'March 2011 Cover', date: 'Mar 2011' },
-  { src: 'May  2011 Cover.jpg', title: 'May 2011 Cover', date: 'May 2011' },
-  { src: 'Oct  2011 Cover.jpg', title: 'October 2011 Cover', date: 'Oct 2011' },
-  { src: 'Sept  2011 Cover.jpg', title: 'September 2011 Cover', date: 'Sep 2011' },
-  { src: 'feb 2012.jpg', title: 'February 2012 Cover', date: 'Feb 2012' }
+  { src: '1001702539.jpg', title: '1001702539', date: '1001702539' },
+  { src: '1001702550.jpg', title: '1001702550', date: '1001702550' },
+  { src: '1001702555.jpg', title: '1001702555', date: '1001702555' },
+  { src: 'APRIL-2013.jpg', title: 'APRIL 2013', date: 'APRIL 2013' },
+  { src: 'April  2011 Cover.jpg', title: 'April  2011 Cover', date: 'April  2011 Cover' },
+  { src: 'April  Issue Cover 10.jpg', title: 'April  Issue Cover 10', date: 'April  Issue Cover 10' },
+  { src: 'April-2012.png', title: 'April 2012', date: 'April 2012' },
+  { src: 'Augst  2011 Cover.jpg', title: 'Augst  2011 Cover', date: 'Augst  2011 Cover' },
+  { src: 'Augst Issue Cover 10.jpg', title: 'Augst Issue Cover 10', date: 'Augst Issue Cover 10' },
+  { src: 'Augst-2012.png', title: 'Augst 2012', date: 'Augst 2012' },
+  { src: 'Dec 2011 Cover.jpg', title: 'Dec 2011 Cover', date: 'Dec 2011 Cover' },
+  { src: 'Dec-2012.png', title: 'Dec 2012', date: 'Dec 2012' },
+  { src: 'December Cover 09.jpg', title: 'December Cover 09', date: 'December Cover 09' },
+  { src: 'FEB-2013.png', title: 'FEB 2013', date: 'FEB 2013' },
+  { src: 'Feb Issue Cover10.jpg', title: 'Feb Issue Cover10', date: 'Feb Issue Cover10' },
+  { src: 'February 2011 Cover.jpg', title: 'February 2011 Cover', date: 'February 2011 Cover' },
+  { src: 'JAN-2013.png', title: 'JAN 2013', date: 'JAN 2013' },
+  { src: 'Jan-2012.png', title: 'Jan 2012', date: 'Jan 2012' },
+  { src: 'July Issue Cover 10.jpg', title: 'July Issue Cover 10', date: 'July Issue Cover 10' },
+  { src: 'July-2012.png', title: 'July 2012', date: 'July 2012' },
+  { src: 'June Issue Cover 10.jpg', title: 'June Issue Cover 10', date: 'June Issue Cover 10' },
+  { src: 'June-2012.png', title: 'June 2012', date: 'June 2012' },
+  { src: 'MARCH-2013.png', title: 'MARCH 2013', date: 'MARCH 2013' },
+  { src: 'March  2011 Cover.jpg', title: 'March  2011 Cover', date: 'March  2011 Cover' },
+  { src: 'March Issue Cover 10.jpg', title: 'March Issue Cover 10', date: 'March Issue Cover 10' },
+  { src: 'May  2011 Cover.jpg', title: 'May  2011 Cover', date: 'May  2011 Cover' },
+  { src: 'May Issue Cover 10.jpg', title: 'May Issue Cover 10', date: 'May Issue Cover 10' },
+  { src: 'May-2012.png', title: 'May 2012', date: 'May 2012' },
+  { src: 'Nov cover 09.jpg', title: 'Nov cover 09', date: 'Nov cover 09' },
+  { src: 'Nov-2012.png', title: 'Nov 2012', date: 'Nov 2012' },
+  { src: 'November Cover 10.jpg', title: 'November Cover 10', date: 'November Cover 10' },
+  { src: 'Oct  2011 Cover.jpg', title: 'Oct  2011 Cover', date: 'Oct  2011 Cover' },
+  { src: 'Oct Issue Cover 09.jpg', title: 'Oct Issue Cover 09', date: 'Oct Issue Cover 09' },
+  { src: 'Oct-2012.png', title: 'Oct 2012', date: 'Oct 2012' },
+  { src: 'Sep Cover 10.jpg', title: 'Sep Cover 10', date: 'Sep Cover 10' },
+  { src: 'Sep-2012.png', title: 'Sep 2012', date: 'Sep 2012' },
+  { src: 'Sept  2011 Cover.jpg', title: 'Sept  2011 Cover', date: 'Sept  2011 Cover' },
+  { src: 'feb 2012.jpg', title: 'feb 2012', date: 'feb 2012' },
+  { src: 'feb-2012.png', title: 'feb 2012', date: 'feb 2012' },
 ];
 
 export default function HomeClientPage() {
@@ -37,6 +53,10 @@ export default function HomeClientPage() {
   const [memberData, setMemberData] = useState<any>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [inquiryStatus, setInquiryStatus] = useState<'idle'|'submitting'|'success'>('idle');
+  const [testimonials, setTestimonials] = useState<any[]>([]);
+  const [testimonialStatus, setTestimonialStatus] = useState<'idle'|'submitting'|'success'>('idle');
+  const [activeTestimonialIndex, setActiveTestimonialIndex] = useState(1);
 
   useEffect(() => {
     let unsubscribe = () => {};
@@ -82,6 +102,109 @@ export default function HomeClientPage() {
     setIsDropdownOpen(false);
   };
 
+  useEffect(() => {
+    const fetchTestimonials = async () => {
+      try {
+        const result = await getTestimonials();
+        if (result.success && result.data) {
+          setTestimonials(result.data);
+        } else {
+          console.error("Failed to fetch testimonials via server action", result.error);
+        }
+      } catch (e) {
+        console.error("Failed to fetch testimonials", e);
+      }
+    };
+    fetchTestimonials();
+  }, []);
+
+  const handleGoogleSignIn = async () => {
+    try {
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
+    } catch (error) {
+      console.error("Sign in failed", error);
+    }
+  };
+
+  const submitInquiry = async (e: any) => {
+    e.preventDefault();
+    if (!user) return;
+    setInquiryStatus('submitting');
+    try {
+      const formData = new FormData(e.target);
+      await addDoc(collection(db, "inquiries"), {
+        category: formData.get("category"),
+        message: formData.get("message"),
+        name: user.displayName || 'Unknown',
+        email: user.email,
+        createdAt: serverTimestamp()
+      });
+      setInquiryStatus('success');
+      e.target.reset();
+    } catch (err) {
+      console.error(err);
+      setInquiryStatus('idle');
+    }
+  };
+
+  const submitTestimonial = async (e: any) => {
+    e.preventDefault();
+    if (!user) return;
+    setTestimonialStatus('submitting');
+    try {
+      const formData = new FormData(e.target);
+      const newTestimonial = {
+        text: formData.get("text"),
+        name: user.displayName || 'Anonymous User',
+        email: user.email,
+        photoURL: user.photoURL || '',
+        createdAt: serverTimestamp()
+      };
+      await addDoc(collection(db, "testimonials"), newTestimonial);
+      setTestimonialStatus('success');
+      e.target.reset();
+      // Optimistically update list
+      setTestimonials(prev => [{ id: Math.random().toString(), ...newTestimonial }, ...prev].slice(0,6));
+    } catch (err) {
+      console.error(err);
+      setTestimonialStatus('idle');
+    }
+  };
+
+  const handleSmoothScroll = (e: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
+    e.preventDefault();
+    const targetElement = document.getElementById(targetId);
+    if (!targetElement) return;
+
+    const targetPosition = targetElement.getBoundingClientRect().top + window.pageYOffset;
+    const startPosition = window.pageYOffset;
+    const distance = targetPosition - startPosition;
+    const duration = 1500; // 1.5 seconds smooth scroll
+    let start: number | null = null;
+
+    const animation = (currentTime: number) => {
+      if (start === null) start = currentTime;
+      const timeElapsed = currentTime - start;
+      const progress = Math.min(timeElapsed / duration, 1);
+      
+      // easeInOutCubic
+      const ease = progress < 0.5 
+        ? 4 * progress * progress * progress 
+        : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+
+      window.scrollTo(0, startPosition + distance * ease);
+
+      if (timeElapsed < duration) {
+        requestAnimationFrame(animation);
+      } else {
+        window.history.pushState(null, '', '#' + targetId);
+      }
+    };
+
+    requestAnimationFrame(animation);
+  };
+
   return (
     <>
       
@@ -123,7 +246,7 @@ export default function HomeClientPage() {
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center gap-6 text-sm font-semibold text-slate-600">
                 <a href="/mission" className="hover:text-brandBlue transition-colors font-bold text-slate-800">Mission</a>
-                <a href="#about" className="hover:text-brandBlue transition-colors">Corporate</a>
+                <a href="#about" onClick={(e) => handleSmoothScroll(e, 'about')} className="hover:text-brandBlue transition-colors">Corporate</a>
                 <a href="/pricing" className="hover:text-brandBlue transition-colors">Pricing</a>
                 <div className="relative group/nav">
                     <button className="hover:text-brandBlue transition-colors flex items-center gap-1">
@@ -142,8 +265,8 @@ export default function HomeClientPage() {
                 </div>
                 <a href="gallery" className="hover:text-brandBlue transition-colors">Gallery</a>
                 <a href="archives" className="hover:text-brandBlue transition-colors">Archive</a>
-                <a href="#networks" className="hover:text-brandBlue transition-colors">Networks</a>
-                <a href="#advertisers" className="hover:text-brandBlue transition-colors">Advertisers</a>
+                <a href="#networks" onClick={(e) => handleSmoothScroll(e, 'networks')} className="hover:text-brandBlue transition-colors">Networks</a>
+                <a href="#advertisers" onClick={(e) => handleSmoothScroll(e, 'advertisers')} className="hover:text-brandBlue transition-colors">Advertisers</a>
 
                 {/* Auth State */}
                 {!user ? (
@@ -157,6 +280,7 @@ export default function HomeClientPage() {
                     <button id="nav-status-btn" onClick={() => setIsDropdownOpen(!isDropdownOpen)} className="flex items-center gap-1.5 focus:outline-none rounded-full p-0.5 border border-slate-200 hover:border-brandBlue transition-all bg-white" aria-expanded={isDropdownOpen}>
                         <img 
                             src={user.photoURL || "https://placehold.co/100x100/0a1e4b/ffffff?text=User"} 
+                            referrerPolicy="no-referrer"
                             alt="Profile" 
                             className="w-11 h-11 rounded-full object-cover shrink-0" 
                         />
@@ -213,7 +337,7 @@ export default function HomeClientPage() {
                     <span>Mission</span>
                     <i className="fa-solid fa-chevron-right text-slate-300 ml-auto text-[9px]"></i>
                 </a>
-                <a href="#about" className="flex items-center py-2.5 px-3 text-sm font-semibold text-slate-700 hover:text-brandBlue active:bg-slate-50 rounded-xl transition-all border-b border-slate-50 last:border-0">
+                <a href="#about" onClick={(e) => { setIsMobileMenuOpen(false); handleSmoothScroll(e, 'about'); }} className="flex items-center py-2.5 px-3 text-sm font-semibold text-slate-700 hover:text-brandBlue active:bg-slate-50 rounded-xl transition-all border-b border-slate-50 last:border-0">
                     <i className="fa-solid fa-building text-slate-400 mr-3 w-5 text-center text-xs"></i>
                     <span>Corporate</span>
                     <i className="fa-solid fa-chevron-right text-slate-300 ml-auto text-[9px]"></i>
@@ -247,12 +371,12 @@ export default function HomeClientPage() {
                     <span>Archive</span>
                     <i className="fa-solid fa-chevron-right text-slate-300 ml-auto text-[9px]"></i>
                 </a>
-                <a href="#networks" className="flex items-center py-2.5 px-3 text-sm font-semibold text-slate-700 hover:text-brandBlue active:bg-slate-50 rounded-xl transition-all border-b border-slate-50 last:border-0">
+                <a href="#networks" onClick={(e) => { setIsMobileMenuOpen(false); handleSmoothScroll(e, 'networks'); }} className="flex items-center py-2.5 px-3 text-sm font-semibold text-slate-700 hover:text-brandBlue active:bg-slate-50 rounded-xl transition-all border-b border-slate-50 last:border-0">
                     <i className="fa-solid fa-circle-nodes text-slate-400 mr-3 w-5 text-center text-xs"></i>
                     <span>Networks</span>
                     <i className="fa-solid fa-chevron-right text-slate-300 ml-auto text-[9px]"></i>
                 </a>
-                <a href="#advertisers" className="flex items-center py-2.5 px-3 text-sm font-semibold text-slate-700 hover:text-brandBlue active:bg-slate-50 rounded-xl transition-all border-b border-slate-50 last:border-0">
+                <a href="#advertisers" onClick={(e) => { setIsMobileMenuOpen(false); handleSmoothScroll(e, 'advertisers'); }} className="flex items-center py-2.5 px-3 text-sm font-semibold text-slate-700 hover:text-brandBlue active:bg-slate-50 rounded-xl transition-all border-b border-slate-50 last:border-0">
                     <i className="fa-solid fa-rectangle-ad text-slate-400 mr-3 w-5 text-center text-xs"></i>
                     <span>Advertisers</span>
                     <i className="fa-solid fa-chevron-right text-slate-300 ml-auto text-[9px]"></i>
@@ -302,10 +426,14 @@ export default function HomeClientPage() {
 
     {/* Main Hero Section */}
     <section id="home" className="relative py-20 md:py-28 bg-brandDark text-white border-b border-slate-900 overflow-hidden">
+        
+        {/* 3D Background from Three.js snippet */}
+        <iframe src="/three-bg.html" className="absolute inset-0 w-full h-full border-0 pointer-events-none z-0" title="3D Background"></iframe>
+
         {/* Subtle grid background */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-70"></div>
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-70 z-0 pointer-events-none"></div>
         {/* Ambient radial glow */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-brandBlue/20 rounded-full blur-[120px] pointer-events-none"></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-brandBlue/20 rounded-full blur-[120px] pointer-events-none z-0"></div>
 
         <div className="max-w-7xl mx-auto px-6 relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             {/* Left Content */}
@@ -315,21 +443,21 @@ export default function HomeClientPage() {
                     <span data-field="hero.location">London, UK</span> • SEPTEMBER 18-20, 2026
                 </div>
                 <h1 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black leading-tight tracking-tight text-white">
-                    <span data-field="hero.title">Vishwa Leader Dr. B. R. Ambedkar International Awards 2026</span>
+                    <span data-field="hero.title"><span translate="no" className="notranslate">Vishwa Leader</span> Dr. B. R. Ambedkar International Awards 2026</span>
                 </h1>
                 <p className="text-slate-300 text-base md:text-lg leading-relaxed max-w-2xl font-normal" data-field="hero.description">
-                    Vishwa Leader Techmedia Pvt. Ltd. coordinates global advocacy networks, academic research, and media ecosystems to amplify constitutional values and diaspora empowerment.
+                    On the eve of 135th Birth Anniversary of Dr. B. R. Ambedkar, Vishwa Leader Techmedia Pvt. Ltd. coordinates global advocacy networks, academic research, and media ecosystems to amplify constitutional values and diaspora empowerment. 🎉
                 </p>
                 
                 {/* CTA buttons for the three main calls */}
                 <div className="flex flex-col sm:flex-row flex-wrap gap-4 pt-4 w-full">
-                    <a id="btn-abstract" data-field="announcements.abstractLink" href="#conference-details" className="w-full sm:w-auto bg-brandBlue text-white font-bold px-6 py-4 rounded hover:bg-brandBlue/90 active:scale-[0.98] text-xs tracking-wider uppercase text-center transition-all shadow-md flex items-center justify-center gap-2">
+                    <a id="btn-abstract" data-field="announcements.abstractLink" href="#conference-details" onClick={(e) => handleSmoothScroll(e, 'conference-details')} className="w-full sm:w-auto bg-brandBlue text-white font-bold px-6 py-4 rounded hover:bg-brandBlue/90 active:scale-[0.98] text-xs tracking-wider uppercase text-center transition-all shadow-md flex items-center justify-center gap-2">
                         <i className="fa-solid fa-graduation-cap"></i> Submit Abstract
                     </a>
-                    <a id="btn-business" data-field="announcements.businessLink" href="#business-summit" className="w-full sm:w-auto bg-amber-500 text-brandDark font-bold px-6 py-4 rounded hover:bg-amber-400 active:scale-[0.98] text-xs tracking-wider uppercase text-center transition-all shadow-md flex items-center justify-center gap-2">
+                    <a id="btn-business" data-field="announcements.businessLink" href="#business-summit" onClick={(e) => handleSmoothScroll(e, 'business-summit')} className="w-full sm:w-auto bg-amber-500 text-brandDark font-bold px-6 py-4 rounded hover:bg-amber-400 active:scale-[0.98] text-xs tracking-wider uppercase text-center transition-all shadow-md flex items-center justify-center gap-2">
                         <i className="fa-solid fa-briefcase"></i> Business Participation
                     </a>
-                    <a id="btn-nomination" data-field="announcements.awardLink" href="#awards" className="w-full sm:w-auto border border-slate-500 text-white bg-slate-900/60 font-bold px-6 py-4 rounded hover:bg-slate-800 active:scale-[0.98] text-xs tracking-wider uppercase text-center transition-all shadow-sm flex items-center justify-center gap-2">
+                    <a id="btn-nomination" data-field="announcements.awardLink" href="#awards" onClick={(e) => handleSmoothScroll(e, 'awards')} className="w-full sm:w-auto border border-slate-500 text-white bg-slate-900/60 font-bold px-6 py-4 rounded hover:bg-slate-800 active:scale-[0.98] text-xs tracking-wider uppercase text-center transition-all shadow-sm flex items-center justify-center gap-2">
                         <i className="fa-solid fa-trophy"></i> Nominate for Award
                     </a>
                 </div>
@@ -478,7 +606,7 @@ export default function HomeClientPage() {
                         </p>
                         <div className="bg-white border border-slate-250 rounded-xl p-4 space-y-2 text-xs text-slate-700 mb-6">
                             <div className="flex justify-between py-1">
-                                <span className="text-slate-450">Editor & Owner</span>
+                                <span className="text-slate-450">Owner</span>
                                 <span className="font-bold text-slate-900">Shirish B. Ramteke</span>
                             </div>
                         </div>
@@ -657,7 +785,7 @@ export default function HomeClientPage() {
                     </h2>
                     <h3 className="text-lg font-bold text-slate-700 -mt-3">Call for Abstracts and Papers</h3>
                     <p className="text-slate-600 leading-relaxed text-sm md:text-base">
-                        Held on the eve of the <strong>Vishwa Leader Dr. B. R. Ambedkar International Awards 2026</strong> in London, UK. The organizing committee invites scholars, researchers, and activists to submit abstracts and full research papers for the academic conference at <strong>SOAS University of London</strong>.
+                        Held on the eve of the <strong><span translate="no" className="notranslate">Vishwa Leader</span> Dr. B. R. Ambedkar International Awards 2026</strong> in London, UK. The organizing committee invites scholars, researchers, and activists to submit abstracts and full research papers for the academic conference at <strong>SOAS University of London</strong>.
                     </p>
                     <p className="text-slate-655 leading-relaxed text-sm">
                         Featuring sessions on social justice, human rights, economic inclusion, and constitutional values, reimagining Dr. B. R. Ambedkar's vision in the 21st century.
@@ -666,7 +794,7 @@ export default function HomeClientPage() {
                         <a href="/call-for-papers" className="bg-brandBlue text-white font-bold px-6 py-3 rounded hover:bg-brandBlue/90 text-xs uppercase tracking-wider transition-all shadow-sm">
                             Read More & Details
                         </a>
-                        <a href="/auth/member" className="border border-slate-350 text-slate-700 bg-white hover:bg-slate-50 font-bold px-6 py-3 rounded text-xs uppercase tracking-wider transition-all">
+                        <a href="/auth/member?tab=submissions" className="border border-slate-350 text-slate-700 bg-white hover:bg-slate-50 font-bold px-6 py-3 rounded text-xs uppercase tracking-wider transition-all">
                             Submit Abstract
                         </a>
                     </div>
@@ -819,47 +947,28 @@ export default function HomeClientPage() {
                 </p>
             </div>
             
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                <div className="lg:col-span-8 bg-slate-800/50 border border-slate-700 rounded-2xl p-6 shadow-sm">
-                    <h3 className="font-display text-lg font-bold text-white mb-4 border-b border-slate-700 pb-2">Tour Highlights</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-slate-300">
-                        <div>
-                            <p className="font-bold text-amber-400 mb-1">Day 1-2: Arrival & Academic</p>
-                            <p className="text-xs mb-3">Arrival in London, check-in at Atrium Hotel LHR. Attend SOAS Conference.</p>
-                            <p className="font-bold text-amber-400 mb-1">Day 3: Business Summit</p>
-                            <p className="text-xs mb-3">Windsor Castle visit, International Business Summit.</p>
-                            <p className="font-bold text-amber-400 mb-1">Day 4: Awards Ceremony</p>
-                            <p className="text-xs mb-3">Morning leisure, Dr. Ambedkar Awards Ceremony at Greenwood Theatre.</p>
-                            <p className="font-bold text-amber-400 mb-1">Day 5: City Tour</p>
-                            <p className="text-xs mb-3">Guided City tour, Ambedkar Museum, Madame Tussauds, Oxford Street.</p>
-                        </div>
-                        <div>
-                            <p className="font-bold text-amber-400 mb-1">Day 6: Institutions</p>
-                            <p className="text-xs mb-3">LSE, India House, Grey's Inn, Tower of London.</p>
-                            <p className="font-bold text-amber-400 mb-1">Day 7: Outskirts</p>
-                            <p className="text-xs mb-3">Wolverhampton Buddha Vihara, Oxford Orientation tour.</p>
-                            <p className="font-bold text-amber-400 mb-1">Day 8: Departure</p>
-                            <p className="text-xs">Breakfast, check out, and transfer to airport.</p>
-                        </div>
+            <div className="max-w-5xl mx-auto bg-slate-800/50 border border-slate-700 rounded-2xl p-6 shadow-sm">
+                <h3 className="font-display text-lg font-bold text-white mb-4 border-b border-slate-700 pb-2">Tour Highlights</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-4 text-sm text-slate-300">
+                    <div>
+                        <p className="font-bold text-amber-400 mb-1">Day 1: Arrival</p>
+                        <p className="text-xs mb-3">Arrival in London, check-in at Hotel and Inaugural Function.</p>
+                        <p className="font-bold text-amber-400 mb-1">Day 2: Academic</p>
+                        <p className="text-xs mb-3">Attend SOAS Conference.</p>
+                        <p className="font-bold text-amber-400 mb-1">Day 3: Business Summit</p>
+                        <p className="text-xs mb-3">Windsor Castle visit, International Business Summit.</p>
+                        <p className="font-bold text-amber-400 mb-1">Day 4: Awards Ceremony</p>
+                        <p className="text-xs mb-3">Morning leisure, Dr. Ambedkar Awards Ceremony at Greenwood Theatre.</p>
                     </div>
-                </div>
-                
-                <div className="lg:col-span-4 space-y-6">
-                    <div className="bg-brandBlue text-white border border-brandBlue rounded-2xl p-6 shadow-md">
-                        <h4 className="font-display text-sm font-bold uppercase tracking-widest text-amber-300 border-b border-white/20 pb-2 mb-3">Tour Package Cost</h4>
-                        <div className="text-2xl font-black mb-1">₹ 2,86,400/-</div>
-                        <p className="text-[10px] opacity-80 mb-4">per person (Incl. GST & TCS)</p>
-                        
-                        <ul className="space-y-2 text-xs mb-4">
-                            <li><i className="fa-solid fa-check text-amber-300 mr-2"></i>Economy Airfare & Visa</li>
-                            <li><i className="fa-solid fa-check text-amber-300 mr-2"></i>4-Star Hotel Accommodation</li>
-                            <li><i className="fa-solid fa-check text-amber-300 mr-2"></i>Meals & Transfers Included</li>
-                        </ul>
-                        
-                        <div className="bg-white/10 p-3 rounded mt-2">
-                            <p className="text-[10px] font-bold uppercase mb-1 text-amber-300">Registration</p>
-                            <p className="text-xs font-mono">₹ 23,600/-</p>
-                        </div>
+                    <div>
+                        <p className="font-bold text-amber-400 mb-1">Day 5: City Tour</p>
+                        <p className="text-xs mb-3">Guided City tour, Ambedkar Museum, Madame Tussauds, Oxford Street.</p>
+                        <p className="font-bold text-amber-400 mb-1">Day 6: Institutions</p>
+                        <p className="text-xs mb-3">LSE, India House, Grey's Inn, Tower of London.</p>
+                        <p className="font-bold text-amber-400 mb-1">Day 7: Outskirts</p>
+                        <p className="text-xs mb-3">Wolverhampton Buddha Vihara, Oxford Orientation tour.</p>
+                        <p className="font-bold text-amber-400 mb-1">Day 8: Departure</p>
+                        <p className="text-xs">Breakfast, check out, and transfer to airport.</p>
                     </div>
                 </div>
             </div>
@@ -978,6 +1087,129 @@ export default function HomeClientPage() {
         </div>
     </section>
 
+    {/* Testimonials Section */}
+    <section id="testimonials" className="py-24 bg-[#141414] text-white border-t border-white/5">
+        <div className="max-w-7xl mx-auto px-6 overflow-hidden">
+            <div className="text-center mb-12">
+                <span className="text-xs font-bold tracking-widest text-brandBlue uppercase">Voices of the Community</span>
+                <h2 className="font-display text-3xl md:text-4xl font-black tracking-tight text-white mt-2">Testimonials</h2>
+            </div>
+            
+            {/* Carousel */}
+            <div className="relative max-w-5xl mx-auto flex items-center justify-center min-h-[400px]">
+                {(() => {
+                    let displayData = testimonials.length > 0 ? [...testimonials] : [];
+                    
+                    if (displayData.length === 0) {
+                        displayData = [
+                            { id: 'e1', text: "Be the first to share your experience! We'd love to hear from you.", name: "Community Member", designation: "" },
+                            { id: 'e2', text: "Your voice matters to us. Leave a testimonial below.", name: "Community Member", designation: "" },
+                            { id: 'e3', text: "Join our community of thought leaders and share your journey.", name: "Community Member", designation: "" }
+                        ];
+                    } else if (displayData.length === 1) {
+                        displayData = [displayData[0], displayData[0], displayData[0]];
+                    } else if (displayData.length === 2) {
+                        displayData = [displayData[0], displayData[1], displayData[0]];
+                    }
+                    
+                    const getIndex = (offset: number) => (activeTestimonialIndex + offset + displayData.length) % displayData.length;
+                    
+                    const leftIndex = getIndex(-1);
+                    const centerIndex = getIndex(0);
+                    const rightIndex = getIndex(1);
+
+                    return (
+                        <div className="flex w-full items-center justify-center relative h-[360px]">
+                            {/* Left Card */}
+                            <div className="absolute left-0 w-[30%] lg:w-[28%] h-[300px] bg-[#1a1a1a] rounded-xl shadow-lg opacity-40 scale-90 transition-all duration-500 ease-in-out p-6 flex flex-col justify-between hidden md:flex items-center text-center cursor-pointer" onClick={() => setActiveTestimonialIndex(leftIndex)}>
+                                <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-[#333] mb-4">
+                                    <img src={displayData[leftIndex]?.photoURL} alt="Avatar" className="w-full h-full object-cover" />
+                                </div>
+                                <p className="text-sm text-slate-400 italic line-clamp-4">"{displayData[leftIndex]?.text}"</p>
+                                <div className="mt-4">
+                                    <p className="text-xs text-slate-500">- {displayData[leftIndex]?.name}{displayData[leftIndex]?.designation && `, ${displayData[leftIndex].designation}`}</p>
+                                </div>
+                            </div>
+
+                            {/* Center Card */}
+                            <div className="z-10 w-[90%] md:w-[45%] lg:w-[40%] h-[360px] bg-[#2a2a2a] rounded-xl shadow-2xl opacity-100 scale-100 transition-all duration-500 ease-in-out p-8 flex flex-col items-center text-center">
+                                <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-slate-600 mb-6 shrink-0">
+                                    {displayData[centerIndex]?.photoURL ? (
+                                        <img src={displayData[centerIndex].photoURL} alt="Avatar" className="w-full h-full object-cover" />
+                                    ) : (
+                                        <div className="w-full h-full bg-slate-700 text-white flex items-center justify-center font-bold text-xl">{displayData[centerIndex]?.name?.charAt(0)}</div>
+                                    )}
+                                </div>
+                                <p className="text-base text-white leading-relaxed flex-grow">"{displayData[centerIndex]?.text}"</p>
+                                <div className="mt-6 shrink-0">
+                                    <p className="text-sm text-slate-300">- {displayData[centerIndex]?.name}{displayData[centerIndex]?.designation && `, ${displayData[centerIndex].designation}`}</p>
+                                </div>
+                            </div>
+
+                            {/* Right Card */}
+                            <div className="absolute right-0 w-[30%] lg:w-[28%] h-[300px] bg-[#1a1a1a] rounded-xl shadow-lg opacity-40 scale-90 transition-all duration-500 ease-in-out p-6 flex flex-col justify-between hidden md:flex items-center text-center cursor-pointer" onClick={() => setActiveTestimonialIndex(rightIndex)}>
+                                <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-[#333] mb-4">
+                                    <img src={displayData[rightIndex]?.photoURL} alt="Avatar" className="w-full h-full object-cover" />
+                                </div>
+                                <p className="text-sm text-slate-400 italic line-clamp-4">"{displayData[rightIndex]?.text}"</p>
+                                <div className="mt-4">
+                                    <p className="text-xs text-slate-500">- {displayData[rightIndex]?.name}{displayData[rightIndex]?.designation && `, ${displayData[rightIndex].designation}`}</p>
+                                </div>
+                            </div>
+                        </div>
+                    );
+                })()}
+            </div>
+
+            {/* Navigation */}
+            <div className="flex items-center justify-center gap-6 mt-8">
+                <button 
+                    onClick={() => setActiveTestimonialIndex(prev => prev === 0 ? (testimonials.length > 0 ? testimonials.length : 4) - 1 : prev - 1)}
+                    className="w-10 h-10 rounded-full border border-slate-600 flex items-center justify-center text-slate-400 hover:text-white hover:border-white transition-colors">
+                    <i className="fa-solid fa-chevron-left"></i>
+                </button>
+                <div className="flex gap-2">
+                    {Array.from({ length: testimonials.length > 0 ? testimonials.length : 4 }).map((_, i) => (
+                        <div key={i} onClick={() => setActiveTestimonialIndex(i)} className={`w-2.5 h-2.5 rounded-full cursor-pointer transition-colors ${activeTestimonialIndex === i ? 'bg-white' : 'bg-slate-600'}`}></div>
+                    ))}
+                </div>
+                <button 
+                    onClick={() => setActiveTestimonialIndex(prev => (prev + 1) % (testimonials.length > 0 ? testimonials.length : 4))}
+                    className="w-10 h-10 rounded-full border border-slate-600 flex items-center justify-center text-slate-400 hover:text-white hover:border-white transition-colors">
+                    <i className="fa-solid fa-chevron-right"></i>
+                </button>
+            </div>
+
+            {/* Write Testimonial Form */}
+            <div className="max-w-2xl mx-auto bg-[#1c1c1c] p-8 rounded-2xl shadow-xl border border-white/10 mt-16">
+                {!user ? (
+                    <div className="text-center space-y-4">
+                        <h3 className="font-bold text-white">Share Your Experience</h3>
+                        <p className="text-xs text-slate-400">Please sign in to write a testimonial.</p>
+                        <button onClick={handleGoogleSignIn} className="bg-white hover:bg-slate-200 text-slate-900 font-bold py-2.5 px-6 rounded-lg text-xs transition-colors inline-flex items-center gap-2">
+                           <i className="fa-brands fa-google text-brandBlue"></i> Sign In to Write
+                        </button>
+                    </div>
+                ) : testimonialStatus === 'success' ? (
+                    <div className="text-center space-y-2 py-4">
+                        <div className="w-12 h-12 rounded-full bg-emerald-500/10 text-emerald-400 flex items-center justify-center mx-auto text-xl mb-3"><i className="fa-solid fa-check"></i></div>
+                        <h3 className="font-bold text-white">Thank You!</h3>
+                        <p className="text-xs text-slate-400">Your testimonial has been added to our community.</p>
+                        <button onClick={() => setTestimonialStatus('idle')} className="text-brandBlue text-xs font-bold mt-2 hover:text-brandBlue/80">Write Another</button>
+                    </div>
+                ) : (
+                    <form onSubmit={submitTestimonial} className="space-y-4">
+                        <h3 className="font-bold text-white text-center mb-4">Share Your Experience</h3>
+                        <textarea name="text" rows={3} required placeholder="Write your honest review here..." className="w-full bg-[#2a2a2a] border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brandBlue focus:ring-1 focus:ring-brandBlue text-xs placeholder:text-slate-500"></textarea>
+                        <button type="submit" disabled={testimonialStatus === 'submitting'} className="w-full bg-brandDark text-white font-bold py-3 rounded-lg hover:bg-brandDark/95 transition-colors uppercase tracking-wider text-xs border border-brandDark">
+                            {testimonialStatus === 'submitting' ? 'Submitting...' : 'Post Testimonial'}
+                        </button>
+                    </form>
+                )}
+            </div>
+        </div>
+    </section>
+
     {/* Contact Section */}
     <section id="contact" className="py-20 md:py-24 bg-white">
         <div className="max-w-7xl mx-auto px-6">
@@ -1029,86 +1261,89 @@ export default function HomeClientPage() {
                 {/* Form Column (Google-Verified Inquiry) */}
                 <div className="lg:col-span-7 border border-slate-200 rounded-2xl p-8 bg-white shadow-sm flex flex-col justify-center">
                     
-                    {/* State A: Unauthenticated Visitor */}
-                    <div id="inquiry-unauth-container" className="space-y-6 text-center py-6">
-                        <div className="w-14 h-14 rounded-full bg-brandBlue/10 border border-brandBlue/20 flex items-center justify-center text-brandBlue text-xl mx-auto">
-                            <i className="fa-solid fa-shield-halved"></i>
-                        </div>
-                        <div className="space-y-2">
-                            <h3 className="font-display text-lg font-extrabold text-slate-900 tracking-tight">Verified Secure Inquiry</h3>
-                            <p className="text-xs text-slate-550 max-w-md mx-auto leading-relaxed">
-                                To prevent spam and register your contact details securely, we track sender email addresses verified by Google. Please sign in with a secure Google Account to submit your inquiry or message.
-                            </p>
-                        </div>
-                        <button onClick={() => {}} className="inline-flex items-center justify-center gap-3 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 hover:border-slate-300 shadow-sm font-bold px-8 py-3.5 rounded-xl transition-all active:scale-[0.98] text-xs uppercase tracking-wider mx-auto">
-                            <svg style={{ width: 16, height: 16, flexShrink: 0 }} viewBox="0 0 24 24">
-                                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
-                                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
-                            </svg>
-                            Sign In with Google
-                        </button>
-                    </div>
-
-                    {/* State B: Authenticated Visitor */}
-                    <div id="inquiry-auth-container" className="hidden space-y-6">
-                        <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-                            <div className="flex items-center gap-3">
-                                <div id="inquiry-verified-avatar" className="w-9 h-9 rounded-full bg-brandBlue text-white font-bold flex items-center justify-center text-xs overflow-hidden">
-                                    VL
-                                </div>
-                                <div className="text-left leading-normal">
-                                    <h4 id="inquiry-verified-name" className="text-xs font-bold text-slate-900">Name</h4>
-                                    <p id="inquiry-verified-email" className="text-[10px] text-slate-500 font-mono">email@gmail.com</p>
-                                </div>
+                    {!user ? (
+                        <div id="inquiry-unauth-container" className="space-y-6 text-center py-6">
+                            <div className="w-14 h-14 rounded-full bg-brandBlue/10 border border-brandBlue/20 flex items-center justify-center text-brandBlue text-xl mx-auto">
+                                <i className="fa-solid fa-shield-halved"></i>
                             </div>
-                            <span className="text-[9px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 rounded flex items-center gap-1">
-                                <i className="fa-solid fa-circle-check text-[10px]"></i> Verified Sender
-                            </span>
-                        </div>
-
-                        <form id="contactForm" onSubmit={(e) => e.preventDefault()} className="space-y-4 text-xs">
-                            <div className="space-y-1">
-                                <label className="font-bold uppercase tracking-wider text-slate-500">Inquiry Category</label>
-                                <select name="category" className="w-full bg-slate-50 border border-slate-200 rounded px-4 py-3 text-slate-800 focus:outline-none focus:border-brandBlue focus:ring-1 focus:ring-brandBlue text-xs">
-                                    <option>SOAS Conference 2026 - Article Submission</option>
-                                    <option>Dr. Ambedkar Awards - Attendee Registration</option>
-                                    <option>Vishwa Leader Magazine - Subscriptions & Print Ads</option>
-                                    <option>General Information Inquiry</option>
-                                </select>
+                            <div className="space-y-2">
+                                <h3 className="font-display text-lg font-extrabold text-slate-900 tracking-tight">Verified Secure Inquiry</h3>
+                                <p className="text-xs text-slate-550 max-w-md mx-auto leading-relaxed">
+                                    To prevent spam and register your contact details securely, we track sender email addresses verified by Google. Please sign in with a secure Google Account to submit your inquiry or message.
+                                </p>
                             </div>
-                            <div className="space-y-1">
-                                <label className="font-bold uppercase tracking-wider text-slate-500">Message Detail</label>
-                                <textarea name="message" rows={4} required className="w-full bg-slate-50 border border-slate-200 rounded px-4 py-3 text-slate-800 focus:outline-none focus:border-brandBlue focus:ring-1 focus:ring-brandBlue text-xs" placeholder="Type your inquiry or message here..."></textarea>
-                            </div>
-                            <button type="submit" className="w-full bg-brandDark text-white font-bold py-4 rounded hover:bg-brandDark/95 transition-colors uppercase tracking-wider text-xs">
-                                Submit Verified Inquiry
-                            </button>
-                        </form>
-                        
-                        <div className="text-center pt-2">
-                            <button onClick={() => {}} className="text-[10px] text-rose-500 hover:text-rose-600 font-bold uppercase tracking-wide">
-                                <i className="fa-solid fa-sign-out-alt"></i> Sign Out
+                            <button onClick={handleGoogleSignIn} className="inline-flex items-center justify-center gap-3 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 hover:border-slate-300 shadow-sm font-bold px-8 py-3.5 rounded-xl transition-all active:scale-[0.98] text-xs uppercase tracking-wider mx-auto">
+                                <svg style={{ width: 16, height: 16, flexShrink: 0 }} viewBox="0 0 24 24">
+                                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                                </svg>
+                                Sign In with Google
                             </button>
                         </div>
-                    </div>
+                    ) : inquiryStatus === 'success' ? (
+                        <div id="inquiry-success-alert" className="text-center py-8 space-y-4">
+                            <div className="w-12 h-12 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500 text-xl mx-auto">
+                                <i className="fa-solid fa-circle-check"></i>
+                            </div>
+                            <div className="space-y-1">
+                                <p className="text-xs font-bold text-slate-900">Message Sent Successfully</p>
+                                <p className="text-[10px] text-slate-550 max-w-xs mx-auto leading-relaxed">
+                                    Thank you! Your verified inquiry has been logged in our databases. The coordinator team will reach out directly to your Google email.
+                                </p>
+                            </div>
+                            <button onClick={() => setInquiryStatus('idle')} className="text-[9px] font-bold text-brandBlue uppercase bg-brandBlue/10 hover:bg-brandBlue/20 px-3 py-1.5 rounded transition-all">
+                                Send Another Message
+                            </button>
+                        </div>
+                    ) : (
+                        <div id="inquiry-auth-container" className="space-y-6">
+                            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                                <div className="flex items-center gap-3">
+                                    {user.photoURL ? (
+                                        <img src={user.photoURL} referrerPolicy="no-referrer" alt="Avatar" className="w-9 h-9 rounded-full border border-slate-200" />
+                                    ) : (
+                                        <div className="w-9 h-9 rounded-full bg-brandBlue text-white font-bold flex items-center justify-center text-xs overflow-hidden">
+                                            {user.displayName ? user.displayName.charAt(0) : "VL"}
+                                        </div>
+                                    )}
+                                    <div className="text-left leading-normal">
+                                        <h4 className="text-xs font-bold text-slate-900">{user.displayName || "Verified User"}</h4>
+                                        <p className="text-[10px] text-slate-500 font-mono">{user.email}</p>
+                                    </div>
+                                </div>
+                                <span className="text-[9px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 rounded flex items-center gap-1">
+                                    <i className="fa-solid fa-circle-check text-[10px]"></i> Verified Sender
+                                </span>
+                            </div>
 
-                    {/* Success State */}
-                    <div id="inquiry-success-alert" className="hidden text-center py-8 space-y-4">
-                        <div className="w-12 h-12 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500 text-xl mx-auto">
-                            <i className="fa-solid fa-circle-check"></i>
+                            <form onSubmit={submitInquiry} className="space-y-4 text-xs">
+                                <div className="space-y-1">
+                                    <label className="font-bold uppercase tracking-wider text-slate-500">Inquiry Category</label>
+                                    <select name="category" className="w-full bg-slate-50 border border-slate-200 rounded px-4 py-3 text-slate-800 focus:outline-none focus:border-brandBlue focus:ring-1 focus:ring-brandBlue text-xs">
+                                        <option>SOAS Conference 2026 - Article Submission</option>
+                                        <option>Dr. Ambedkar Awards - Attendee Registration</option>
+                                        <option>Vishwa Leader Magazine - Subscriptions & Print Ads</option>
+                                        <option>General Information Inquiry</option>
+                                    </select>
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="font-bold uppercase tracking-wider text-slate-500">Message Detail</label>
+                                    <textarea name="message" rows={4} required className="w-full bg-slate-50 border border-slate-200 rounded px-4 py-3 text-slate-800 focus:outline-none focus:border-brandBlue focus:ring-1 focus:ring-brandBlue text-xs" placeholder="Type your inquiry or message here..."></textarea>
+                                </div>
+                                <button type="submit" disabled={inquiryStatus === 'submitting'} className="w-full bg-brandDark text-white font-bold py-4 rounded hover:bg-brandDark/95 transition-colors uppercase tracking-wider text-xs disabled:opacity-50">
+                                    {inquiryStatus === 'submitting' ? 'Submitting...' : 'Submit Verified Inquiry'}
+                                </button>
+                            </form>
+                            
+                            <div className="text-center pt-2">
+                                <button onClick={handleLogout} className="text-[10px] text-rose-500 hover:text-rose-600 font-bold uppercase tracking-wide">
+                                    <i className="fa-solid fa-sign-out-alt"></i> Sign Out
+                                </button>
+                            </div>
                         </div>
-                        <div className="space-y-1">
-                            <p className="text-xs font-bold text-slate-900">Message Sent Successfully</p>
-                            <p className="text-[10px] text-slate-550 max-w-xs mx-auto leading-relaxed">
-                                Thank you! Your verified inquiry has been logged in our databases. The coordinator team will reach out directly to your Google email.
-                            </p>
-                        </div>
-                        <button onClick={() => {}} className="text-[9px] font-bold text-brandBlue uppercase bg-brandBlue/10 hover:bg-brandBlue/20 px-3 py-1.5 rounded transition-all">
-                            Send Another Message
-                        </button>
-                    </div>
+                    )}
                 </div>
             </div>
         </div>
@@ -1160,7 +1395,7 @@ export default function HomeClientPage() {
         </div>
 
         <div className="max-w-7xl mx-auto px-6 border-t border-slate-800 pt-8 text-center text-[10px] text-slate-500 font-normal">
-            <p>© 2026 Vishwa Leader Techmedia Private Limited. All Rights Reserved. Compiled under RNI & MCA guidelines.</p>
+            <p>© 2026 <span translate="no" className="notranslate">Vishwa Leader</span> Techmedia Private Limited. All Rights Reserved. Compiled under RNI & MCA guidelines.</p>
         </div>
     </footer>
     </>
