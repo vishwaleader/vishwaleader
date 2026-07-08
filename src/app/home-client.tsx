@@ -110,7 +110,7 @@ export default function HomeClientPage() {
         if (result.success && result.data) {
           setTestimonials(result.data);
         } else {
-          console.error("Failed to fetch testimonials via server action", result.error);
+          console.error("Failed to fetch testimonials via server action", (result as any).error);
         }
       } catch (e) {
         console.error("Failed to fetch testimonials", e);
