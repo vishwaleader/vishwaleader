@@ -1098,6 +1098,62 @@ export default function HomeClientPage() {
         </div>
     </section>
 
+    {/* Supported Organizations */}
+    <section id="organizations" className="py-20 md:py-24 bg-slate-50 border-b border-slate-200/60">
+        <div className="max-w-7xl mx-auto px-6">
+            <div className="text-center mb-16">
+                <span className="text-xs font-bold tracking-widest text-brandBlue uppercase">Global Network</span>
+                <h2 className="font-display text-3xl md:text-4xl font-black tracking-tight text-slate-900 mt-2">Supported Organizations</h2>
+                <p className="text-slate-550 mt-4 text-sm leading-relaxed max-w-2xl mx-auto">
+                    We are proud to be associated with leading trade and commerce networks that build business bridges, explore international markets, and support socio-economic initiatives globally.
+                </p>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+                {/* WLCC */}
+                <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm flex flex-col items-center text-center hover:shadow-md transition-shadow">
+                    <div className="h-24 flex items-center justify-center mb-6">
+                        <img src="/assets/images/WLCC.png" alt="West London Chambers of Commerce" className="max-h-full object-contain" />
+                    </div>
+                    <h3 className="font-bold text-lg text-slate-900 mb-3">West London Chambers of Commerce</h3>
+                    <p className="text-xs text-slate-600 mb-4 leading-relaxed">
+                        A highly recognized, proactive, non-profit British business chamber supporting companies across the West London boroughs.
+                    </p>
+                    <p className="text-xs text-slate-500 leading-relaxed">
+                        They act as a massive networking and business growth hub, hosting over 100 events a year, giving our business a direct bridge to the UK/European market and international trade assistance.
+                    </p>
+                </div>
+
+                {/* GBBC */}
+                <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm flex flex-col items-center text-center hover:shadow-md transition-shadow">
+                    <div className="h-24 flex items-center justify-center mb-6">
+                        <img src="/assets/images/GBBC.png" alt="Global Bahujan Business Council" className="max-h-full object-contain" />
+                    </div>
+                    <h3 className="font-bold text-lg text-slate-900 mb-3">Global Bahujan Business Council</h3>
+                    <p className="text-xs text-slate-600 mb-4 leading-relaxed">
+                        A global trade network focused on socio-economic empowerment, connecting and elevating entrepreneurs from historically underrepresented backgrounds.
+                    </p>
+                    <p className="text-xs text-slate-500 leading-relaxed">
+                        They provide a collaborative ecosystem to foster trade relations globally, help small-to-medium businesses scale up, and connect businesses for cross-border investments and mentorship.
+                    </p>
+                </div>
+
+                {/* DACCI */}
+                <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm flex flex-col items-center text-center hover:shadow-md transition-shadow">
+                    <div className="h-24 flex items-center justify-center mb-6">
+                        <img src="/assets/images/DACCI.png" alt="Ambedkar Chamber of Commerce and Industry" className="max-h-full object-contain mix-blend-multiply" />
+                    </div>
+                    <h3 className="font-bold text-lg text-slate-900 mb-3">Ambedkar Chamber of Commerce and Industry</h3>
+                    <p className="text-xs text-slate-600 mb-4 leading-relaxed">
+                        An Indian non-profit organization focused on promoting Economic Democracy and empowering first-generation entrepreneurs from marginalized communities.
+                    </p>
+                    <p className="text-xs text-slate-500 leading-relaxed">
+                        They provide resources, business training, financial inclusion guidance, and market linkages, pointing to a strong focus on inclusive business development and converting job seekers into job creators.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
     {/* Testimonials Section */}
     <section id="testimonials" className="py-24 bg-[#141414] text-white border-t border-white/5">
         <div className="max-w-7xl mx-auto px-6 overflow-hidden">
