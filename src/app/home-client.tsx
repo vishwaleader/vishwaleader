@@ -947,6 +947,11 @@ export default function HomeClientPage() {
                 <p className="text-slate-400 leading-relaxed text-sm">
                     Join us for an exclusive 7 Nights / 8 Days guided tour (17th Sept - 24th Sept 2026) encompassing the conference, summit, awards, and historical sightseeing across London and Oxford.
                 </p>
+                <div className="pt-2">
+                    <a href="https://vishwaleader.vercel.app/tour-package" className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold py-2 px-6 rounded-md text-sm transition-colors">
+                        Read More <i className="fa-solid fa-arrow-right text-xs"></i>
+                    </a>
+                </div>
             </div>
             
             <div className="max-w-5xl mx-auto bg-slate-800/50 border border-slate-700 rounded-2xl p-6 shadow-sm">
