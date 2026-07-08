@@ -861,11 +861,11 @@ export default function HomeClientPage() {
                 <div className="lg:col-span-5 order-2 lg:order-1">
                     <div className="bg-white border border-slate-200 rounded-2xl p-8 space-y-4 shadow-sm">
                         <h4 className="font-display font-bold text-slate-900 text-sm uppercase tracking-wide">Award Categories</h4>
-                        <ul className="space-y-3 text-xs text-slate-600">
-                            <li className="flex gap-2"><i className="fa-solid fa-trophy text-amber-500 mt-0.5"></i> <span>Dr. Ambedkar International Award (Socio-Economic Reforms)</span></li>
-                            <li className="flex gap-2"><i className="fa-solid fa-trophy text-amber-500 mt-0.5"></i> <span>International Socio-Cultural Leadership Award</span></li>
-                            <li className="flex gap-2"><i className="fa-solid fa-trophy text-amber-500 mt-0.5"></i> <span>Young Leader Academic Excellence Award</span></li>
-                            <li className="flex gap-2"><i className="fa-solid fa-trophy text-amber-500 mt-0.5"></i> <span>Constitutional Rights Advocacy Prize</span></li>
+                            <li className="flex gap-2"><i className="fa-solid fa-trophy text-amber-500 mt-0.5"></i> <span>Social Justice Leadership</span></li>
+                            <li className="flex gap-2"><i className="fa-solid fa-trophy text-amber-500 mt-0.5"></i> <span>Education and Empowerment</span></li>
+                            <li className="flex gap-2"><i className="fa-solid fa-trophy text-amber-500 mt-0.5"></i> <span>Economic Development and Inclusion</span></li>
+                            <li className="flex gap-2"><i className="fa-solid fa-trophy text-amber-500 mt-0.5"></i> <span>Human Rights Advocacy</span></li>
+                            <li className="flex gap-2"><i className="fa-solid fa-trophy text-amber-500 mt-0.5"></i> <span>Innovative Community Service</span></li>
                         </ul>
                     </div>
                 </div>

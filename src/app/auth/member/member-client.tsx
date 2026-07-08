@@ -1306,10 +1306,11 @@ export default function MemberClientPage() {
                                   onChange={(e) => setProfileCategory(e.target.value)}
                                   className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-brandBlue text-slate-800"
                                 >
-                                  <option value="ambedkar-awards">Dr. B. R. Ambedkar International Awards</option>
-                                  <option value="sociocultural-leadership">International Socio-Cultural Leadership Award</option>
-                                  <option value="young-leader-academic">Young Leader Academic Excellence Award</option>
-                                  <option value="constitutional-rights">Constitutional Rights Advocacy Prize</option>
+                                  <option value="social-justice-leadership">Social Justice Leadership</option>
+                                  <option value="education-empowerment">Education and Empowerment</option>
+                                  <option value="economic-development">Economic Development and Inclusion</option>
+                                  <option value="human-rights-advocacy">Human Rights Advocacy</option>
+                                  <option value="innovative-community-service">Innovative Community Service</option>
                                 </select>
                               </div>
                             </div>
