@@ -814,7 +814,7 @@ export default function MemberClientPage() {
 
       {/* Authenticated View: Collapsible Sidebar + Shadcn layout panels in Admin White Theme */}
       {!loading && user && (
-        <div className="w-full flex min-h-screen bg-slate-50 text-slate-900 font-sans">
+        <div className="w-full flex h-screen overflow-hidden bg-slate-50 text-slate-900 font-sans">
           <SidebarProvider>
             
             {/* Sidebar wrapper */}
@@ -932,7 +932,7 @@ export default function MemberClientPage() {
             </Sidebar>
 
             {/* Inset Main Pane */}
-            <SidebarInset className="bg-slate-50">
+            <SidebarInset className="bg-slate-50 h-screen overflow-y-auto">
               {/* Sticky Header bar */}
               <header className="flex h-16 shrink-0 items-center justify-between border-b border-slate-200 px-6 gap-4 bg-white sticky top-0 z-30">
                 <div className="flex items-center gap-2">
