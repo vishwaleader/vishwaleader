@@ -17,15 +17,54 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: "Vishwa Leader",
-  description: "Vishwa Leader Techmedia Private Limited",
+  title: "Vishwa Leader | Dr. B. R. Ambedkar International Awards 2026",
+  description:
+    "Vishwa Leader Techmedia Private Limited — Dr. B. R. Ambedkar International Awards 2026. Academic Conference, Business Summit & Award Ceremony. London, UK | September 18–20, 2026.",
   alternates: {
     canonical: "https://vishwaleader.com",
+  },
+  icons: {
+    icon: [
+      { url: "/assets/images/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+      { url: "/assets/images/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/assets/images/favicon.ico", sizes: "any" },
+    ],
+    apple: [
+      { url: "/assets/images/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
+    other: [
+      { rel: "android-chrome", url: "/assets/images/android-chrome-192x192.png", sizes: "192x192" },
+      { rel: "android-chrome", url: "/assets/images/android-chrome-512x512.png", sizes: "512x512" },
+    ],
+  },
+  openGraph: {
+    type: "website",
+    url: "https://www.vishwaleader.com",
+    siteName: "Vishwa Leader",
+    title: "Vishwa Leader | Dr. B. R. Ambedkar International Awards 2026",
+    description:
+      "Dr. B. R. Ambedkar International Awards 2026 — Academic Conference at SOAS, Business Summit & Award Ceremony at Greenwood Theatre, King's College London. September 18–20, 2026.",
+    images: [
+      {
+        url: "https://www.vishwaleader.com/assets/images/og-card.png",
+        width: 1024,
+        height: 1024,
+        alt: "Vishwa Leader — Dr. B. R. Ambedkar International Awards 2026, London",
+      },
+    ],
+    locale: "en_GB",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Vishwa Leader | Dr. B. R. Ambedkar International Awards 2026",
+    description:
+      "Academic Conference, Business Summit & Award Ceremony. London, UK | September 18–20, 2026.",
+    images: ["https://www.vishwaleader.com/assets/images/og-card.png"],
   },
   verification: {
     google: [
       "q4N3KTI45z79rdxu0McdajvAh4hQG3v4IjnIhMMCYyE",
-      "KRXML02ICZ_2HeuT9VZ2RtAbeZrYog9Hlxygc9Llup8"
+      "KRXML02ICZ_2HeuT9VZ2RtAbeZrYog9Hlxygc9Llup8",
     ],
   },
 };
