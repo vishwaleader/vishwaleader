@@ -32,7 +32,7 @@ export default function MissionPage() {
           {/* Background Image */}
           <div 
             className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
-            style={{ backgroundImage: 'url("/assets/images/Ambedkar_at_the_Round_Table_Conference.jpg")' }}
+            style={{ backgroundImage: 'url(/assets/images/Ambedkar_at_the_Round_Table_Conference.jpg)' }}
           ></div>
           {/* Neutral Overlay to ensure text readability without altering image color */}
           <div className="absolute inset-0 bg-black/60 z-0"></div>
