@@ -6,6 +6,9 @@ import { doc, getDoc, collection, addDoc, getDocs, query, orderBy, serverTimesta
 import { checkAdminSession, logoutAdmin } from "@/app/actions/adminAuth";
 import { getTestimonials } from "@/app/actions/testimonials";
 import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
 const magazineCoversList = [
   { src: '1001702539.jpg', title: '1001702539', date: '1001702539' },
@@ -1189,31 +1192,60 @@ export default function HomeClientPage() {
             </div>
 
             {/* Write Testimonial Form */}
-            <div className="max-w-2xl mx-auto bg-[#1c1c1c] p-8 rounded-2xl shadow-xl border border-white/10 mt-16">
-                {!user ? (
-                    <div className="text-center space-y-4">
-                        <h3 className="font-bold text-white">Share Your Experience</h3>
-                        <p className="text-xs text-slate-400">Please sign in to write a testimonial.</p>
-                        <button onClick={handleGoogleSignIn} className="bg-white hover:bg-slate-200 text-slate-900 font-bold py-2.5 px-6 rounded-lg text-xs transition-colors inline-flex items-center gap-2">
-                           <i className="fa-brands fa-google text-brandBlue"></i> Sign In to Write
-                        </button>
-                    </div>
-                ) : testimonialStatus === 'success' ? (
-                    <div className="text-center space-y-2 py-4">
-                        <div className="w-12 h-12 rounded-full bg-emerald-500/10 text-emerald-400 flex items-center justify-center mx-auto text-xl mb-3"><i className="fa-solid fa-check"></i></div>
-                        <h3 className="font-bold text-white">Thank You!</h3>
-                        <p className="text-xs text-slate-400">Your testimonial has been added to our community.</p>
-                        <button onClick={() => setTestimonialStatus('idle')} className="text-brandBlue text-xs font-bold mt-2 hover:text-brandBlue/80">Write Another</button>
-                    </div>
-                ) : (
-                    <form onSubmit={submitTestimonial} className="space-y-4">
-                        <h3 className="font-bold text-white text-center mb-4">Share Your Experience</h3>
-                        <textarea name="text" rows={3} required placeholder="Write your honest review here..." className="w-full bg-[#2a2a2a] border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brandBlue focus:ring-1 focus:ring-brandBlue text-xs placeholder:text-slate-500"></textarea>
-                        <button type="submit" disabled={testimonialStatus === 'submitting'} className="w-full bg-brandDark text-white font-bold py-3 rounded-lg hover:bg-brandDark/95 transition-colors uppercase tracking-wider text-xs border border-brandDark">
-                            {testimonialStatus === 'submitting' ? 'Submitting...' : 'Post Testimonial'}
-                        </button>
-                    </form>
-                )}
+            <div className="max-w-2xl mx-auto mt-16">
+                <Card className="bg-[#1c1c1c] border-white/10 text-white shadow-2xl">
+                    <CardHeader className="text-center pb-2">
+                        <CardTitle className="text-2xl font-bold tracking-tight text-white">Share Your Experience</CardTitle>
+                        <CardDescription className="text-slate-400">Join our community and let others know about your journey</CardDescription>
+                    </CardHeader>
+                    <CardContent className="pt-4">
+                        {!user ? (
+                            <div className="text-center space-y-5 py-4">
+                                <div className="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto text-slate-500 mb-2">
+                                    <i className="fa-solid fa-lock text-xl"></i>
+                                </div>
+                                <p className="text-sm text-slate-300">You must be signed in to submit a review.</p>
+                                <Button onClick={handleGoogleSignIn} variant="secondary" className="font-semibold text-xs px-6 py-5 rounded-xl w-full sm:w-auto">
+                                   <i className="fa-brands fa-google text-brandBlue mr-2"></i> Sign In to Write
+                                </Button>
+                            </div>
+                        ) : testimonialStatus === 'success' ? (
+                            <div className="text-center space-y-4 py-8">
+                                <div className="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto text-3xl mb-4 shadow-[0_0_15px_rgba(16,185,129,0.3)]">
+                                    <i className="fa-solid fa-check"></i>
+                                </div>
+                                <h3 className="text-xl font-bold text-white">Thank You!</h3>
+                                <p className="text-sm text-slate-400">Your testimonial is now live and part of our global community.</p>
+                                <Button onClick={() => setTestimonialStatus('idle')} variant="outline" className="text-brandBlue border-brandBlue/30 hover:bg-brandBlue/10 mt-4 rounded-xl text-xs font-bold">
+                                    Write Another
+                                </Button>
+                            </div>
+                        ) : (
+                            <form onSubmit={submitTestimonial} className="space-y-5">
+                                <div className="space-y-2">
+                                    <Textarea 
+                                        name="text" 
+                                        rows={4} 
+                                        required 
+                                        placeholder="I attended the SOAS conference and..." 
+                                        className="resize-none bg-[#2a2a2a] border-slate-700 text-white placeholder:text-slate-500 focus-visible:ring-brandBlue rounded-xl p-4 text-sm"
+                                    />
+                                </div>
+                                <Button 
+                                    type="submit" 
+                                    disabled={testimonialStatus === 'submitting'} 
+                                    className="w-full bg-brandBlue hover:bg-brandBlue/90 text-white font-bold py-6 rounded-xl transition-all shadow-lg text-sm"
+                                >
+                                    {testimonialStatus === 'submitting' ? (
+                                        <><i className="fa-solid fa-spinner fa-spin mr-2"></i> Submitting...</>
+                                    ) : (
+                                        'Post Testimonial'
+                                    )}
+                                </Button>
+                            </form>
+                        )}
+                    </CardContent>
+                </Card>
             </div>
         </div>
     </section>
