@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Sensitive credentials
+firebase_admin_cred.json
+firebase_admin_cred.b64
+cred_clean.txt
+add_ga4_env.py

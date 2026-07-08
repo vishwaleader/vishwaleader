@@ -725,7 +725,7 @@ export default function HomeClientPage() {
                         <div className="p-6 space-y-4">
                             <h3 className="font-display font-black text-slate-800 text-lg uppercase leading-tight" data-field="events.event2_name">International Business Summit</h3>
                             <div className="flex items-center gap-2 text-xs text-brandBlue font-bold">
-                                <i className="fa-solid fa-location-dot"></i> <span data-field="events.event2_venue">London, UK</span>
+                                <i className="fa-solid fa-location-dot"></i> <span data-field="events.event2_venue">Hotel Banquet Suite, London, UK</span>
                             </div>
                             <p className="text-xs text-slate-500 leading-relaxed" data-field="events.event2_focus">
                                 Connecting global diaspora entrepreneurs, business leaders, and investors. Promoting inclusive trade partnerships and economic empowerment.
@@ -753,7 +753,7 @@ export default function HomeClientPage() {
                         <div className="p-6 space-y-4">
                             <h3 className="font-display font-black text-slate-800 text-lg uppercase leading-tight" data-field="events.event3_name">International Award & Cultural Ceremony</h3>
                             <div className="flex items-center gap-2 text-xs text-brandBlue font-bold">
-                                <i className="fa-solid fa-location-dot"></i> <span data-field="events.event3_venue">London, UK</span>
+                                <i className="fa-solid fa-location-dot"></i> <span data-field="events.event3_venue">Greenwood Theatre, Guys Campus, King&apos;s College, London, UK</span>
                             </div>
                             <p className="text-xs text-slate-500 leading-relaxed" data-field="events.event3_focus">
                                 Presentation of the prestigious Dr. Ambedkar International Awards 2026. Followed by cultural performances, networking banquet, and celebratory dinner.
