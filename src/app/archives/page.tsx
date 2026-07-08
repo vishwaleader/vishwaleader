@@ -162,7 +162,7 @@ export default function ArchivesPage() {
                                 <div key={idx} className="flex flex-col items-center text-center space-y-4 group cursor-pointer" onClick={() => setModalState({ type: 'image', item: cover })}>
                                     <div className="relative w-[110px] h-[160px] sm:w-[130px] sm:h-[190px] active:scale-95 transition-transform duration-150">
                                         <div className="relative w-full h-full bg-slate-900 border border-slate-800/80 rounded-md shadow-lg overflow-hidden">
-                                            <img src={`/magazine-covers/${cover.src}`} alt={cover.title} className="w-full h-full object-cover" />
+                                            <img src={encodeURI(`/magazine-covers/${cover.src}`)} alt={cover.title} className="w-full h-full object-cover" loading="lazy" />
                                             <div className="absolute top-0 left-0 w-2.5 h-full bg-gradient-to-r from-black/45 to-transparent z-10"></div>
                                             <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/10 pointer-events-none z-10"></div>
                                         </div>
@@ -212,7 +212,7 @@ export default function ArchivesPage() {
                             <div className="space-y-6">
                                 <div className="aspect-[3/4] w-48 mx-auto rounded-xl overflow-hidden bg-slate-900 border border-slate-800 shadow-2xl relative">
                                     {modalState.type === 'image' ? (
-                                        <img src={`/magazine-covers/${modalState.item.src}`} alt="Cover Image" className="w-full h-full object-cover" />
+                                        <img src={encodeURI(`/magazine-covers/${modalState.item.src}`)} alt="Cover Image" className="w-full h-full object-cover" />
                                     ) : (
                                         <div className="w-full h-full bg-gradient-to-br from-slate-900 to-brandDark flex flex-col justify-between p-4">
                                             <div className="absolute top-0 left-0 w-2.5 h-full bg-black/25"></div>
@@ -243,7 +243,7 @@ export default function ArchivesPage() {
                             {modalState.type === 'pdf' ? (
                                 <iframe src={`/pdfs/${modalState.item.file}`} className="w-full h-full border-0 rounded-2xl shadow-2xl" style={{ minHeight: 'calc(100vh - 120px)' }}></iframe>
                             ) : (
-                                <img src={`/magazine-covers/${modalState.item.src}`} className="max-w-full max-h-[calc(100vh-140px)] object-contain rounded-xl shadow-2xl" />
+                                <img src={encodeURI(`/magazine-covers/${modalState.item.src}`)} className="max-w-full max-h-[calc(100vh-140px)] object-contain rounded-xl shadow-2xl" />
                             )}
                         </div>
                     </div>

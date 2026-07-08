@@ -5,6 +5,7 @@ import { onAuthStateChanged, signOut, User, GoogleAuthProvider, signInWithPopup 
 import { doc, getDoc, collection, addDoc, getDocs, query, orderBy, serverTimestamp, limit } from "firebase/firestore";
 import { checkAdminSession, logoutAdmin } from "@/app/actions/adminAuth";
 import { getTestimonials } from "@/app/actions/testimonials";
+import Image from "next/image";
 
 const magazineCoversList = [
   { src: '1001702539.jpg', title: '1001702539', date: '1001702539' },
@@ -565,7 +566,7 @@ export default function HomeClientPage() {
                     {[...magazineCoversList, ...magazineCoversList].map((cover, i) => (
                         <a key={i} href={`/archives/covers/MAGAZINE COVER-${cover.title}`} 
                            className="flex-shrink-0 w-[200px] md:w-[260px] aspect-[3/4] relative group rounded-xl overflow-hidden shadow-md bg-slate-900 border border-slate-700/50 hover:border-amber-400/80 transition-all cursor-pointer">
-                            <img src={`/magazine-covers/${cover.src}`} alt={cover.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy" />
+                            <Image src={encodeURI(`/magazine-covers/${cover.src}`)} alt={cover.title} fill sizes="(max-width: 768px) 200px, 260px" className="object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy" />
                             <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/25 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3 text-left">
                                 <h4 className="text-white text-xs md:text-sm font-bold leading-tight font-display">{cover.title}</h4>
                                 <span className="text-amber-400 text-[9px] md:text-[10px] font-extrabold mt-1 uppercase tracking-wider">{cover.date}</span>
