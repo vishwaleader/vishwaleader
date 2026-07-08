@@ -16,8 +16,8 @@ export async function getTestimonials() {
       return {
         id: doc.id,
         name: data.name || "Anonymous",
-        content: data.content || "",
-        title: data.title || "",
+        text: data.text || data.content || "",
+        designation: data.designation || data.title || "",
         company: data.company || "",
         image: data.image || "",
         photoURL: data.photoURL || "",
@@ -35,8 +35,8 @@ export async function getTestimonials() {
       {
         id: "1",
         name: "Dr. A. Sharma",
-        content: "An incredible global platform that genuinely amplifies the voices of academic researchers. The conference in London was an eye-opening experience.",
-        title: "Senior Researcher",
+        text: "An incredible global platform that genuinely amplifies the voices of academic researchers. The conference in London was an eye-opening experience.",
+        designation: "Senior Researcher",
         company: "Global Studies Institute",
         image: "",
         photoURL: "",
@@ -46,8 +46,8 @@ export async function getTestimonials() {
       {
         id: "2",
         name: "J. Peterson",
-        content: "The level of networking and the caliber of speakers at the Business Summit was unparalleled. Highly recommended for international entrepreneurs.",
-        title: "CEO",
+        text: "The level of networking and the caliber of speakers at the Business Summit was unparalleled. Highly recommended for international entrepreneurs.",
+        designation: "CEO",
         company: "Tech Innovations Ltd.",
         image: "",
         photoURL: "",

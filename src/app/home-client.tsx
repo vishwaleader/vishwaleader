@@ -1295,8 +1295,10 @@ export default function HomeClientPage() {
                                         <div className="w-full h-full bg-slate-700 text-white flex items-center justify-center font-bold text-lg">{displayData[leftIndex]?.name?.charAt(0) || "U"}</div>
                                     )}
                                 </div>
-                                <p className="text-sm text-slate-400 italic line-clamp-4">"{displayData[leftIndex]?.text}"</p>
-                                <div className="mt-4">
+                                <div className="flex-grow overflow-y-auto w-full px-2 mb-2 custom-scrollbar">
+                                    <p className="text-sm text-slate-400 italic">"{displayData[leftIndex]?.text}"</p>
+                                </div>
+                                <div className="mt-2 shrink-0">
                                     <p className="text-xs text-slate-500">- {displayData[leftIndex]?.name}{displayData[leftIndex]?.designation && `, ${displayData[leftIndex].designation}`}</p>
                                 </div>
                             </div>
@@ -1310,8 +1312,10 @@ export default function HomeClientPage() {
                                         <div className="w-full h-full bg-slate-700 text-white flex items-center justify-center font-bold text-xl">{displayData[centerIndex]?.name?.charAt(0)}</div>
                                     )}
                                 </div>
-                                <p className="text-base text-white leading-relaxed flex-grow">"{displayData[centerIndex]?.text}"</p>
-                                <div className="mt-6 shrink-0">
+                                <div className="flex-grow overflow-y-auto w-full px-2 mb-4 custom-scrollbar">
+                                    <p className="text-base text-white leading-relaxed">"{displayData[centerIndex]?.text}"</p>
+                                </div>
+                                <div className="mt-2 shrink-0">
                                     <p className="text-sm text-slate-300">- {displayData[centerIndex]?.name}{displayData[centerIndex]?.designation && `, ${displayData[centerIndex].designation}`}</p>
                                 </div>
                             </div>
@@ -1325,8 +1329,10 @@ export default function HomeClientPage() {
                                         <div className="w-full h-full bg-slate-700 text-white flex items-center justify-center font-bold text-lg">{displayData[rightIndex]?.name?.charAt(0) || "U"}</div>
                                     )}
                                 </div>
-                                <p className="text-sm text-slate-400 italic line-clamp-4">"{displayData[rightIndex]?.text}"</p>
-                                <div className="mt-4">
+                                <div className="flex-grow overflow-y-auto w-full px-2 mb-2 custom-scrollbar">
+                                    <p className="text-sm text-slate-400 italic">"{displayData[rightIndex]?.text}"</p>
+                                </div>
+                                <div className="mt-2 shrink-0">
                                     <p className="text-xs text-slate-500">- {displayData[rightIndex]?.name}{displayData[rightIndex]?.designation && `, ${displayData[rightIndex].designation}`}</p>
                                 </div>
                             </div>
