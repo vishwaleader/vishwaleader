@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 import GlobalPreloader from "@/components/GlobalPreloader";
 
 export default function MissionPage() {
@@ -29,10 +30,15 @@ export default function MissionPage() {
 
         {/* Hero Section */}
         <div className="text-white py-24 md:py-32 border-b border-slate-900 relative overflow-hidden flex items-center justify-center">
-          {/* Background Image */}
-          <div 
-            className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat bg-[url('/assets/images/Ambedkar_at_the_Round_Table_Conference.jpg')]"
-          ></div>
+          {/* Background Image using Next.js Image for reliable rendering */}
+          <Image 
+            src="/assets/images/Ambedkar_at_the_Round_Table_Conference.jpg"
+            alt="Ambedkar at the Round Table Conference"
+            fill
+            quality={100}
+            priority
+            className="object-cover object-center z-0"
+          />
           {/* Neutral Overlay to ensure text readability without altering image color */}
           <div className="absolute inset-0 bg-black/60 z-0"></div>
           
