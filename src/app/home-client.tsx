@@ -1110,6 +1110,101 @@ export default function HomeClientPage() {
         </div>
     </section>
 
+    {/* Azad TV Collaboration */}
+    <section id="azad-tv-collaboration" className="pt-10 pb-20 md:pt-12 md:pb-24 bg-slate-50 border-b border-slate-200/60">
+        <div className="max-w-7xl mx-auto px-6">
+            <div className="flex flex-col gap-6 md:gap-8 items-center">
+                
+                {/* Logos Above Header */}
+                <div className="flex flex-wrap items-center justify-center gap-8">
+                    <img src="/assets/images/vishwaleader-logo-hd.png" alt="Vishwa Leader" className="h-16 md:h-20 lg:h-24 object-contain" />
+                    <div className="text-brandBlue text-3xl md:text-4xl">
+                        <i className="fa-solid fa-handshake"></i>
+                    </div>
+                    <img src="/assets/images/Azad-TV.png" alt="Azad TV" className="h-16 md:h-20 lg:h-24 object-contain mix-blend-multiply" />
+                </div>
+
+                {/* Header Text */}
+                <div className="text-center space-y-4">
+                    <span className="text-xs font-bold tracking-widest text-brandBlue uppercase">Strategic Partnership</span>
+                    <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-black tracking-tight text-slate-900 leading-tight">
+                        Vishwa Leader & Azad-TV UK
+                    </h2>
+                </div>
+                    
+                    {/* Collaboration Photo */}
+                    <div className="rounded-2xl overflow-hidden shadow-xl border border-slate-200 bg-white">
+                        <img src="/assets/images/Shirsh-Ramteke-and-Ramesh-Klair.jpg" alt="Shirish Ramteke and Ramesh Klair" className="w-full h-auto max-h-[600px] object-contain bg-slate-50" />
+                        <div className="p-4 bg-white border-t border-slate-100 text-center">
+                            <p className="text-sm font-semibold text-slate-800">Shirish Ramteke <span className="text-slate-400 font-normal mx-2">|</span> Ramesh Klair</p>
+                            <p className="text-xs text-brandBlue uppercase tracking-wider mt-1 font-bold">Vishwa Leader & Azad TV UK</p>
+                        </div>
+                    </div>
+
+                {/* Bottom Column - Text Content */}
+                <div className="w-full space-y-8">
+                    <div className="bg-white rounded-2xl p-6 md:p-8 border border-slate-200 shadow-sm text-center">
+                        <p className="text-slate-700 leading-relaxed text-lg font-medium">
+                            Vishwa Leader, owned by <strong className="text-slate-900">Shirish Ramteke</strong>, is in strategic collaboration with Azad-TV UK, owned by <strong className="text-slate-900">Ramesh Klair</strong>, bridging the gap between global networks and community broadcasting.
+                        </p>
+                    </div>
+
+                    <div className="space-y-6">
+                        <div className="text-center">
+                            <h3 className="font-display text-2xl md:text-3xl font-bold tracking-tight text-slate-800 pb-2">
+                                About Ramesh Chander Klair
+                            </h3>
+                            <div className="w-24 h-1 bg-brandBlue/20 mx-auto rounded-full mb-4"></div>
+                            <p className="text-base text-slate-600 leading-relaxed max-w-3xl mx-auto">
+                                Ramesh Chander Klair is a British broadcaster and businessman based in Southall, West London, who serves as the director and owner of Azad TV Limited. Here is a breakdown of his professional profile and corporate registrations based on UK official records:
+                            </p>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                            <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm space-y-4">
+                                <h4 className="font-bold text-slate-800 text-base flex items-center gap-2 border-b border-slate-100 pb-3">
+                                    <i className="fa-solid fa-building text-brandBlue"></i>
+                                    Corporate Overview
+                                </h4>
+                                <ul className="space-y-4 text-sm text-slate-600">
+                                    <li className="flex gap-3">
+                                        <i className="fa-solid fa-check text-green-500 mt-1"></i>
+                                        <span><strong>Azad TV Limited:</strong> Incorporated on June 11, 2019, under company number 12044250. The channel provides programming catering to the South Asian diaspora, primarily focused on the Punjabi and broader Asian communities in the UK and Europe.</span>
+                                    </li>
+                                    <li className="flex gap-3">
+                                        <i className="fa-solid fa-check text-green-500 mt-1"></i>
+                                        <span><strong>Role:</strong> He is listed as an active Director and holds significant control over the company.</span>
+                                    </li>
+                                    <li className="flex gap-3">
+                                        <i className="fa-solid fa-check text-green-500 mt-1"></i>
+                                        <span><strong>Registered Address:</strong> 65 Norwood Road, Southall, England, UB2 4EA.</span>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm space-y-4">
+                                <h4 className="font-bold text-slate-800 text-base flex items-center gap-2 border-b border-slate-100 pb-3">
+                                    <i className="fa-solid fa-globe text-brandBlue"></i>
+                                    Other Ventures & Background
+                                </h4>
+                                <ul className="space-y-4 text-sm text-slate-600">
+                                    <li className="flex gap-3">
+                                        <i className="fa-solid fa-check text-green-500 mt-1"></i>
+                                        <span><strong>Kanshi TV:</strong> Prior to establishing Azad TV, he was closely involved with Kanshi TV (another prominent UK-based Punjabi community channel), serving as a director there until his resignation in January 2019 shortly before launching Azad TV.</span>
+                                    </li>
+                                    <li className="flex gap-3">
+                                        <i className="fa-solid fa-check text-green-500 mt-1"></i>
+                                        <span><strong>Human Rights & Community Work:</strong> He served as a director for the Sri Guru Ravidass International Organization for Human Rights from 2002 until 2012. He was also previously involved with the British Asian Multicultural Society (UK) Limited. His work heavily intersects with the Punjabi media landscape, cultural broadcasting, and community advocacy in the Greater London area.</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     {/* Legal Compliance Desk */}
     <section id="compliance" className="py-20 md:py-24 bg-white border-b border-slate-200/60">
         <div className="max-w-7xl mx-auto px-6">
