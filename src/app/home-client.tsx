@@ -1112,10 +1112,11 @@ export default function HomeClientPage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
                 {/* WLCC */}
                 <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm flex flex-col items-center text-center hover:shadow-md transition-shadow">
-                    <div className="h-24 flex items-center justify-center mb-6">
+                    <div className="h-28 flex items-center justify-center mb-6">
                         <img src="/assets/images/WLCC.png" alt="West London Chambers of Commerce" className="max-h-full object-contain" />
                     </div>
-                    <h3 className="font-bold text-lg text-slate-900 mb-3">West London Chambers of Commerce</h3>
+                    <h3 className="font-bold text-lg text-slate-900 mb-1">West London Chambers of Commerce</h3>
+                    <span className="text-xs font-bold tracking-widest text-brandBlue mb-4">(WLCC)</span>
                     <p className="text-xs text-slate-600 mb-4 leading-relaxed">
                         A highly recognized, proactive, non-profit British business chamber supporting companies across the West London boroughs.
                     </p>
@@ -1126,10 +1127,11 @@ export default function HomeClientPage() {
 
                 {/* GBBC */}
                 <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm flex flex-col items-center text-center hover:shadow-md transition-shadow">
-                    <div className="h-24 flex items-center justify-center mb-6">
-                        <img src="/assets/images/GBBC.png" alt="Global Bahujan Business Council" className="max-h-full object-contain" />
+                    <div className="h-40 flex items-center justify-center mb-4">
+                        <img src="/assets/images/GBBC.png" alt="Global Bahujan Business Council" className="max-h-full w-full object-contain" />
                     </div>
-                    <h3 className="font-bold text-lg text-slate-900 mb-3">Global Bahujan Business Council</h3>
+                    <h3 className="font-bold text-lg text-slate-900 mb-1">Global Bahujan Business Council</h3>
+                    <span className="text-xs font-bold tracking-widest text-brandBlue mb-4">(GBBC)</span>
                     <p className="text-xs text-slate-600 mb-4 leading-relaxed">
                         A global trade network focused on socio-economic empowerment, connecting and elevating entrepreneurs from historically underrepresented backgrounds.
                     </p>
@@ -1138,12 +1140,13 @@ export default function HomeClientPage() {
                     </p>
                 </div>
 
-                {/* DACCI */}
+                {/* ACCI */}
                 <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm flex flex-col items-center text-center hover:shadow-md transition-shadow">
-                    <div className="h-24 flex items-center justify-center mb-6">
-                        <img src="/assets/images/DACCI.png" alt="Ambedkar Chamber of Commerce and Industry" className="max-h-full object-contain mix-blend-multiply" />
+                    <div className="h-40 flex items-center justify-center mb-4">
+                        <img src="/assets/images/DACCI.png" alt="Ambedkar Chamber of Commerce and Industry" className="max-h-full w-full object-contain mix-blend-multiply" />
                     </div>
-                    <h3 className="font-bold text-lg text-slate-900 mb-3">Ambedkar Chamber of Commerce and Industry</h3>
+                    <h3 className="font-bold text-lg text-slate-900 mb-1">Ambedkar Chamber of Commerce and Industry</h3>
+                    <span className="text-xs font-bold tracking-widest text-brandBlue mb-4">(ACCI)</span>
                     <p className="text-xs text-slate-600 mb-4 leading-relaxed">
                         An Indian non-profit organization focused on promoting Economic Democracy and empowering first-generation entrepreneurs from marginalized communities.
                     </p>
