@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">VishwaLeader</string>
+    <string name="title_activity_main">VishwaLeader</string>
+    <string name="package_name">com.vishwaleader.app</string>
+    <string name="custom_url_scheme">com.vishwaleader.app</string>
+</resources>

@@ -55,11 +55,11 @@ export default function Preloader({ loading = true, onFadeComplete, isComingSoon
       
       {/* Subtitles */}
       <div className="flex flex-col items-center mt-[2px]">
-          <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "10px", fontWeight: 700, letterSpacing: "0.18em", color: "#0056CA", opacity: 0.55, textTransform: "uppercase" }}>
+          <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "10px", fontWeight: 700, letterSpacing: "0.18em", color: "#1e3a8a", textTransform: "uppercase" }}>
             TECHMEDIA
           </p>
           {isComingSoon && (
-            <p className="animate-pulse" style={{ fontFamily: "'Inter', sans-serif", fontSize: "10px", fontWeight: 700, letterSpacing: "0.18em", color: "#0056CA", opacity: 0.85, textTransform: "uppercase", marginTop: "4px" }}>
+            <p className="animate-pulse" style={{ fontFamily: "'Inter', sans-serif", fontSize: "10px", fontWeight: 700, letterSpacing: "0.18em", color: "#1e3a8a", textTransform: "uppercase", marginTop: "4px" }}>
               COMING SOON
             </p>
           )}

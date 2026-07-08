@@ -236,6 +236,7 @@ export default function HomeClientPage() {
                     <img src="/assets/images/vishwaleader-logo-hd.png" 
                           alt="Vishwa Leader Logo" 
                           className="h-9 md:h-12 w-auto object-contain transition-transform group-hover:scale-105" 
+                          fetchPriority="high"
                           onError={() => {}} />
                     <div className="flex flex-col gap-0.5 leading-none">
                         <span className="text-base md:text-lg font-black tracking-tight text-brandBlue font-display">Vishwa Leader</span>

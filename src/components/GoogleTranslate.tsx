@@ -286,7 +286,7 @@ export default function GoogleTranslate() {
 
       <Script
         src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"
-        strategy="afterInteractive"
+        strategy="lazyOnload"
       />
     </>
   );

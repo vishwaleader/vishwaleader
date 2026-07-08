@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
+    "@capacitor/core": "^8.4.1",
     "@e965/xlsx": "^0.20.3",
     "@google-analytics/data": "^6.1.0",
     "class-variance-authority": "^0.7.1",
@@ -31,6 +32,8 @@
     "uuid": "^14.0.1"
   },
   "devDependencies": {
+    "@capacitor/android": "^8.4.1",
+    "@capacitor/cli": "^8.4.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

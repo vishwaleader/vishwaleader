@@ -2,7 +2,7 @@
 
 import React, { useEffect } from "react";
 import Image from "next/image";
-import GlobalPreloader from "@/components/GlobalPreloader";
+
 
 export default function MissionPage() {
   useEffect(() => {
@@ -11,7 +11,7 @@ export default function MissionPage() {
 
   return (
     <>
-      <GlobalPreloader />
+
       <div className="min-h-screen bg-slate-50 text-slate-800 font-sans antialiased flex flex-col selection:bg-brandBlue selection:text-white pb-20">
         
         {/* Header */}
