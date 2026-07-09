@@ -114,7 +114,7 @@ const AutocompleteInput = ({ value, onChange, options, placeholder, required, cl
         autoComplete="off"
       />
       {showDropdown && filteredOptions.length > 0 && (
-        <ul className="absolute z-[100] w-full mt-1 max-h-48 overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-lg text-xs text-slate-800">
+        <ul className="absolute z-[100] w-full mt-1 max-h-60 overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-lg text-lg md:text-xl text-slate-800">
           {filteredOptions.map((opt: string, i: number) => (
             <li 
               key={i} 
@@ -899,7 +899,8 @@ export default function MemberClientPage() {
     <form onSubmit={(e) => e.preventDefault()} className="flex flex-col h-full relative">
       
       {/* Dynamic Slide Content */}
-      <div key={currentSlide.id} className="flex-grow flex flex-col justify-center py-4 px-2 max-w-3xl mx-auto w-full animate-in fade-in slide-in-from-bottom-4 duration-500 overflow-y-auto">
+      <div key={currentSlide.id} className="flex-grow flex flex-col justify-center py-4 px-2 max-w-3xl mx-auto w-full animate-in fade-in slide-in-from-bottom-4 duration-500 overflow-visible pb-32">
+        <div className="space-y-6 md:space-y-8">
         <h2 className="text-2xl md:text-4xl font-semibold text-slate-900 tracking-tight mb-2 font-display">
           {currentSlide.title}
         </h2>
@@ -1501,7 +1502,7 @@ export default function MemberClientPage() {
                       </div>
                     </div>
                     
-                    <div className="flex-grow flex flex-col w-full overflow-y-auto">
+                    <div className="flex-grow flex flex-col w-full overflow-visible pb-32">
                       {wizardFormContent}
                     </div>
                   </div>
