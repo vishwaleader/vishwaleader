@@ -1493,18 +1493,17 @@ export default function MemberClientPage() {
 
                 {/* ═════════════════════ TAB: DELEGATE REGISTRATION FORM ═════════════════════ */}
                 {activeTab === 'registration' && (
-                  <div className="space-y-6">
-
-
-                    <Card className="border-slate-200 bg-white rounded-2xl shadow-sm">
-                      <CardHeader>
-                        <CardTitle className="text-sm font-bold uppercase tracking-wider text-slate-500">Detailed Registration Document</CardTitle>
-                        <CardDescription className="text-xs text-slate-450">This information will be used for award certificate print and travel logs.</CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        {wizardFormContent}
-                      </CardContent>
-                    </Card>
+                  <div className="space-y-6 flex flex-col h-[calc(100vh-8rem)]">
+                    <div className="flex items-center justify-between border-b border-slate-200 pb-4 shrink-0">
+                      <div>
+                        <h2 className="text-2xl font-black font-display text-slate-900 uppercase tracking-tight">Detailed Registration Document</h2>
+                        <p className="text-xs text-slate-550 mt-0.5 font-medium">This information will be used for award certificate print and travel logs.</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex-grow flex flex-col w-full overflow-y-auto">
+                      {wizardFormContent}
+                    </div>
                   </div>
                 )}
 
