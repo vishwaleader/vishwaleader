@@ -205,7 +205,7 @@ export default function GoogleTranslate() {
   }
 
   const buttonContent = (
-    <div className={portalTarget ? "relative z-[9999] w-full" : "fixed bottom-24 md:bottom-8 right-4 z-[9999]"} ref={dropdownRef}>
+    <div className={portalTarget ? "relative z-[9999] w-full" : "fixed bottom-4 md:bottom-8 right-4 z-[9999]"} ref={dropdownRef}>
       {/* Custom Button */}
       {portalTarget ? (
         <button
