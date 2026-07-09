@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
   SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarHeader,
-  SidebarFooter, SidebarRail, SidebarInset, SidebarTrigger
+  SidebarFooter, SidebarRail, SidebarInset, SidebarTrigger, useSidebar
 } from "@/components/ui/sidebar";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -26,6 +26,21 @@ import * as XLSX from "@e965/xlsx";
 import { loginAsAdmin, logoutAdmin, checkAdminSession, getAdminDashboardData } from "@/app/actions/adminAuth";
 import { exportToGoogleSheets } from "@/app/actions/googleSheets";
 import { getWebTrafficData } from "@/app/actions/analytics";
+
+const MobileCloseSidebarMenuButton = ({ onClick, children, ...props }: any) => {
+  const { setOpenMobile, isMobile } = useSidebar();
+  return (
+    <SidebarMenuButton 
+      onClick={(e) => {
+        if (onClick) onClick(e);
+        if (isMobile) setOpenMobile(false);
+      }} 
+      {...props}
+    >
+      {children}
+    </SidebarMenuButton>
+  );
+};
 
 // ─── Admin Toast ────────────────────────────────────────────────────────────────
 type ToastType = 'info' | 'success' | 'activity' | 'error';
@@ -350,7 +365,7 @@ export default function AdminClientPage() {
                       { label: "Users", icon: <Users /> },
                     ].map(item => (
                       <SidebarMenuItem key={item.label}>
-                        <SidebarMenuButton isActive={activeTab === item.label} onClick={() => setActiveTab(item.label)}>
+                        <MobileCloseSidebarMenuButton isActive={activeTab === item.label} onClick={() => setActiveTab(item.label)}>
                           {item.icon}
                           <span>{item.label === "CRM" ? "CRM & Inquiries" : item.label === "Users" ? "User Management" : item.label === "Analytics" ? "Firebase Analytics" : "Default Dashboard"}</span>
                           {item.label === "Users" && totalUsers > 0 && (
@@ -359,7 +374,7 @@ export default function AdminClientPage() {
                           {item.label === "CRM" && totalInquiries > 0 && (
                             <span className="ml-auto text-[9px] font-bold bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full">{totalInquiries}</span>
                           )}
-                        </SidebarMenuButton>
+                        </MobileCloseSidebarMenuButton>
                       </SidebarMenuItem>
                     ))}
                   </SidebarMenu>
@@ -372,16 +387,16 @@ export default function AdminClientPage() {
                   <div id="sidebar-translate-container"></div>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
-                  <SidebarMenuButton onClick={() => window.location.href = "/"}>
+                  <MobileCloseSidebarMenuButton onClick={() => window.location.href = "/"}>
                     <LogOut className="rotate-180" />
                     <span>Return to Website</span>
-                  </SidebarMenuButton>
+                  </MobileCloseSidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
-                  <SidebarMenuButton onClick={handleLogout} className="text-red-600 hover:text-red-700 hover:bg-red-50">
+                  <MobileCloseSidebarMenuButton onClick={handleLogout} className="text-red-600 hover:text-red-700 hover:bg-red-50">
                     <LogOut />
                     <span>Log out</span>
-                  </SidebarMenuButton>
+                  </MobileCloseSidebarMenuButton>
                 </SidebarMenuItem>
               </SidebarMenu>
             </SidebarFooter>
@@ -389,7 +404,7 @@ export default function AdminClientPage() {
           </Sidebar>
 
           {/* ── Main Content ── */}
-          <SidebarInset>
+          <SidebarInset className="min-h-0 bg-slate-50 h-screen overflow-y-auto">
             {/* Header */}
             <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4 bg-white/80 backdrop-blur-sm sticky top-0 z-40">
               <div className="flex items-center gap-2 flex-1">
