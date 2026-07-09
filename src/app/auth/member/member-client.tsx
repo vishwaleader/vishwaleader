@@ -896,15 +896,15 @@ export default function MemberClientPage() {
   }, [wizardStep, currentSlide, wizardIntents, activeTab, isRegistrationComplete]);
 
   const wizardFormContent = (
-    <form onSubmit={(e) => e.preventDefault()} className="flex flex-col min-h-[50vh] relative">
+    <form onSubmit={(e) => e.preventDefault()} className="flex flex-col h-full relative">
       
       {/* Dynamic Slide Content */}
-      <div key={currentSlide.id} className="flex-grow flex flex-col justify-center py-10 px-4 max-w-3xl mx-auto w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
-        <h2 className="text-3xl md:text-5xl font-semibold text-slate-900 tracking-tight mb-3 font-display">
+      <div key={currentSlide.id} className="flex-grow flex flex-col justify-center py-4 px-2 max-w-3xl mx-auto w-full animate-in fade-in slide-in-from-bottom-4 duration-500 overflow-y-auto">
+        <h2 className="text-2xl md:text-4xl font-semibold text-slate-900 tracking-tight mb-2 font-display">
           {currentSlide.title}
         </h2>
         {currentSlide.subtitle && (
-          <p className="text-slate-500 text-lg mb-8">{currentSlide.subtitle}</p>
+          <p className="text-slate-500 text-base mb-6">{currentSlide.subtitle}</p>
         )}
 
         {/* Input Renders */}
@@ -935,19 +935,25 @@ export default function MemberClientPage() {
               className="w-full text-2xl md:text-3xl text-brandBlue bg-transparent border-0 border-b-2 border-slate-200 focus:ring-0 focus:border-brandBlue focus:outline-none py-4 transition-colors placeholder:text-slate-300"
             />
           ) : currentSlide.type === 'select' ? (
-            <div className="flex flex-col gap-3">
+            <div className="grid grid-cols-1 gap-4">
               {(currentSlide.options || []).map((opt: string, idx: number) => (
-                <button 
-                  key={opt}
-                  onClick={() => {
-                    currentSlide.setState?.(opt);
-                    setTimeout(goNext, 300);
-                  }}
-                  className={`w-full text-left px-6 py-4 text-xl md:text-2xl rounded-2xl border-2 transition-all ${currentSlide.state === opt ? 'border-brandBlue bg-blue-50/50 text-brandBlue shadow-sm' : 'border-slate-100 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50'}`}
-                >
-                  <span className="inline-block w-8 font-bold text-slate-300 text-sm mr-2">{String.fromCharCode(65 + idx)}</span>
-                  {opt}
-                </button>
+                <label key={opt} className="flex items-center justify-between gap-3 py-3 cursor-pointer transition-all">
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-sm md:text-base text-slate-800 mb-0.5">{opt}</h4>
+                  </div>
+                  <div>
+                    <input 
+                      type="radio" 
+                      name={currentSlide.id}
+                      className="w-5 h-5 text-brandBlue focus:ring-brandBlue border-slate-300"
+                      checked={currentSlide.state === opt}
+                      onChange={() => {
+                        currentSlide.setState?.(opt);
+                        setTimeout(goNext, 300);
+                      }}
+                    />
+                  </div>
+                </label>
               ))}
             </div>
           ) : currentSlide.type === 'intent' ? (
@@ -1004,32 +1010,58 @@ export default function MemberClientPage() {
               )}
             </div>
           ) : currentSlide.type === 'tour_select' ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               {[
                 { val: 'None', label: 'Not Interested', price: 'I will manage my own' },
                 { val: 'From India', label: 'From India', price: '₹1,31,000' },
                 { val: 'From Outside India', label: 'From Outside India', price: '₹2,00,501' }
               ].map(opt => (
-                <label key={opt.val} className={`flex flex-col gap-2 p-6 rounded-3xl border-2 cursor-pointer transition-all ${profilePackageTour === opt.val ? 'border-brandBlue bg-blue-50/50 shadow-md' : 'border-slate-100 hover:border-slate-200 bg-white'}`}>
-                  <input type="radio" name="tour" value={opt.val} checked={profilePackageTour === opt.val} onChange={(e) => { setProfilePackageTour(e.target.value); setTimeout(goNext, 300); }} className="sr-only" />
-                  <span className="text-xl font-bold text-slate-800">{opt.label}</span>
-                  <span className="text-sm font-bold text-brandBlue">{opt.price}</span>
+                <label key={opt.val} className="flex items-center justify-between gap-3 py-3 cursor-pointer transition-all">
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-sm md:text-base text-slate-800 mb-0.5">{opt.label}</h4>
+                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{opt.price}</p>
+                  </div>
+                  <div>
+                    <input 
+                      type="radio" 
+                      name="tour" 
+                      value={opt.val} 
+                      checked={profilePackageTour === opt.val} 
+                      onChange={(e) => { 
+                        setProfilePackageTour(e.target.value); 
+                        setTimeout(goNext, 300); 
+                      }} 
+                      className="w-5 h-5 text-brandBlue focus:ring-brandBlue border-slate-300" 
+                    />
+                  </div>
                 </label>
               ))}
             </div>
           ) : currentSlide.type === 'logistics' ? (
-            <div className="space-y-4">
-              <label className="flex items-center space-x-4 p-5 bg-white border border-slate-200 rounded-2xl cursor-pointer hover:bg-slate-50 transition-colors">
-                <input type="checkbox" checked={profileVisaSupport} onChange={(e) => setProfileVisaSupport(e.target.checked)} className="size-6 rounded text-brandBlue focus:ring-brandBlue" />
-                <span className="text-lg font-medium text-slate-700">Official Invitation Letter for Visa</span>
+            <div className="grid grid-cols-1 gap-4">
+              <label className="flex items-center justify-between gap-3 py-3 cursor-pointer transition-all">
+                <div className="flex-1">
+                  <h4 className="font-semibold text-sm md:text-base text-slate-800 mb-0.5">Official Invitation Letter for Visa</h4>
+                </div>
+                <div>
+                  <input type="checkbox" checked={profileVisaSupport} onChange={(e) => setProfileVisaSupport(e.target.checked)} className="w-5 h-5 rounded text-brandBlue focus:ring-brandBlue border-slate-300" />
+                </div>
               </label>
-              <label className="flex items-center space-x-4 p-5 bg-white border border-slate-200 rounded-2xl cursor-pointer hover:bg-slate-50 transition-colors">
-                <input type="checkbox" checked={profileAccommodation} onChange={(e) => setProfileAccommodation(e.target.checked)} className="size-6 rounded text-brandBlue focus:ring-brandBlue" />
-                <span className="text-lg font-medium text-slate-700">Accommodation Assistance</span>
+              <label className="flex items-center justify-between gap-3 py-3 cursor-pointer transition-all">
+                <div className="flex-1">
+                  <h4 className="font-semibold text-sm md:text-base text-slate-800 mb-0.5">Accommodation Assistance</h4>
+                </div>
+                <div>
+                  <input type="checkbox" checked={profileAccommodation} onChange={(e) => setProfileAccommodation(e.target.checked)} className="w-5 h-5 rounded text-brandBlue focus:ring-brandBlue border-slate-300" />
+                </div>
               </label>
-              <label className="flex items-center space-x-4 p-5 bg-white border border-slate-200 rounded-2xl cursor-pointer hover:bg-slate-50 transition-colors">
-                <input type="checkbox" checked={profileWheelchair} onChange={(e) => setProfileWheelchair(e.target.checked)} className="size-6 rounded text-brandBlue focus:ring-brandBlue" />
-                <span className="text-lg font-medium text-slate-700">Wheelchair Support Needed</span>
+              <label className="flex items-center justify-between gap-3 py-3 cursor-pointer transition-all">
+                <div className="flex-1">
+                  <h4 className="font-semibold text-sm md:text-base text-slate-800 mb-0.5">Wheelchair Support Needed</h4>
+                </div>
+                <div>
+                  <input type="checkbox" checked={profileWheelchair} onChange={(e) => setProfileWheelchair(e.target.checked)} className="w-5 h-5 rounded text-brandBlue focus:ring-brandBlue border-slate-300" />
+                </div>
               </label>
             </div>
           ) : currentSlide.type === 'review' ? (
@@ -1096,7 +1128,7 @@ export default function MemberClientPage() {
       </div>
 
       {/* Persistent Bottom Bar */}
-      <div className="sticky bottom-0 w-full bg-white/90 backdrop-blur-xl border-t border-slate-200 p-4 z-20 mt-auto">
+      <div className="w-full bg-white border-t border-slate-200 p-4 mt-auto shrink-0">
         <div className="w-full flex items-center justify-between gap-4 px-2 sm:px-8">
           
           <div className="flex-grow hidden sm:block">
@@ -1204,9 +1236,13 @@ export default function MemberClientPage() {
         <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
           {/* Standalone Wizard Header */}
           <header className="h-16 flex items-center justify-between px-4 sm:px-8 bg-white border-b border-slate-200 shrink-0 shadow-sm z-10 relative">
-            <a href="/" className="flex items-center">
-              <img src="/assets/images/vishwaleader-logo-hd.png" alt="Vishwa Leader" className="h-8 w-auto object-contain" />
-            </a>
+            <div className="flex items-center gap-4">
+              <a href="/" className="flex items-center">
+                <img src="/assets/images/vishwaleader-logo-hd.png" alt="Vishwa Leader" className="h-8 w-auto object-contain" />
+              </a>
+              <div className="hidden sm:block h-6 w-[1px] bg-slate-200"></div>
+              <h1 className="text-sm sm:text-base font-black font-display text-slate-900 uppercase tracking-tight">Delegate Onboarding</h1>
+            </div>
             <div className="flex items-center gap-4">
               <div className="text-right hidden sm:block">
                 <p className="text-xs font-bold text-slate-800">{user.displayName || "Delegate"}</p>
@@ -1221,17 +1257,12 @@ export default function MemberClientPage() {
           </header>
 
           {/* Wizard Content */}
-          <main className="flex-1 overflow-y-auto p-4 sm:p-8 flex justify-center py-10 relative">
+          <main className="flex-1 overflow-hidden p-4 sm:p-8 flex flex-col justify-center relative">
             {/* Minimal ambient background */}
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-64 bg-brandBlue/5 blur-3xl rounded-full pointer-events-none -z-10"></div>
             
-            <div className="w-full max-w-3xl animate-fade-in-up">
-              <div className="mb-8 text-center space-y-2">
-                <h1 className="text-3xl font-black font-display text-slate-900 uppercase tracking-tight">Delegate Onboarding</h1>
-                <p className="text-sm text-slate-500 font-medium max-w-lg mx-auto">Please complete your registration profile to unlock the member portal and proceed to the payment checkpoint.</p>
-              </div>
-
-              <Card className="border-slate-200/60 bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl overflow-hidden p-6 sm:p-10 ring-1 ring-slate-900/5">
+            <div className="w-full max-w-3xl mx-auto h-full flex flex-col animate-fade-in-up pb-4">
+              <Card className="border-slate-200/60 bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl overflow-hidden ring-1 ring-slate-900/5 flex-grow flex flex-col h-full">
                 {wizardFormContent}
               </Card>
             </div>
