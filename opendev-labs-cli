@@ -98,6 +98,31 @@ deploy_project() {
     print_success "=== Deployment Finished Successfully! ==="
 }
 
+deploy_project_local_build() {
+    print_bold "=== Starting Local Build & Vercel Deployment ==="
+    echo "Staging files for Git..."
+    git add .
+    
+    read -p "Enter commit message (Press Enter for 'update: workspace sync'): " msg
+    if [ -z "$msg" ]; then
+        msg="update: workspace sync"
+    fi
+    
+    echo "Committing: '$msg'..."
+    git commit -m "$msg" || echo "No changes to commit in Git."
+    
+    echo "Pushing codebase to GitHub (upstream main)..."
+    git push upstream main || echo "Git push failed or up to date, continuing to deployment..."
+    
+    echo "Building project locally (so you can see the terminal build)..."
+    npx vercel build --prod
+    
+    echo "Deploying prebuilt output to Vercel..."
+    npx vercel deploy --prebuilt --prod
+    
+    print_success "=== Deployment Finished Successfully! ==="
+}
+
 cd "$PROJECT_DIR" || exit
 
 case "$1" in
@@ -119,12 +144,25 @@ case "$1" in
     deploy)
         deploy_project
         ;;
+    view)
+        if [ "$2" == "deploy" ]; then
+            deploy_project_local_build
+        else
+            print_error "Unknown view command: $2"
+            print_help
+            exit 1
+        fi
+        ;;
     help|--help|-h|"")
         print_help
         ;;
     *)
-        print_error "Unknown command: $1"
-        print_help
-        exit 1
+        if [ "$1 view deploy" == "$1 $2 $3" ] && [ "$1" == "view" ]; then
+            deploy_project_local_build
+        else
+            print_error "Unknown command: $1"
+            print_help
+            exit 1
+        fi
         ;;
 esac
