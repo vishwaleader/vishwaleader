@@ -358,6 +358,7 @@ export default function MemberClientPage() {
   const [profilePurpose, setProfilePurpose] = useState("");
   const [submissions, setSubmissions] = useState<any[]>([]);
   const [showSubForm, setShowSubForm] = useState(true);
+  const [showBilling, setShowBilling] = useState(false);
   const [subFileName, setSubFileName] = useState("");
 
   // Toast status alert
@@ -2338,7 +2339,7 @@ export default function MemberClientPage() {
                       return;
                     }
                     await handleSaveRegistration();
-                    handlePayment();
+                    setShowBilling(true);
                   }}
                   className="bg-slate-900 text-white hover:bg-slate-800 font-semibold h-12 px-8 rounded-xl shadow-lg transition-colors text-sm"
                 >
@@ -3002,7 +3003,7 @@ export default function MemberClientPage() {
                                 return;
                               }
                               await handleSaveRegistration();
-                              handlePayment();
+                              setShowBilling(true);
                             }}
                             className="bg-slate-900 text-white hover:bg-slate-800 font-semibold h-12 px-8 rounded-xl shadow-lg transition-colors text-sm"
                           >
@@ -3569,6 +3570,116 @@ export default function MemberClientPage() {
                   Yes, Re-register
                 </Button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Billing / Receipt Modal ── */}
+      {showBilling && (
+        <div
+          onClick={() => setShowBilling(false)}
+          className="fixed inset-0 z-[9998] flex items-center justify-center"
+          style={{ background: "rgba(0,0,0,0.65)", backdropFilter: "blur(8px)" }}
+        >
+          <div
+            className="relative bg-white rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden animate-in fade-in zoom-in-95 duration-300 max-h-[90vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Top accent bar */}
+            <div className="absolute top-0 left-0 w-full h-1 bg-brandBlue" />
+
+            {/* Header */}
+            <div className="bg-[#0a0a0a] px-8 pt-8 pb-7 relative shrink-0">
+              <button
+                onClick={() => setShowBilling(false)}
+                className="absolute top-4 right-4 text-slate-500 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-white/10"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              <div className="flex items-center gap-4 mb-4">
+                <ShieldAlert className="w-10 h-10 text-brandBlue shrink-0 drop-shadow-md" />
+                <div>
+                  <h2 className="text-xl font-bold text-white tracking-tight">Secure Checkout</h2>
+                  <p className="text-slate-400 text-xs mt-0.5">Review your order before payment</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-5 text-xs font-medium text-slate-500 mt-4">
+                <span className="flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5 text-emerald-500" /> SSL Secured</span>
+                <span className="flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5 text-emerald-500" /> Authorized Gateway</span>
+                <div className="ml-auto opacity-80 grayscale invert brightness-200 mix-blend-screen">
+                  <img src="/assets/images/razorpay.svg" alt="Razorpay" className="h-4 object-contain" />
+                </div>
+              </div>
+            </div>
+
+            {/* Body — Receipt */}
+            <div className="px-8 py-7 space-y-5 overflow-y-auto">
+
+              {/* Delegate info */}
+              <div className="flex items-center gap-4 p-4 bg-slate-50 border border-slate-100 rounded-xl">
+                <img
+                  src={memberData?.headshotUrl || user?.photoURL || "https://placehold.co/100x100"}
+                  referrerPolicy="no-referrer"
+                  className="w-11 h-11 rounded-full border border-slate-200 object-cover shrink-0"
+                  alt="Profile"
+                />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-slate-900 truncate">{memberData?.name || profileName || user?.displayName || "Delegate"}</p>
+                  <p className="text-xs text-slate-500 truncate">{user?.email}</p>
+                  {(memberData?.designation || profileDesignation) && (
+                    <p className="text-[10px] text-slate-400 mt-0.5 truncate">{memberData?.designation || profileDesignation}{(memberData?.organization || profileOrganization) ? ` • ${memberData?.organization || profileOrganization}` : ""}</p>
+                  )}
+                </div>
+                <span className="text-[9px] font-mono font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded shrink-0">
+                  VL-2026-{(user?.uid?.substring(0, 4) || "XXXX").toUpperCase()}
+                </span>
+              </div>
+
+              {/* Total */}
+              <div className="bg-slate-900 p-4 rounded-xl flex items-center justify-between shadow-md mt-4">
+                <span className="text-sm font-bold uppercase tracking-wider text-slate-400">Total Due Today</span>
+                <span className="text-2xl font-semibold text-white">₹{calculateWizardTotal().toLocaleString('en-IN')}</span>
+              </div>
+
+              {/* Legal consent */}
+              <label className="flex items-start gap-3 p-4 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer hover:border-slate-300 transition-colors">
+                <input
+                  type="checkbox"
+                  checked={profileLegalConsent}
+                  onChange={(e) => setProfileLegalConsent(e.target.checked)}
+                  className="mt-0.5 w-4 h-4 rounded text-slate-900 focus:ring-slate-900 shrink-0"
+                />
+                <span className="text-sm text-slate-600 leading-tight">
+                  I confirm that all information provided is accurate and I agree to the{" "}
+                  <a href="/terms" target="_blank" className="font-semibold text-slate-900 hover:underline">
+                    Terms and Conditions
+                  </a>{" "}
+                  to finalize this transaction.
+                </span>
+              </label>
+            </div>
+
+            {/* Footer */}
+            <div className="px-8 py-5 border-t border-slate-100 flex items-center justify-end gap-3 shrink-0">
+              <button
+                onClick={() => setShowBilling(false)}
+                className="rounded-xl font-semibold h-12 px-6 border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all shadow-sm bg-white text-sm"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  setShowBilling(false);
+                  handlePayment();
+                }}
+                disabled={loading || !profileLegalConsent}
+                className="bg-slate-900 text-white hover:bg-slate-800 font-semibold h-12 px-8 rounded-xl shadow-lg transition-colors text-sm flex items-center gap-2 disabled:opacity-50"
+              >
+                {loading ? "Processing..." : "Pay & Finalize"}
+              </button>
             </div>
           </div>
         </div>

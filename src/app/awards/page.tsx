@@ -119,6 +119,26 @@ export default function AwardsPage() {
               </ul>
             </div>
 
+            {/* Google Maps */}
+            <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+              <div className="p-6 border-b border-slate-100">
+                <h2 className="text-xl font-semibold text-slate-900 flex items-center gap-2">
+                  <MapPin className="w-5 h-5 text-slate-400" /> Venue Location
+                </h2>
+                <p className="text-slate-500 text-sm mt-1">Greenwood Theatre, Guys Campus, King&apos;s College, London</p>
+              </div>
+              <iframe
+                src={`https://www.google.com/maps/embed/v1/place?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_EMBED_API_KEY}&q=Greenwood+Theatre,King%27s+College+London,UK&zoom=15&maptype=satellite`}
+                width="100%"
+                height="300"
+                style={{ border: 0 }}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                title="Awards Venue — Greenwood Theatre, London"
+              />
+            </div>
+
           </div>
 
           {/* Sidebar (Right) */}

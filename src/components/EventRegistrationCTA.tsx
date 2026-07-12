@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, User } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { createDynamicOrder, verifyDynamicPayment } from "@/app/actions/paymentActions";
+import { Check, CheckCircle, ShieldAlert, X } from "lucide-react";
 
 interface EventRegistrationCTAProps {
   itemId: string;
@@ -30,6 +31,30 @@ const loadRazorpay = (): Promise<boolean> =>
     document.body.appendChild(s);
   });
 
+// ── Item label + price map (client-side mirror of server PRICE_DICTIONARY) ──
+const ITEM_INFO: Record<string, { label: string; amount: number }> = {
+  reg_conference: { label: "International Conference Registration", amount: 5900 },
+  reg_business: { label: "International Business Summit Registration", amount: 11800 },
+  reg_award: { label: "International Awards Ceremony Registration", amount: 5900 },
+  reg_presenter: { label: "Conference Presenter Registration", amount: 5900 },
+  reg_souvenir: { label: "Official Souvenir Article Submission", amount: 5900 },
+  day_1: { label: "Day 1 — Conference Pass", amount: 5900 },
+  day_2: { label: "Day 2 — Business Summit Pass", amount: 11800 },
+  day_3: { label: "Day 3 — Awards Ceremony Pass", amount: 5900 },
+  ad_front_cover: { label: "Souvenir Ad — Front Cover (Premium)", amount: 500000 },
+  ad_back_cover: { label: "Souvenir Ad — Back Cover (Premium)", amount: 200000 },
+  ad_inside_cover: { label: "Souvenir Ad — Inside Cover", amount: 150000 },
+  ad_double_spread: { label: "Souvenir Ad — Double Spread", amount: 100000 },
+  ad_full_page: { label: "Souvenir Ad — Full Page", amount: 50000 },
+  ad_half_page: { label: "Souvenir Ad — Half Page", amount: 25000 },
+  ad_quarter_page: { label: "Souvenir Ad — Quarter Page", amount: 15000 },
+  pkg_1: { label: "London Tour Package (Mumbai–London–Mumbai, 7N/8D)", amount: 310000 },
+  pkg_2: { label: "London Tour Package (Mumbai–London–Mumbai, 4N/5D)", amount: 235000 },
+  pkg_3: { label: "London Land Package (7N/8D)", amount: 200501 },
+  pkg_4: { label: "London Land Package (4N/5D)", amount: 131000 },
+  donation_patron: { label: "High-Level Patronage Contribution", amount: 118000 },
+};
+
 export default function EventRegistrationCTA({
   itemId, price, label, paidLabel = "✅ Registered — View in Profile", onPaymentSuccess, dark = false
 }: EventRegistrationCTAProps) {
@@ -38,8 +63,13 @@ export default function EventRegistrationCTA({
   const [loading, setLoading] = useState(true);
   const [paying, setPaying] = useState(false);
   const [hasPaid, setHasPaid] = useState(false);
-  // true when the user has completed the Member Wizard (legalConsent === true in Firestore)
   const [profileComplete, setProfileComplete] = useState(false);
+  const [memberData, setMemberData] = useState<any>(null);
+
+  // Billing modal state
+  const [showBilling, setShowBilling] = useState(false);
+  const [legalConsent, setLegalConsent] = useState(false);
+  const overlayRef = useRef<HTMLDivElement>(null);
 
   // ── Auth + profile check ────────────────────────────────────────────────────
   useEffect(() => {
@@ -51,6 +81,7 @@ export default function EventRegistrationCTA({
         const rights: string[] = data?.accessRights || [];
         setHasPaid(rights.includes(itemId));
         setProfileComplete(data?.legalConsent === true);
+        setMemberData(data || null);
       }
       setLoading(false);
     });
@@ -64,29 +95,26 @@ export default function EventRegistrationCTA({
       const result = await signInWithPopup(auth, new GoogleAuthProvider());
       const u = result.user;
 
-      // Check profile after sign-in
       const snap = await getDoc(doc(db, "users", u.uid));
       const data = snap.data();
       const rights: string[] = data?.accessRights || [];
 
-      // Already paid for this specific item — nothing to do
       if (rights.includes(itemId)) {
         setHasPaid(true);
         return;
       }
 
-      // Login-only items (sign-in gate, no purchase) — stay on page
       if (itemId === "__login_only__") {
         setProfileComplete(data?.legalConsent === true);
         return;
       }
 
       if (data?.legalConsent === true) {
-        // Profile is complete → open Razorpay directly
         setProfileComplete(true);
-        // Payment will now be triggered by the re-render showing the Pay button
+        setMemberData(data);
+        // Show billing modal instead of direct Razorpay
+        setShowBilling(true);
       } else {
-        // Profile is incomplete → send to the Member Wizard
         router.push("/auth/member");
       }
     } catch (e) {
@@ -97,19 +125,24 @@ export default function EventRegistrationCTA({
   };
 
   // ── Pay button click ────────────────────────────────────────────────────────
-  const handlePayClick = async () => {
+  const handlePayClick = () => {
     if (!user) return;
-
-    // Login-only items never trigger payment
     if (itemId === "__login_only__") return;
 
-    // Profile not completed yet → send to the Member Wizard first
     if (!profileComplete) {
       router.push("/auth/member");
       return;
     }
 
-    // Profile complete → open Razorpay
+    // Show billing modal
+    setLegalConsent(false);
+    setShowBilling(true);
+  };
+
+  // ── Confirm & Pay from billing modal ────────────────────────────────────────
+  const handleConfirmPay = async () => {
+    if (!user || !legalConsent) return;
+    setShowBilling(false);
     await handlePayment();
   };
 
@@ -145,6 +178,15 @@ export default function EventRegistrationCTA({
     } finally { setPaying(false); }
   };
 
+  // ── Helpers ─────────────────────────────────────────────────────────────────
+  const itemInfo = ITEM_INFO[itemId];
+  const displayAmount = itemInfo ? `₹${itemInfo.amount.toLocaleString('en-IN')}` : price;
+  const displayLabel = itemInfo?.label || label;
+
+  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target === overlayRef.current) setShowBilling(false);
+  };
+
   // ── Shared styles ───────────────────────────────────────────────────────────
   const btnBase = "w-full py-3 px-4 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 disabled:opacity-60";
   const btnStyle = dark
@@ -169,63 +211,167 @@ export default function EventRegistrationCTA({
 
   // ── Render states ───────────────────────────────────────────────────────────
 
-  // Loading skeleton
-  if (loading) {
-    return <div className="w-full py-3 rounded-xl bg-slate-800/50 animate-pulse h-11" />;
-  }
+  if (loading) return <div className="w-full py-3 rounded-xl bg-slate-800/50 animate-pulse h-11" />;
 
-  // Already paid
-  if (hasPaid) {
-    return (
-      <div className="w-full text-center py-3 px-4 rounded-xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 font-bold text-sm flex items-center justify-center gap-2">
-        {paidLabel}
-      </div>
-    );
-  }
+  if (hasPaid) return (
+    <div className="w-full text-center py-3 px-4 rounded-xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 font-bold text-sm flex items-center justify-center gap-2">
+      {paidLabel}
+    </div>
+  );
 
-  // Not signed in → Sign-In button
-  if (!user) {
-    return (
-      <button
-        onClick={handleSignIn}
-        disabled={paying}
-        className={`${btnBase} ${btnStyle}`}
-      >
-        {paying
-          ? <><Spinner /> Signing in…</>
-          : <><GoogleIcon /> Sign in to {label}</>}
-      </button>
-    );
-  }
-
-  // Signed in, profile NOT complete → "Complete Registration" nudge
-  // (for real purchase items only — login-only items just stay on page)
-  if (!profileComplete && itemId !== "__login_only__") {
-    return (
-      <button
-        onClick={handlePayClick}
-        disabled={paying}
-        className={`${btnBase} ${btnStyle}`}
-      >
-        {paying
-          ? <><Spinner /> Redirecting…</>
-          : <>Complete Registration to {label}</>}
-      </button>
-    );
-  }
-
-  // Signed in + profile complete (or login-only) → normal Pay button
+  // ── Main render ─────────────────────────────────────────────────────────────
   return (
-    <button
-      onClick={handlePayClick}
-      disabled={paying || itemId === "__login_only__"}
-      className={`${btnBase} ${btnStyle} ${itemId === "__login_only__" ? "cursor-default" : ""}`}
-    >
-      {paying
-        ? <><Spinner /> Processing…</>
-        : itemId === "__login_only__"
-          ? <>{paidLabel}</>
-          : <>{label} — {price}</>}
-    </button>
+    <>
+      {/* CTA Button */}
+      {!user ? (
+        <button onClick={handleSignIn} disabled={paying} className={`${btnBase} ${btnStyle}`}>
+          {paying ? <><Spinner /> Signing in…</> : <><GoogleIcon /> Sign in to {label}</>}
+        </button>
+      ) : !profileComplete && itemId !== "__login_only__" ? (
+        <button onClick={handlePayClick} disabled={paying} className={`${btnBase} ${btnStyle}`}>
+          {paying ? <><Spinner /> Redirecting…</> : <>Complete Registration to {label}</>}
+        </button>
+      ) : (
+        <button
+          onClick={handlePayClick}
+          disabled={paying || itemId === "__login_only__"}
+          className={`${btnBase} ${btnStyle} ${itemId === "__login_only__" ? "cursor-default" : ""}`}
+        >
+          {paying ? <><Spinner /> Processing…</> : itemId === "__login_only__" ? <>{paidLabel}</> : <>{label} — {price}</>}
+        </button>
+      )}
+
+      {/* ── Billing / Receipt Modal ── */}
+      {showBilling && (
+        <div
+          ref={overlayRef}
+          onClick={handleBackdropClick}
+          className="fixed inset-0 z-[9998] flex items-center justify-center"
+          style={{ background: "rgba(0,0,0,0.65)", backdropFilter: "blur(8px)" }}
+        >
+          <div
+            className="relative bg-white rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden animate-in fade-in zoom-in-95 duration-300"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Top accent bar */}
+            <div className="absolute top-0 left-0 w-full h-1 bg-brandBlue" />
+
+            {/* Header */}
+            <div className="bg-[#0a0a0a] px-8 pt-8 pb-7 relative">
+              <button
+                onClick={() => setShowBilling(false)}
+                className="absolute top-4 right-4 text-slate-500 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-white/10"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              <div className="flex items-center gap-4 mb-4">
+                <ShieldAlert className="w-10 h-10 text-brandBlue shrink-0 drop-shadow-md" />
+                <div>
+                  <h2 className="text-xl font-bold text-white tracking-tight">Secure Checkout</h2>
+                  <p className="text-slate-400 text-xs mt-0.5">Review your order before payment</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-5 text-xs font-medium text-slate-500 mt-4">
+                <span className="flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5 text-emerald-500" /> SSL Secured</span>
+                <span className="flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5 text-emerald-500" /> Authorized Gateway</span>
+                <div className="ml-auto opacity-80 grayscale invert brightness-200 mix-blend-screen">
+                  <img src="/assets/images/razorpay.svg" alt="Razorpay" className="h-4 object-contain" />
+                </div>
+              </div>
+            </div>
+
+            {/* Body — Receipt */}
+            <div className="px-8 py-7 space-y-5">
+
+              {/* Delegate info */}
+              {memberData && (
+                <div className="flex items-center gap-4 p-4 bg-slate-50 border border-slate-100 rounded-xl">
+                  <img
+                    src={memberData?.headshotUrl || user?.photoURL || "https://placehold.co/100x100"}
+                    referrerPolicy="no-referrer"
+                    className="w-11 h-11 rounded-full border border-slate-200 object-cover shrink-0"
+                    alt="Profile"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-slate-900 truncate">{memberData?.name || user?.displayName || "Delegate"}</p>
+                    <p className="text-xs text-slate-500 truncate">{user?.email}</p>
+                    {memberData?.designation && (
+                      <p className="text-[10px] text-slate-400 mt-0.5 truncate">{memberData.designation}{memberData.organization ? ` • ${memberData.organization}` : ""}</p>
+                    )}
+                  </div>
+                  <span className="text-[9px] font-mono font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded shrink-0">
+                    VL-2026-{(user?.uid?.substring(0, 4) || "XXXX").toUpperCase()}
+                  </span>
+                </div>
+              )}
+
+              {/* Line items */}
+              <div>
+                <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase mb-3">Registration Summary</p>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-start text-sm text-slate-600 pb-2">
+                    <span className="flex items-start gap-2">
+                      <Check className="w-4 h-4 shrink-0 text-slate-900 mt-0.5" />
+                      <span>{displayLabel}</span>
+                    </span>
+                    <span className="font-semibold text-slate-900 shrink-0">{displayAmount}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Tax note */}
+              <div className="pt-3 pb-3 border-t border-b border-slate-100 flex justify-between items-center">
+                <span className="text-sm font-semibold text-slate-900">All Taxes</span>
+                <span className="text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                  INCLUDED IN PRICE
+                </span>
+              </div>
+
+              {/* Total */}
+              <div className="bg-slate-900 p-4 rounded-xl flex items-center justify-between shadow-md">
+                <span className="text-sm font-bold uppercase tracking-wider text-slate-400">Total Due Today</span>
+                <span className="text-2xl font-semibold text-white">{displayAmount}</span>
+              </div>
+
+              {/* Legal consent */}
+              <label className="flex items-start gap-3 p-4 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer hover:border-slate-300 transition-colors">
+                <input
+                  type="checkbox"
+                  checked={legalConsent}
+                  onChange={(e) => setLegalConsent(e.target.checked)}
+                  className="mt-0.5 w-4 h-4 rounded text-slate-900 focus:ring-slate-900 shrink-0"
+                />
+                <span className="text-sm text-slate-600 leading-tight">
+                  I confirm that all information provided is accurate and I agree to the{" "}
+                  <a href="/terms" target="_blank" className="font-semibold text-slate-900 hover:underline">
+                    Terms and Conditions
+                  </a>{" "}
+                  to finalize this transaction.
+                </span>
+              </label>
+            </div>
+
+            {/* Footer */}
+            <div className="px-8 py-5 border-t border-slate-100 flex items-center justify-end gap-3">
+              <button
+                onClick={() => setShowBilling(false)}
+                className="rounded-xl font-semibold h-12 px-6 border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all shadow-sm bg-white text-sm"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmPay}
+                disabled={paying || !legalConsent}
+                className="bg-slate-900 text-white hover:bg-slate-800 font-semibold h-12 px-8 rounded-xl shadow-lg transition-colors text-sm flex items-center gap-2 disabled:opacity-50"
+              >
+                {paying ? <><Spinner /> Processing…</> : <>Pay & Finalize</>}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
