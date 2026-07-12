@@ -14,9 +14,9 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbP
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
-  LayoutDashboard, Users, LogOut, Search, ChevronDown, ChartBar,
   Gauge, FileSpreadsheet, Database, RefreshCw, CheckCircle2, Clock,
-  TrendingUp, MessageCircle, UserCheck, Wifi
+  TrendingUp, MessageCircle, UserCheck, Wifi, Mail, Send,
+  LayoutDashboard, ChartBar, Users, Search, LogOut
 } from "lucide-react";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
@@ -26,6 +26,7 @@ import * as XLSX from "@e965/xlsx";
 import { loginAsAdmin, logoutAdmin, checkAdminSession, getAdminDashboardData } from "@/app/actions/adminAuth";
 import { exportToGoogleSheets } from "@/app/actions/googleSheets";
 import { getWebTrafficData } from "@/app/actions/analytics";
+import { sendBroadcastEmail } from "@/app/actions/emailActions";
 
 const MobileCloseSidebarMenuButton = ({ onClick, children, ...props }: any) => {
   const { setOpenMobile, isMobile } = useSidebar();
@@ -363,11 +364,12 @@ export default function AdminClientPage() {
                       { label: "CRM", icon: <ChartBar /> },
                       { label: "Analytics", icon: <Gauge /> },
                       { label: "Users", icon: <Users /> },
+                      { label: "Broadcast", icon: <Mail /> },
                     ].map(item => (
                       <SidebarMenuItem key={item.label}>
                         <MobileCloseSidebarMenuButton isActive={activeTab === item.label} onClick={() => setActiveTab(item.label)}>
                           {item.icon}
-                          <span>{item.label === "CRM" ? "CRM & Inquiries" : item.label === "Users" ? "User Management" : item.label === "Analytics" ? "Firebase Analytics" : "Default Dashboard"}</span>
+                          <span>{item.label === "CRM" ? "CRM & Inquiries" : item.label === "Users" ? "User Management" : item.label === "Analytics" ? "Firebase Analytics" : item.label === "Broadcast" ? "Email Broadcast" : "Default Dashboard"}</span>
                           {item.label === "Users" && totalUsers > 0 && (
                             <span className="ml-auto text-[9px] font-bold bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full">{totalUsers}</span>
                           )}
@@ -880,6 +882,72 @@ export default function AdminClientPage() {
                       </div>
                     </div>
                   )}
+                </div>
+              )}
+              {activeTab === "Broadcast" && (
+                <div className="space-y-6 max-w-4xl">
+                  <div>
+                    <h2 className="text-2xl font-black font-display text-slate-900 uppercase tracking-tight">Email Broadcast</h2>
+                    <p className="text-sm text-slate-500 mt-1">Send an automated email to your registered users via Resend.</p>
+                  </div>
+                  
+                  <Card className="border-slate-200 shadow-sm overflow-hidden">
+                    <CardHeader className="bg-slate-50 border-b pb-4">
+                      <CardTitle className="text-lg">Compose Message</CardTitle>
+                      <CardDescription>This email will be sent from info@vishwaleader.com</CardDescription>
+                    </CardHeader>
+                    <CardContent className="p-6">
+                      <form onSubmit={async (e) => {
+                        e.preventDefault();
+                        const formData = new FormData(e.currentTarget);
+                        const subject = formData.get('subject') as string;
+                        const body = formData.get('body') as string;
+                        const target = formData.get('target') as 'all' | 'paid';
+                        
+                        showToast(`Sending email to ${target} users...`, 'info');
+                        const res = await sendBroadcastEmail(subject, body, target);
+                        
+                        if (res.success) {
+                          showToast(`Successfully sent email to ${res.count} users!`, 'success');
+                          (e.target as HTMLFormElement).reset();
+                        } else {
+                          showToast(`Failed to send emails: ${res.error}`, 'error');
+                        }
+                      }} className="space-y-6">
+                        
+                        <div className="space-y-2">
+                          <label className="text-sm font-semibold text-slate-700">Target Audience</label>
+                          <select name="target" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+                            <option value="all">All Registered Users</option>
+                            <option value="paid">Only Paid Users (VIP / Delegates)</option>
+                          </select>
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="text-sm font-semibold text-slate-700">Subject Line</label>
+                          <Input name="subject" placeholder="Welcome to Vishwa Leader 2026!" required />
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="text-sm font-semibold text-slate-700">Message Content (HTML Supported)</label>
+                          <textarea 
+                            name="body"
+                            required
+                            placeholder="<p>Hello Delegates,</p><p>We are excited to announce...</p>"
+                            className="flex min-h-[250px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 font-mono"
+                          />
+                          <p className="text-xs text-slate-400 mt-1">Tip: You can use HTML tags like &lt;b&gt;, &lt;p&gt;, &lt;a href="..."&gt; to format your email.</p>
+                        </div>
+
+                        <div className="flex justify-end pt-2">
+                          <Button type="submit" className="bg-brandBlue hover:bg-blue-900 text-white gap-2">
+                            <Send className="w-4 h-4" />
+                            Send Broadcast
+                          </Button>
+                        </div>
+                      </form>
+                    </CardContent>
+                  </Card>
                 </div>
               )}
             </main>

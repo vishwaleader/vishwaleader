@@ -219,216 +219,8 @@ export default function HomeClientPage() {
     {/* ═══════════════════════════════════════════════════════════════════════════════════════ */}
 
 
-    <div className="bg-brandBlue text-white py-3 px-4 text-center border-b border-white/10 text-xs tracking-wide font-semibold relative z-50">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6">
-            <a id="nav-abstract-strip" data-field="announcements.abstractLink" href="/call-for-papers" className="hover:text-amber-300 transition-colors flex items-center gap-1.5"><i className="fa-solid fa-graduation-cap"></i> Call for Abstracts</a>
-            <span className="hidden sm:inline text-white/30">|</span>
-            <a id="nav-business-strip" data-field="announcements.businessLink" href="/business-summit" className="hover:text-amber-300 transition-colors flex items-center gap-1.5"><i className="fa-solid fa-briefcase"></i> Call for Business Participation</a>
-            <span className="hidden sm:inline text-white/30">|</span>
-            <a id="nav-award-strip" data-field="announcements.awardLink" href="/awards" className="hover:text-amber-300 transition-colors flex items-center gap-1.5"><i className="fa-solid fa-trophy"></i> Call for Award Nominations</a>
-        </div>
-    </div>
 
-    {/* Navigation Header */}
-    <header className="bg-white/80 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-40 view-transition-header">
-        <div className="max-w-7xl mx-auto px-4 md:px-6 h-16 md:h-20 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-                <a href="#home" className="group flex items-center gap-2 md:gap-3">
-                    <img src="/assets/images/vishwaleader-logo-hd.png" 
-                          alt="Vishwa Leader Logo" 
-                          className="h-9 md:h-12 w-auto object-contain transition-transform group-hover:scale-105" 
-                          fetchPriority="high"
-                          onError={() => {}} />
-                    <div className="flex flex-col gap-0.5 leading-none">
-                        <span className="text-base md:text-lg font-black tracking-tight text-brandBlue font-display">Vishwa Leader</span>
-                        <span className="text-[9px] md:text-[10px] font-black tracking-widest text-brandBlue uppercase border border-brandBlue/20 px-2 py-0.5 rounded bg-brandBlue/5 self-start">
-                            Techmedia
-                        </span>
-                    </div>
-                </a>
 
-            </div>
-
-            {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center gap-6 text-sm font-semibold text-slate-600">
-                <a href="/mission" className="hover:text-brandBlue transition-colors font-bold text-slate-800">Mission</a>
-                <a href="#about" onClick={(e) => handleSmoothScroll(e, 'about')} className="hover:text-brandBlue transition-colors">Corporate</a>
-                <a href="/pricing" className="hover:text-brandBlue transition-colors">Pricing</a>
-                <div className="relative group/nav">
-                    <button className="hover:text-brandBlue transition-colors flex items-center gap-1">
-                        Events 2026 <i className="fa-solid fa-chevron-down text-[10px]"></i>
-                    </button>
-                    <div className="absolute top-full left-0 pt-2 w-56 hidden group-hover/nav:block z-50">
-                        <div className="bg-white border border-slate-200 rounded-xl shadow-xl p-2">
-                            <a href="/call-for-papers" className="block px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-brandBlue rounded-lg transition-colors">Call for Papers</a>
-                            <a href="/business-summit" className="block px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-brandBlue rounded-lg transition-colors">Business Summit</a>
-                            <a href="/awards" className="block px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-brandBlue rounded-lg transition-colors">Awards Nominations</a>
-                            <a href="/souvenir-articles" className="block px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-brandBlue rounded-lg transition-colors">Souvenir Articles</a>
-                            <a href="/tour-package" className="block px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-brandBlue rounded-lg transition-colors">London Tour Package</a>
-                            <a href="/advertise" className="block px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-brandBlue rounded-lg transition-colors">Advertise with Us</a>
-                        </div>
-                    </div>
-                </div>
-                <a href="gallery" className="hover:text-brandBlue transition-colors">Gallery</a>
-                <a href="archives" className="hover:text-brandBlue transition-colors">Archive</a>
-                <a href="#networks" onClick={(e) => handleSmoothScroll(e, 'networks')} className="hover:text-brandBlue transition-colors">Networks</a>
-                <a href="#advertisers" onClick={(e) => handleSmoothScroll(e, 'advertisers')} className="hover:text-brandBlue transition-colors">Advertisers</a>
-
-                {/* Auth State */}
-                {!user ? (
-                <div id="nav-login-links">
-                    <a href="/auth/member" className="text-brandBlue hover:text-brandBlue/80 transition-colors font-bold text-sm flex items-center gap-1">
-                        <i className="fa-solid fa-right-to-bracket text-xs"></i> Login/SignIn
-                    </a>
-                </div>
-                ) : (
-                <div id="nav-user-status" className="relative flex items-center">
-                    <button id="nav-status-btn" onClick={() => setIsDropdownOpen(!isDropdownOpen)} className="flex items-center gap-1.5 focus:outline-none rounded-full p-0.5 border border-slate-200 hover:border-brandBlue transition-all bg-white" aria-expanded={isDropdownOpen}>
-                        <img 
-                            src={user.photoURL || "https://placehold.co/100x100/0a1e4b/ffffff?text=User"} 
-                            referrerPolicy="no-referrer"
-                            alt="Profile" 
-                            className="w-11 h-11 rounded-full object-cover shrink-0" 
-                        />
-                        <i className={`fa-solid fa-chevron-down text-[8px] text-slate-500 mr-2 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} id="nav-status-chevron"></i>
-                    </button>
-
-                    {/* Dropdown card */}
-                    <div id="nav-user-dropdown" className={`vl-dropdown absolute right-0 top-[calc(100%+8px)] w-64 bg-white border border-slate-200 rounded-2xl shadow-2xl p-4 z-50 ${isDropdownOpen ? 'block' : 'hidden'}`}>
-                        {/* User info */}
-                        <div className="flex items-center gap-3 mb-3 pb-3 border-b border-slate-100">
-                            <div id="nav-avatar" className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold text-white shrink-0 bg-brandBlue">
-                                {user.displayName ? user.displayName.charAt(0) : 'U'}
-                            </div>
-                            <div className="overflow-hidden">
-                                <p id="nav-display-name" className="text-xs font-bold text-slate-900 truncate">{user.displayName || 'User'}</p>
-                                <p id="nav-display-email" className="text-[10px] text-slate-405 truncate">{user.email}</p>
-                            </div>
-                        </div>
-                        {/* Role badge */}
-                        <div id="nav-role-badge" className="text-[10px] font-extrabold uppercase tracking-widest px-2.5 py-1 rounded-full mb-3 text-center bg-brandBlue/10 text-brandBlue">
-                            {memberData?.role || 'Member'}
-                        </div>
-                        {/* Actions */}
-                        <div className="space-y-1.5">
-                            <a id="nav-portal-link" href={(user as any)?.isAdmin ? "/auth/admin" : "/auth/member"} className="flex items-center gap-2 w-full text-left text-xs font-semibold text-slate-700 hover:text-brandBlue hover:bg-brandBlue/5 px-3 py-2 rounded-xl transition-all">
-                                <i id="nav-portal-icon" className="fa-solid fa-user text-brandBlue"></i>
-                                <span id="nav-portal-text">{(user as any)?.isAdmin ? "Go to Dashboard" : "Go to Profile"}</span>
-                            </a>
-                            <button onClick={handleLogout} className="flex items-center gap-2 w-full text-left text-xs font-semibold text-rose-600 hover:bg-rose-50 px-3 py-2 rounded-xl transition-all">
-                                <i className="fa-solid fa-right-from-bracket text-rose-500"></i> Sign Out
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                )}
-
-            </nav>
-
-            {/* Mobile Hamburger Menu Button */}
-            <button id="menuBtn" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="md:hidden relative w-10 h-10 text-slate-800 hover:text-brandBlue focus:outline-none flex items-center justify-center" aria-label="Toggle Menu">
-                <div className="w-6 h-4 flex flex-col justify-between items-center relative">
-                    <span className={`w-full h-0.5 bg-slate-800 rounded transition-all duration-300 transform ${isMobileMenuOpen ? 'rotate-45 translate-y-[0.45rem]' : ''}`} id="bar1"></span>
-                    <span className={`w-full h-0.5 bg-slate-800 rounded transition-all duration-300 transform ${isMobileMenuOpen ? 'opacity-0' : ''}`} id="bar2"></span>
-                    <span className={`w-full h-0.5 bg-slate-800 rounded transition-all duration-300 transform ${isMobileMenuOpen ? '-rotate-45 -translate-y-[0.45rem]' : ''}`} id="bar3"></span>
-                </div>
-            </button>
-        </div>
-
-        {/* Mobile Navigation Menu */}
-        <div id="mobileMenu" className={`md:hidden absolute top-full left-0 right-0 overflow-y-auto transition-all duration-300 ease-in-out bg-white border-t border-slate-200 px-4 space-y-1 shadow-2xl z-50 ${isMobileMenuOpen ? 'max-h-[calc(100vh-4rem)] opacity-100 py-4' : 'max-h-0 opacity-0 pointer-events-none'}`}>
-            <div className="py-3 space-y-1.5">
-                <a href="/mission" className="flex items-center py-2.5 px-3 text-sm font-semibold text-slate-700 hover:text-brandBlue active:bg-slate-50 rounded-xl transition-all border-b border-slate-50 last:border-0">
-                    <i className="fa-solid fa-bullseye text-slate-400 mr-3 w-5 text-center text-xs"></i>
-                    <span>Mission</span>
-                    <i className="fa-solid fa-chevron-right text-slate-300 ml-auto text-[9px]"></i>
-                </a>
-                <a href="#about" onClick={(e) => { setIsMobileMenuOpen(false); handleSmoothScroll(e, 'about'); }} className="flex items-center py-2.5 px-3 text-sm font-semibold text-slate-700 hover:text-brandBlue active:bg-slate-50 rounded-xl transition-all border-b border-slate-50 last:border-0">
-                    <i className="fa-solid fa-building text-slate-400 mr-3 w-5 text-center text-xs"></i>
-                    <span>Corporate</span>
-                    <i className="fa-solid fa-chevron-right text-slate-300 ml-auto text-[9px]"></i>
-                </a>
-                <a href="/pricing" className="flex items-center py-2.5 px-3 text-sm font-semibold text-slate-700 hover:text-brandBlue active:bg-slate-50 rounded-xl transition-all border-b border-slate-50 last:border-0">
-                    <i className="fa-solid fa-tag text-slate-400 mr-3 w-5 text-center text-xs"></i>
-                    <span>Pricing</span>
-                    <i className="fa-solid fa-chevron-right text-slate-300 ml-auto text-[9px]"></i>
-                </a>
-                <div className="py-2.5 px-3 border-b border-slate-50">
-                    <div className="flex items-center text-sm font-semibold text-brandBlue mb-2">
-                        <i className="fa-solid fa-calendar-days text-brandBlue/60 mr-3 w-5 text-center text-xs"></i>
-                        <span>Events 2026</span>
-                    </div>
-                    <div className="pl-8 space-y-1">
-                        <a href="/call-for-papers" className="block py-1.5 text-sm text-slate-600 hover:text-brandBlue">Call for Papers</a>
-                        <a href="/business-summit" className="block py-1.5 text-sm text-slate-600 hover:text-brandBlue">Business Summit</a>
-                        <a href="/awards" className="block py-1.5 text-sm text-slate-600 hover:text-brandBlue">Awards Nominations</a>
-                        <a href="/souvenir-articles" className="block py-1.5 text-sm text-slate-600 hover:text-brandBlue">Souvenir Articles</a>
-                        <a href="/tour-package" className="block py-1.5 text-sm text-slate-600 hover:text-brandBlue">London Tour Package</a>
-                        <a href="/advertise" className="block py-1.5 text-sm text-slate-600 hover:text-brandBlue">Advertise with Us</a>
-                    </div>
-                </div>
-                <a href="gallery" className="flex items-center py-2.5 px-3 text-sm font-semibold text-slate-700 hover:text-brandBlue active:bg-slate-50 rounded-xl transition-all border-b border-slate-50 last:border-0">
-                    <i className="fa-solid fa-images text-slate-400 mr-3 w-5 text-center text-xs"></i>
-                    <span>Gallery</span>
-                    <i className="fa-solid fa-chevron-right text-slate-300 ml-auto text-[9px]"></i>
-                </a>
-                <a href="archives" className="flex items-center py-2.5 px-3 text-sm font-semibold text-slate-700 hover:text-brandBlue active:bg-slate-50 rounded-xl transition-all border-b border-slate-50 last:border-0">
-                    <i className="fa-solid fa-box-archive text-slate-400 mr-3 w-5 text-center text-xs"></i>
-                    <span>Archive</span>
-                    <i className="fa-solid fa-chevron-right text-slate-300 ml-auto text-[9px]"></i>
-                </a>
-                <a href="#networks" onClick={(e) => { setIsMobileMenuOpen(false); handleSmoothScroll(e, 'networks'); }} className="flex items-center py-2.5 px-3 text-sm font-semibold text-slate-700 hover:text-brandBlue active:bg-slate-50 rounded-xl transition-all border-b border-slate-50 last:border-0">
-                    <i className="fa-solid fa-circle-nodes text-slate-400 mr-3 w-5 text-center text-xs"></i>
-                    <span>Networks</span>
-                    <i className="fa-solid fa-chevron-right text-slate-300 ml-auto text-[9px]"></i>
-                </a>
-                <a href="#advertisers" onClick={(e) => { setIsMobileMenuOpen(false); handleSmoothScroll(e, 'advertisers'); }} className="flex items-center py-2.5 px-3 text-sm font-semibold text-slate-700 hover:text-brandBlue active:bg-slate-50 rounded-xl transition-all border-b border-slate-50 last:border-0">
-                    <i className="fa-solid fa-rectangle-ad text-slate-400 mr-3 w-5 text-center text-xs"></i>
-                    <span>Advertisers</span>
-                    <i className="fa-solid fa-chevron-right text-slate-300 ml-auto text-[9px]"></i>
-                </a>
-
-                {/* Mobile Auth */}
-                {!user ? (
-                <div id="mobile-login-links" className="pt-2 border-t border-slate-100 flex flex-col gap-1.5">
-                    <a href="/auth/member" className="flex items-center py-2.5 px-3 text-sm font-semibold text-brandBlue hover:text-brandBlue/85 active:bg-slate-50 rounded-xl transition-all">
-                        <i className="fa-solid fa-right-to-bracket text-brandBlue mr-3 w-5 text-center text-xs"></i>
-                        <span>Login/SignIn</span>
-                        <i className="fa-solid fa-chevron-right text-slate-300 ml-auto text-[9px]"></i>
-                    </a>
-                    <a href="/auth/admin" className="flex items-center py-2.5 px-3 text-sm font-semibold text-indigo-600 hover:text-indigo-500 active:bg-slate-50 rounded-xl transition-all border-b border-slate-50 last:border-0">
-                        <i className="fa-solid fa-user-shield text-indigo-400 mr-3 w-5 text-center text-xs"></i>
-                        <span>Login as Team</span>
-                        <i className="fa-solid fa-chevron-right text-slate-300 ml-auto text-[9px]"></i>
-                    </a>
-                </div>
-                ) : (
-                <div id="mobile-user-status" className="pt-3 border-t border-slate-100 flex flex-col gap-2">
-                    <div className="flex items-center gap-3 px-3 py-2 bg-slate-50 rounded-xl">
-                        <img 
-                            src={user.photoURL || "https://placehold.co/100x100/0a1e4b/ffffff?text=User"} 
-                            alt="Profile" 
-                            className="w-11 h-11 rounded-full object-cover shrink-0 border border-slate-200" 
-                        />
-                        <div className="overflow-hidden flex-1">
-                            <p id="mobile-display-name" className="text-xs font-bold text-slate-900 truncate">{user.displayName || 'User'}</p>
-                            <p id="mobile-status-label" className="text-[9px] font-extrabold uppercase tracking-wider text-brandBlue">Logged in</p>
-                        </div>
-                    </div>
-                    <a id="mobile-portal-link" href={(user as any)?.isAdmin ? "/auth/admin" : "/auth/member"} className="flex items-center py-2.5 px-3 text-sm font-semibold text-slate-700 hover:text-brandBlue active:bg-slate-50 rounded-xl transition-all border-b border-slate-50">
-                        <i id="mobile-portal-icon" className="fa-solid fa-user text-slate-400 mr-3 w-5 text-center text-xs"></i>
-                        <span id="mobile-portal-text">{(user as any)?.isAdmin ? "Dashboard" : "Profile"}</span>
-                        <i className="fa-solid fa-chevron-right text-slate-300 ml-auto text-[9px]"></i>
-                    </a>
-                    <button id="mobile-logout-btn" onClick={handleLogout} className="flex items-center py-2.5 px-3 text-sm font-semibold text-rose-600 hover:text-rose-750 active:bg-rose-50 rounded-xl transition-all w-full text-left">
-                        <i className="fa-solid fa-right-from-bracket text-rose-500 mr-3 w-5 text-center text-xs"></i>
-                        <span>Sign Out</span>
-                    </button>
-                </div>
-                )}
-            </div>
-        </div>
-    </header>
 
     {/* Main Hero Section */}
     <section id="home" className="relative py-20 md:py-28 bg-brandDark text-white border-b border-slate-900 overflow-hidden">
@@ -542,24 +334,24 @@ export default function HomeClientPage() {
                 <span className="font-display block text-3xl font-black text-slate-900">2010</span>
                 <span className="block text-[10px] uppercase font-bold tracking-widest text-slate-400 mt-1">Magazine Founded</span>
             </div>
-            <div>
+            <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.2 }}>
                 <span className="font-display block text-3xl font-black text-slate-900">180+</span>
                 <span className="block text-[10px] uppercase font-bold tracking-widest text-slate-400 mt-1">Media Photos</span>
-            </div>
-            <div>
+            </motion.div>
+            <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.3 }}>
                 <span className="font-display block text-3xl font-black text-slate-900">SOAS University</span>
                 <span className="block text-[10px] uppercase font-bold tracking-widest text-slate-400 mt-1">London Conference Venue</span>
-            </div>
-            <div>
+            </motion.div>
+            <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.4 }}>
                 <span className="font-display block text-3xl font-black text-slate-900">Global</span>
                 <span className="block text-[10px] uppercase font-bold tracking-widest text-slate-400 mt-1">Advocacy Scope</span>
-            </div>
+            </motion.div>
         </div>
     </section>
 
     {/* Magazine Covers Train Ticker Section */}
     <section className="bg-slate-950 py-16 overflow-hidden border-b border-slate-900">
-        <div className="max-w-7xl mx-auto px-6 mb-10 text-center">
+        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="max-w-7xl mx-auto px-6 mb-10 text-center">
             <div className="flex justify-center mb-6">
                 <img src="/assets/images/vishwaleader-legacy-logo.png" 
                      alt="Old Vishwa Leader Logo" 
@@ -570,7 +362,7 @@ export default function HomeClientPage() {
             <p className="text-slate-400 text-xs md:text-sm mt-3 max-w-3xl mx-auto leading-relaxed">
                 These editions represent our foundational years in print publishing. As we evolve and scale into digital-first global advocacy campaigns and academic forums, our physical magazine print operations are currently paused. We preserve this archive as a testament to our editorial origins.
             </p>
-        </div>
+        </motion.div>
         
         <div className="relative w-full overflow-hidden py-4 select-none">
             {/* Left & Right gradients for fading edge effect */}
@@ -598,17 +390,19 @@ export default function HomeClientPage() {
     {/* Corporate & Media Infrastructure */}
     <section id="about" className="py-20 md:py-24 bg-white border-b border-slate-200/60">
         <div className="max-w-7xl mx-auto px-6">
-            <div className="max-w-3xl mb-16 space-y-4">
+            <motion.div 
+                initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}
+                className="max-w-3xl mb-16 space-y-4">
                 <span className="text-xs font-bold tracking-widest text-brandBlue uppercase">Core Operations</span>
                 <h2 className="font-display text-3xl md:text-4xl font-black tracking-tight text-slate-900">Corporate & Media Infrastructure</h2>
                 <p className="text-slate-500 leading-relaxed">
                     Vishwa Leader connects grassroots publishing in Maharashtra with corporate-backed advocacy initiatives on the international stage.
                 </p>
-            </div>
+            </motion.div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch mb-16">
                 {/* Magazine Card */}
-                <div className="border border-slate-200 hover:border-slate-400 hover:shadow-md rounded-2xl transition-all p-8 flex flex-col justify-between bg-slate-50/50">
+                <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.1 }} className="border border-slate-200 hover:border-slate-400 hover:shadow-md rounded-2xl transition-all p-8 flex flex-col justify-between bg-slate-50/50">
                     <div>
                         <div className="flex items-center gap-3 mb-6">
                             <div className="w-10 h-10 rounded-xl bg-brandBlue/10 text-brandBlue flex items-center justify-center border border-brandBlue/20">
@@ -632,10 +426,10 @@ export default function HomeClientPage() {
                     <a href="https://prgi.gov.in" target="_blank" className="inline-flex items-center gap-1.5 text-xs font-bold text-brandBlue hover:text-brandDark transition-colors uppercase tracking-wider">
                         PRGI Verification <i className="fa-solid fa-square-arrow-up-right text-[10px]"></i>
                     </a>
-                </div>
+                </motion.div>
 
                 {/* Corporate Entity Card */}
-                <div className="border border-slate-200 hover:border-slate-400 hover:shadow-md rounded-2xl transition-all p-8 flex flex-col justify-between bg-slate-50/50">
+                <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.2 }} className="border border-slate-200 hover:border-slate-400 hover:shadow-md rounded-2xl transition-all p-8 flex flex-col justify-between bg-slate-50/50">
                     <div>
                         <div className="flex items-center gap-3 mb-6">
                             <div className="w-10 h-10 rounded-xl bg-brandBlue/10 text-brandBlue flex items-center justify-center border border-brandBlue/20">
@@ -663,10 +457,10 @@ export default function HomeClientPage() {
                     <a href="https://tracxn.com/d/legal-entities/india/vishwa-leader-techmedia-private-limited/__jDthDz58Owry-yAaHPhKSuhVYScE1DyjR4IGLp2Bhz8" target="_blank" className="inline-flex items-center gap-1.5 text-xs font-bold text-brandBlue hover:text-brandDark transition-colors uppercase tracking-wider">
                         MCA Profile <i className="fa-solid fa-square-arrow-up-right text-[10px]"></i>
                     </a>
-                </div>
+                </motion.div>
 
                 {/* Featured Publication */}
-                <div className="border border-slate-200 hover:border-slate-400 hover:shadow-md rounded-2xl transition-all p-8 flex flex-col justify-between bg-slate-50/50">
+                <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.3 }} className="border border-slate-200 hover:border-slate-400 hover:shadow-md rounded-2xl transition-all p-8 flex flex-col justify-between bg-slate-50/50">
                     <div>
                         <div className="flex items-center gap-3 mb-6">
                             <div className="w-10 h-10 rounded-xl bg-brandBlue/10 text-brandBlue flex items-center justify-center border border-brandBlue/20">
@@ -690,7 +484,7 @@ export default function HomeClientPage() {
                     <a href="#contact" className="inline-flex items-center gap-1.5 text-xs font-bold text-brandBlue hover:text-brandDark transition-colors uppercase tracking-wider">
                         Request Copy <i className="fa-solid fa-arrow-right text-[10px]"></i>
                     </a>
-                </div>
+                </motion.div>
             </div>
         </div>
     </section>
@@ -699,18 +493,18 @@ export default function HomeClientPage() {
     <section id="schedule" className="py-20 md:py-24 bg-slate-50 border-b border-slate-200/60">
         <div className="max-w-7xl mx-auto px-6">
             {/* Event Schedule Header */}
-            <div className="max-w-3xl mb-12 space-y-4 text-center mx-auto">
+            <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="max-w-3xl mb-12 space-y-4 text-center mx-auto">
                 <span className="text-xs font-bold tracking-widest text-brandBlue uppercase">Event Schedule</span>
                 <h2 className="font-display text-3xl md:text-4xl font-black tracking-tight text-slate-900">Three-Day London Event Schedule</h2>
                 <p className="text-slate-500 leading-relaxed text-sm">
                     Overview of the main academic, business, and award events taking place in London from September 18th to September 20th, 2026.
                 </p>
-            </div>
+            </motion.div>
 
             {/* Timeline / Cards Layout */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Day 1 Card */}
-                <div className="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-md hover:border-brandBlue/30 transition-all flex flex-col justify-between group">
+                <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.1 }} className="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-md hover:border-brandBlue/30 transition-all flex flex-col justify-between group">
                     <div>
                         <div className="p-6 bg-brandDark text-white flex justify-between items-center">
                             <span className="text-xs font-black tracking-widest text-amber-400 uppercase">DAY 1</span>
@@ -731,10 +525,10 @@ export default function HomeClientPage() {
                             Submit Abstract
                         </a>
                     </div>
-                </div>
+                </motion.div>
 
                 {/* Day 2 Card */}
-                <div className="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-md hover:border-brandBlue/30 transition-all flex flex-col justify-between group">
+                <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.2 }} className="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-md hover:border-brandBlue/30 transition-all flex flex-col justify-between group">
                     <div>
                         <div className="p-6 bg-brandDark text-white flex justify-between items-center">
                             <span className="text-xs font-black tracking-widest text-amber-400 uppercase">DAY 2</span>
@@ -759,10 +553,10 @@ export default function HomeClientPage() {
                             Register for Summit
                         </a>
                     </div>
-                </div>
+                </motion.div>
 
                 {/* Day 3 Card */}
-                <div className="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-md hover:border-brandBlue/30 transition-all flex flex-col justify-between group">
+                <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.3 }} className="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-md hover:border-brandBlue/30 transition-all flex flex-col justify-between group">
                     <div>
                         <div className="p-6 bg-brandDark text-white flex justify-between items-center">
                             <span className="text-xs font-black tracking-widest text-amber-400 uppercase">DAY 3</span>
@@ -787,7 +581,7 @@ export default function HomeClientPage() {
                             Nominate / Attend
                         </a>
                     </div>
-                </div>
+                </motion.div>
             </div>
         </div>
     </section>
@@ -796,7 +590,7 @@ export default function HomeClientPage() {
     <section id="conference-details" className="py-20 md:py-24 bg-white border-b border-slate-200/60">
         <div className="max-w-7xl mx-auto px-6">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-                <div className="lg:col-span-7 order-1 lg:order-2 space-y-6">
+                <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="lg:col-span-7 order-1 lg:order-2 space-y-6">
                     <span className="text-xs font-bold tracking-widest text-brandBlue uppercase">Academic Invitation</span>
                     <h2 className="font-display text-3xl md:text-4xl font-black tracking-tight text-slate-900">
                         International Academic Conference
@@ -816,8 +610,8 @@ export default function HomeClientPage() {
                             Submit Abstract
                         </a>
                     </div>
-                </div>
-                <div className="lg:col-span-5 order-2 lg:order-1">
+                </motion.div>
+                <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.2 }} className="lg:col-span-5 order-2 lg:order-1">
                     <div className="bg-slate-50 border border-slate-200 rounded-2xl p-8 space-y-4 shadow-sm">
                         <h4 className="font-display font-bold text-slate-900 text-sm uppercase tracking-wide">Key Focus Areas</h4>
                         <ul className="space-y-3 text-xs text-slate-600">
@@ -827,7 +621,7 @@ export default function HomeClientPage() {
                             <li className="flex gap-2"><i className="fa-solid fa-graduation-cap text-brandBlue mt-0.5"></i> <span>Diaspora Mobilization & Advocacy</span></li>
                         </ul>
                     </div>
-                </div>
+                </motion.div>
             </div>
         </div>
     </section>
@@ -836,7 +630,7 @@ export default function HomeClientPage() {
     <section id="business-summit" className="py-20 md:py-24 bg-slate-50 border-b border-slate-200/60">
         <div className="max-w-7xl mx-auto px-6">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-                <div className="lg:col-span-7 space-y-6">
+                <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="lg:col-span-7 space-y-6">
                     <span className="text-xs font-bold tracking-widest text-brandBlue uppercase">Business Participation</span>
                     <h2 className="font-display text-3xl md:text-4xl font-black tracking-tight text-slate-900">
                         International Business Summit & WLCC Networking 2026
@@ -855,8 +649,8 @@ export default function HomeClientPage() {
                             Register as Business Delegate
                         </a>
                     </div>
-                </div>
-                <div className="lg:col-span-5">
+                </motion.div>
+                <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.2 }} className="lg:col-span-5">
                     <div className="bg-slate-50 border border-slate-200 rounded-2xl p-8 space-y-4 shadow-sm">
                         <h4 className="font-display font-bold text-slate-900 text-sm uppercase tracking-wide">Key Focus Areas</h4>
                         <ul className="space-y-3 text-xs text-slate-600">
@@ -866,7 +660,7 @@ export default function HomeClientPage() {
                             <li className="flex gap-2"><i className="fa-solid fa-circle-check text-brandBlue mt-0.5"></i> <span>Cross-border Trade & Compliance Forums</span></li>
                         </ul>
                     </div>
-                </div>
+                </motion.div>
             </div>
         </div>
     </section>
@@ -875,7 +669,7 @@ export default function HomeClientPage() {
     <section id="awards" className="py-20 md:py-24 bg-white border-b border-slate-200/60">
         <div className="max-w-7xl mx-auto px-6">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-                <div className="lg:col-span-5 order-2 lg:order-1">
+                <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="lg:col-span-5 order-2 lg:order-1">
                     <div className="bg-white border border-slate-200 rounded-2xl p-8 space-y-4 shadow-sm">
                         <h4 className="font-display font-bold text-slate-900 text-sm uppercase tracking-wide">Award Categories</h4>
                         <ul className="space-y-3 text-xs text-slate-600">
@@ -886,8 +680,8 @@ export default function HomeClientPage() {
                             <li className="flex gap-2"><i className="fa-solid fa-trophy text-amber-500 mt-0.5"></i> <span>Innovative Community Service</span></li>
                         </ul>
                     </div>
-                </div>
-                <div className="lg:col-span-7 order-1 lg:order-2 space-y-6">
+                </motion.div>
+                <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.2 }} className="lg:col-span-7 order-1 lg:order-2 space-y-6">
                     <span className="text-xs font-bold tracking-widest text-brandBlue uppercase">Recognition & Culture</span>
                     <h2 className="font-display text-3xl md:text-4xl font-black tracking-tight text-slate-900">
                         Dr. Ambedkar International Awards & Cultural Ceremony 2026
@@ -906,7 +700,7 @@ export default function HomeClientPage() {
                             Nominate for Award
                         </a>
                     </div>
-                </div>
+                </motion.div>
             </div>
         </div>
     </section>
@@ -1266,6 +1060,86 @@ export default function HomeClientPage() {
             </div>
         </div>
     </section>
+
+    {/* Secured Payment Gateway Partners Section */}
+    <section className="py-20 bg-slate-50 border-t border-slate-200 overflow-hidden relative">
+        <div className="max-w-7xl mx-auto px-6 text-center mb-12">
+            <span className="text-xs font-bold tracking-widest text-brandBlue uppercase flex items-center justify-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                Secured Global Payments
+            </span>
+            <h2 className="font-display text-3xl md:text-4xl font-black tracking-tight text-slate-900 mt-2">Integrated Banking Partners</h2>
+            <p className="text-slate-600 mt-4 max-w-2xl mx-auto text-sm md:text-base">
+                Vishwa Leader is seamlessly connected to all major domestic and international banks, credit card networks, and UPI platforms via Razorpay's bank-grade secure gateway.
+            </p>
+        </div>
+
+        <div className="relative flex flex-col gap-6 select-none before:absolute before:inset-y-0 before:left-0 before:w-1/6 before:bg-gradient-to-r before:from-slate-50 before:to-transparent before:z-10 after:absolute after:inset-y-0 after:right-0 after:w-1/6 after:bg-gradient-to-l after:from-slate-50 after:to-transparent after:z-10">
+            {/* Row 1 - Cards & Major Banks */}
+            <div className="animate-ticker-logos-forward flex w-max hover:[animation-play-state:paused]">
+                {[...Array(2)].map((_, i) => (
+                    <div key={`row1-${i}`} className="flex gap-4 items-center pr-4">
+                        {[
+                            { name: 'Visa', logo: 'https://img.icons8.com/color/96/000000/visa.png' },
+                            { name: 'Mastercard', logo: 'https://img.icons8.com/color/96/000000/mastercard.png' },
+                            { name: 'American Express', logo: 'https://img.icons8.com/color/96/000000/amex.png' },
+                            { name: 'RuPay', logo: '/assets/logos/rupay.png', scale: 'scale-[1.6]' },
+                            { name: 'HDFC Bank', logo: 'https://cdn.razorpay.com/bank/HDFC.gif' },
+                            { name: 'State Bank of India', logo: 'https://cdn.razorpay.com/bank/SBIN.gif' },
+                            { name: 'ICICI Bank', logo: 'https://cdn.razorpay.com/bank/ICIC.gif' },
+                            { name: 'Axis Bank', logo: 'https://cdn.razorpay.com/bank/UTIB.gif' },
+                            { name: 'Bank of Baroda', logo: 'https://cdn.razorpay.com/bank/BARB.gif' },
+                            { name: 'Kotak Mahindra', logo: 'https://cdn.razorpay.com/bank/KKBK.gif' },
+                            { name: 'Citibank', logo: 'https://cdn.razorpay.com/bank/CITI.gif' },
+                            { name: 'Standard Chartered', logo: 'https://cdn.razorpay.com/bank/SCBL.gif' },
+                            { name: 'HSBC Bank', logo: 'https://cdn.razorpay.com/bank/HSBC.gif' },
+                            { name: 'Federal Bank', logo: 'https://cdn.razorpay.com/bank/FDRL.gif' },
+                            { name: 'Yes Bank', logo: 'https://cdn.razorpay.com/bank/YESB.gif' },
+                            { name: 'IndusInd Bank', logo: 'https://cdn.razorpay.com/bank/INDB.gif' }
+                        ].map((bank, j) => (
+                            <div key={`b1-${j}`} className="flex items-center gap-3 px-6 py-2 whitespace-nowrap opacity-80 hover:opacity-100 transition-opacity">
+                                <img src={bank.logo} alt={bank.name} className={`h-10 w-auto object-contain drop-shadow-sm ${bank.scale || ''}`} />
+                                <span className="font-bold tracking-tight text-lg text-slate-700">{bank.name}</span>
+                            </div>
+                        ))}
+                    </div>
+                ))}
+            </div>
+
+            {/* Row 2 - UPI & International */}
+            <div className="animate-ticker-logos-backward flex w-max hover:[animation-play-state:paused]">
+                {[...Array(2)].map((_, i) => (
+                    <div key={`row2-${i}`} className="flex gap-4 items-center pr-4">
+                        {[
+                            { name: 'Google Pay', logo: 'https://img.icons8.com/color/96/000000/google-pay-india.png' },
+                            { name: 'PhonePe', logo: '/assets/logos/phonepe-icon.svg?v=2' },
+                            { name: 'Paytm', logo: '/assets/logos/paytm.svg' },
+                            { name: 'Amazon Pay', logo: '/assets/logos/amazonpay.svg' },
+                            { name: 'BHIM UPI', logo: 'https://img.icons8.com/color/96/000000/bhim.png' },
+                            { name: 'Apple Pay', logo: 'https://img.icons8.com/ios-filled/96/000000/mac-os.png' },
+                            { name: 'IDFC First Bank', logo: 'https://cdn.razorpay.com/bank/IDFB.gif' },
+                            { name: 'RBL Bank', logo: 'https://cdn.razorpay.com/bank/RATN.gif' },
+                            { name: 'SWIFT', logo: 'https://img.icons8.com/color/96/000000/swift.png' },
+                            { name: 'SEPA (Europe)', logo: '/assets/logos/sepa.svg?v=3' },
+                            { name: 'MobiKwik', logo: '/assets/logos/mobikwik-icon.png?v=2' },
+                            { name: 'iMobile', logo: 'https://cdn.razorpay.com/bank/ICIC.gif' }
+                        ].map((bank, j) => (
+                            <div key={`b2-${j}`} className="flex items-center gap-3 px-6 py-2 whitespace-nowrap opacity-80 hover:opacity-100 transition-opacity">
+                                <img src={bank.logo} alt={bank.name} className={`h-10 w-auto object-contain drop-shadow-sm ${(bank as any).scale || ''}`} />
+                                <span className="font-bold tracking-tight text-lg text-slate-700">{bank.name}</span>
+                            </div>
+                        ))}
+                    </div>
+                ))}
+            </div>
+        </div>
+
+        <div className="mt-12 text-center opacity-80 flex justify-center items-center gap-2 grayscale brightness-0">
+            <span className="text-xs font-semibold text-slate-500 uppercase tracking-widest">Secured by</span>
+            <img src="/assets/images/razorpay.svg" alt="Razorpay" className="h-4 object-contain" />
+        </div>
+    </section>
+
     {/* Testimonials Section */}
     <section id="testimonials" className="py-24 bg-[#141414] text-white border-t border-white/5">
         <div className="max-w-7xl mx-auto px-6 overflow-hidden">

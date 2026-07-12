@@ -42,21 +42,6 @@ export default function AwardsPage() {
 
   return (
     <div className="min-h-screen bg-white font-sans pb-32">
-      {/* Navbar */}
-      <header className="fixed w-full top-0 z-50 bg-white border-b border-slate-100">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <a href="/" className="flex items-center gap-2">
-            <img src="/assets/images/vishwaleader-logo-hd.png" alt="Vishwa Leader" className="h-7 w-auto object-contain" />
-            <span translate="no" className="notranslate font-sans font-bold tracking-tight text-sm text-slate-900">Vishwa Leader</span>
-          </a>
-          <div className="flex gap-6 text-sm font-medium text-slate-500 hidden md:flex">
-            <a href="/" className="hover:text-slate-900 transition-colors">Home</a>
-          </div>
-          <button onClick={handleActionClick} className="bg-slate-900 text-white text-xs font-semibold px-5 py-2.5 rounded-full hover:bg-slate-800 transition-all">
-            Get Started
-          </button>
-        </div>
-      </header>
 
       <main className="pb-16 md:pb-20">
         

@@ -21,21 +21,6 @@ export default function TermsPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col pb-20 font-sans antialiased">
-      
-      {/* Simple Header */}
-      <header className="border-b border-slate-200 bg-white sticky top-0 z-40 shadow-sm">
-        <div className="container mx-auto px-6 h-16 flex items-center justify-between">
-          <a href="/" className="flex items-center gap-3">
-            <img src="/assets/images/vishwaleader-logo-hd.png" alt="Vishwa Leader" className="h-8 w-auto object-contain" />
-            <span className="text-brandBlue font-black tracking-tight text-lg uppercase font-display hidden sm:inline-block">VISHWA LEADER</span>
-          </a>
-
-          <Button variant="ghost" size="sm" onClick={() => router.push('/auth/member')} className="text-slate-500 hover:text-slate-900">
-            <i className="fa-solid fa-arrow-left mr-2"></i>
-            Back
-          </Button>
-        </div>
-      </header>
 
       {/* Main Content */}
       <main className="flex-1 container max-w-4xl mx-auto px-4 mt-8 md:mt-12">

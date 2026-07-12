@@ -1,36 +1,10 @@
-"use client";
-
-import React, { useEffect } from "react";
+import React from "react";
 import Image from "next/image";
 
-
 export default function MissionPage() {
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
-
   return (
     <>
-
       <div className="min-h-screen bg-slate-50 text-slate-800 font-sans antialiased flex flex-col selection:bg-brandBlue selection:text-white pb-20">
-        
-        {/* Header */}
-        <header className="border-b border-slate-200 bg-white sticky top-0 z-40 shadow-sm">
-          <div className="max-w-[1960px] mx-auto px-6 h-20 flex items-center justify-between">
-            <a href="/" className="flex items-center gap-3">
-              <img src="/assets/images/vishwaleader-logo-hd.png" alt="Vishwa Leader" className="h-10 w-auto object-contain" />
-              <div className="flex flex-col leading-none">
-                <span className="text-brandBlue font-black tracking-tight text-lg uppercase font-display">VISHWA LEADER</span>
-                <span className="text-[10px] font-black tracking-widest text-brandBlue uppercase border border-brandBlue/30 px-2 py-0.5 rounded bg-brandBlue/10 self-start mt-0.5">
-                  Our Mission
-                </span>
-              </div>
-            </a>
-            <a href="/" className="text-xs font-bold text-slate-500 hover:text-brandBlue uppercase tracking-wider transition-colors flex items-center gap-2">
-              &larr; Back to Home
-            </a>
-          </div>
-        </header>
 
         {/* Hero Section */}
         <div className="text-white py-24 md:py-32 border-b border-slate-900 relative overflow-hidden flex items-center justify-center">

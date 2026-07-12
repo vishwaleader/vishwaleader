@@ -1,0 +1,57 @@
+export const pdfDownloadsList = [
+    { file: 'awards-circular-2026.pdf', title: 'Dr. Ambedkar International Awards May 2026 Circular', desc: 'Official circular detailing the 2026 awards ceremony, schedule, and delegation instructions.', size: '5.1 MB' },
+    { file: 'nomination-form-2026.pdf', title: 'Application for Award Nominations', desc: 'Official form to nominate candidates for the Dr. B. R. Ambedkar International Awards in London.', size: '4.7 MB' },
+    { file: 'business-prospectus-2026.pdf', title: 'International Business Summit Prospectus', desc: 'Sponsorship levels, business table structures, and executive networking pathways.', size: '1.4 MB' },
+    { file: 'soas-call-for-papers.pdf', title: 'SOAS Conference Call for Abstracts & Papers', desc: 'Themes, submission formats, and academic panel details for the SOAS University conference.', size: '3.0 MB' },
+    { file: 'event-brochure.pdf', title: 'Vishwa Leader Corporate Event Brochure', desc: 'Detailed corporate credentials, organizational goals, and previous social action projects.', size: '3.3 MB' },
+    { file: 'souvenir-invitation.pdf', title: 'Public Invitation for Souvenir Articles', desc: 'Open invitation for write-ups, scholarly papers, and advertisement bookings.', size: '970 KB' },
+    { file: 'advertisement-booking-form.pdf', title: 'Souvenir Print Advertisement Booking Form', desc: 'Pricing layout, print sizes, and booking terms for the commemorative London Summit publication.', size: '1.7 MB' },
+    { file: 'london-itinerary.pdf', title: 'Official London Tour & Seminar Itinerary', desc: 'Official schedule, hotel, academic events, and sightseeing plan for all registered delegates.', size: '4.7 MB' },
+    { file: 'summit-poster.pdf', title: 'Dr. Ambedkar London Summit Event Poster', desc: 'High-resolution promotional event poster with venue details and dates.', size: '238 KB' }
+];
+
+export const magazineCoversList = [
+  { src: '1001702539.jpg', title: '1001702539', date: '1001702539' },
+  { src: '1001702550.jpg', title: '1001702550', date: '1001702550' },
+  { src: '1001702555.jpg', title: '1001702555', date: '1001702555' },
+  { src: 'april-2013.jpg', title: 'APRIL 2013', date: 'APRIL 2013' },
+  { src: 'april-2011-cover.jpg', title: 'April  2011 Cover', date: 'April  2011 Cover' },
+  { src: 'april-issue-cover-10.jpg', title: 'April  Issue Cover 10', date: 'April  Issue Cover 10' },
+  { src: 'april-2012.png', title: 'April 2012', date: 'April 2012' },
+  { src: 'augst-2011-cover.jpg', title: 'Augst  2011 Cover', date: 'Augst  2011 Cover' },
+  { src: 'augst-issue-cover-10.jpg', title: 'Augst Issue Cover 10', date: 'Augst Issue Cover 10' },
+  { src: 'augst-2012.png', title: 'Augst 2012', date: 'Augst 2012' },
+  { src: 'dec-2011-cover.jpg', title: 'Dec 2011 Cover', date: 'Dec 2011 Cover' },
+  { src: 'dec-2012.png', title: 'Dec 2012', date: 'Dec 2012' },
+  { src: 'december-cover-09.jpg', title: 'December Cover 09', date: 'December Cover 09' },
+  { src: 'feb-2013.png', title: 'FEB 2013', date: 'FEB 2013' },
+  { src: 'feb-issue-cover10.jpg', title: 'Feb Issue Cover10', date: 'Feb Issue Cover10' },
+  { src: 'february-2011-cover.jpg', title: 'February 2011 Cover', date: 'February 2011 Cover' },
+  { src: 'jan-2013.png', title: 'JAN 2013', date: 'JAN 2013' },
+  { src: 'jan-2012.png', title: 'Jan 2012', date: 'Jan 2012' },
+  { src: 'july-issue-cover-10.jpg', title: 'July Issue Cover 10', date: 'July Issue Cover 10' },
+  { src: 'july-2012.png', title: 'July 2012', date: 'July 2012' },
+  { src: 'june-issue-cover-10.jpg', title: 'June Issue Cover 10', date: 'June Issue Cover 10' },
+  { src: 'june-2012.png', title: 'June 2012', date: 'June 2012' },
+  { src: 'march-2013.png', title: 'MARCH 2013', date: 'MARCH 2013' },
+  { src: 'march-2011-cover.jpg', title: 'March  2011 Cover', date: 'March  2011 Cover' },
+  { src: 'march-issue-cover-10.jpg', title: 'March Issue Cover 10', date: 'March Issue Cover 10' },
+  { src: 'may-2011-cover.jpg', title: 'May  2011 Cover', date: 'May  2011 Cover' },
+  { src: 'may-issue-cover-10.jpg', title: 'May Issue Cover 10', date: 'May Issue Cover 10' },
+  { src: 'may-2012.png', title: 'May 2012', date: 'May 2012' },
+  { src: 'nov-cover-09.jpg', title: 'Nov cover 09', date: 'Nov cover 09' },
+  { src: 'nov-2012.png', title: 'Nov 2012', date: 'Nov 2012' },
+  { src: 'november-cover-10.jpg', title: 'November Cover 10', date: 'November Cover 10' },
+  { src: 'oct-2011-cover.jpg', title: 'Oct  2011 Cover', date: 'Oct  2011 Cover' },
+  { src: 'oct-issue-cover-09.jpg', title: 'Oct Issue Cover 09', date: 'Oct Issue Cover 09' },
+  { src: 'oct-2012.png', title: 'Oct 2012', date: 'Oct 2012' },
+  { src: 'sep-cover-10.jpg', title: 'Sep Cover 10', date: 'Sep Cover 10' },
+  { src: 'sep-2012.png', title: 'Sep 2012', date: 'Sep 2012' },
+  { src: 'sept-2011-cover.jpg', title: 'Sept  2011 Cover', date: 'Sept  2011 Cover' },
+  { src: 'feb-2012.jpg', title: 'feb 2012', date: 'feb 2012' },
+  { src: 'feb-2012.png', title: 'feb 2012', date: 'feb 2012' },
+];
+
+export function createSlug(title: string) {
+  return title.replace(/[^a-zA-Z0-9\s-]/g, '').trim().replace(/\s+/g, '-');
+}

@@ -40,7 +40,7 @@ const PRICE_DICTIONARY: Record<string, number> = {
     "donation_patron": 118000, // 100000 + GST
 };
 
-export async function createDynamicOrder(selectedItems: string[]) {
+export async function createDynamicOrder(selectedItems: string[], customDonationAmount?: number) {
     if (!selectedItems || selectedItems.length === 0) {
         return { success: false, error: 'No items selected.' };
     }
@@ -48,6 +48,12 @@ export async function createDynamicOrder(selectedItems: string[]) {
     // Calculate authoritative total
     let totalAmount = 0;
     for (const item of selectedItems) {
+        if (item === 'donation_patron' && customDonationAmount !== undefined) {
+            // Apply custom donation amount directly (GST included)
+            totalAmount += customDonationAmount;
+            continue;
+        }
+
         if (PRICE_DICTIONARY[item] === undefined) {
             return { success: false, error: `Invalid item selected: ${item}` };
         }
@@ -63,8 +69,12 @@ export async function createDynamicOrder(selectedItems: string[]) {
         key_secret: process.env.RAZORPAY_KEY_SECRET!,
     });
 
+    // Cap amount at 5,00,000 INR for test mode Razorpay accounts to prevent amount exceeds limit error
+    const isTestMode = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID?.startsWith('rzp_test_');
+    const finalAmount = isTestMode ? Math.min(totalAmount, 500000) : totalAmount;
+
     const options = {
-        amount: totalAmount * 100, // amount in paise
+        amount: finalAmount * 100, // amount in paise
         currency: 'INR',
         receipt: `receipt_order_${new Date().getTime()}`,
     };
@@ -75,9 +85,9 @@ export async function createDynamicOrder(selectedItems: string[]) {
             return { success: false, error: 'Failed to create order.' };
         }
         return { success: true, order, totalAmount };
-    } catch (error) {
+    } catch (error: any) {
         console.error('Razorpay order creation error:', error);
-        return { success: false, error: 'Could not create Razorpay order.' };
+        return { success: false, error: `Could not create Razorpay order: ${error.message || JSON.stringify(error)}` };
     }
 }
 

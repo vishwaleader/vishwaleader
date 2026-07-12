@@ -3,8 +3,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
+import dynamic from 'next/dynamic';
 import { auth, db, storage } from "@/lib/firebase";
-import { onAuthStateChanged, signOut, User, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { onAuthStateChanged, signOut, type User, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs, addDoc, deleteDoc, serverTimestamp } from "firebase/firestore";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { createDynamicOrder, verifyDynamicPayment } from "@/app/actions/paymentActions";
@@ -27,9 +28,20 @@ import {
 } from "@/components/ui/table";
 import { 
   LayoutDashboard, User as UserIcon, FileText, LogOut, 
-  MapPin, Plus, Trash2, CheckCircle, Clock, Upload, ShieldAlert, CreditCard, Camera, FileCheck, Settings, Wifi, Check, ChevronDown
+  MapPin, Plus, Trash2, CheckCircle, Clock, Upload, ShieldAlert, CreditCard, Camera, FileCheck, Settings, Wifi, Check, ChevronDown, X, Download, Lock, Bell
 } from "lucide-react";
+import { ProfilePDF } from '@/components/ProfilePDF';
 
+const PDFDownloadLink = dynamic(() => import('@react-pdf/renderer').then(mod => mod.PDFDownloadLink), { ssr: false });
+
+const CustomPDFViewer = dynamic(() => import('@react-pdf/renderer').then(mod => {
+  return function Viewer({ doc }: { doc: React.ReactElement }) {
+    const [instance] = mod.usePDF({ document: doc as any });
+    if (instance.loading) return <div className="flex items-center justify-center h-full text-slate-400">Generating Profile Dossier...</div>;
+    if (instance.error) return <div className="flex items-center justify-center h-full text-rose-500">Error generating PDF</div>;
+    return <iframe src={`${instance.url}#pagemode=thumbs`} width="100%" height="100%" className="border-none absolute inset-0 bg-white" />;
+  };
+}), { ssr: false });
 declare global {
   interface Window {
     Razorpay: any;
@@ -39,8 +51,12 @@ declare global {
 export interface GuestProfile {
   id: string;
   name: string;
+  title: string;
+  gender: string;
   relationship: string;
+  age: string;
   passportNumber: string;
+  headshotUrl: string;
   passportFrontUrl: string;
   passportBackUrl: string;
   nationalIdUrl: string;
@@ -97,6 +113,22 @@ const INTENT_OPTIONS = [
   { id: "Souvenir Advertisement", category: "Souvenir", label: "I want to give an advertisement in the Event Souvenir", price: "₹5,000 + GST", keywords: ['souvenir', 'advertisement', 'ad', 'promote', 'marketing', 'sponsor'] },
   { id: "Donation Patron", category: "High-Level Patronage", label: "I want to support the global vision of Dr. B. R. Ambedkar through Vishwa Leader", price: "₹1,00,000 + GST", keywords: ['ambedkar', 'dr', 'mission', 'vishwa', 'leader', 'donate', 'support', 'give'] }
 ];
+
+const getPackageName = (pkg: string) => {
+  if (pkg === 'pkg_1') return 'Tour (Mumbai - London - Mumbai 7N/8D)';
+  if (pkg === 'pkg_2') return 'Tour (Mumbai - London - Mumbai 4N/5D)';
+  if (pkg === 'pkg_3' || pkg === 'From Outside India') return 'Land (London Only, 7N/8D)';
+  if (pkg === 'pkg_4' || pkg === 'From India') return 'Land (London Only, 4N/5D)';
+  return pkg;
+};
+
+const getPackagePrice = (pkg: string) => {
+  if (pkg === 'pkg_1') return 310000;
+  if (pkg === 'pkg_2') return 235000;
+  if (pkg === 'pkg_3' || pkg === 'From Outside India') return 200501;
+  if (pkg === 'pkg_4' || pkg === 'From India') return 131000;
+  return 0;
+};
 
 const PHONE_CODES_LIST = [
   "+91 (India)", "+1 (USA/Canada)", "+44 (UK)", "+61 (Australia)", "+971 (UAE)", "+49 (Germany)", "+33 (France)", "+81 (Japan)",
@@ -213,25 +245,46 @@ export default function MemberClientPage() {
   const [reRegisterMode, setReRegisterMode] = useState(false);
   const [showReRegisterModal, setShowReRegisterModal] = useState(false);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'registration' | 'checkout' | 'uploads' | 'submissions' | 'settings'>('dashboard');
+  const [showNotifications, setShowNotifications] = useState(false);
 
-  const calculateWizardTotal = () => {
-    let subtotal = 0; 
-    let isTourSelected = (profilePackageTour === 'From India' || profilePackageTour === 'From Outside India');
+  const getPerPersonCost = (intents: string[], tour: string) => {
+    let perPersonSubtotal = 0; 
+    let isTourSelected = (tour && tour !== 'None');
 
     if (!isTourSelected) {
-      if (wizardIntents.some(i => i.startsWith('Conference'))) subtotal += 5900;
-      if (wizardIntents.some(i => i.startsWith('Business'))) subtotal += 11800;
-      if (wizardIntents.some(i => i.startsWith('Award'))) subtotal += 5900;
+      if (intents.some(i => i.startsWith('Conference'))) perPersonSubtotal += 5900;
+      if (intents.some(i => i.startsWith('Business'))) perPersonSubtotal += 11800;
+      if (intents.some(i => i.startsWith('Award'))) perPersonSubtotal += 5900;
     }
+    
+    if (tour === 'pkg_1') perPersonSubtotal += 310000;
+    if (tour === 'pkg_2') perPersonSubtotal += 235000;
+    if (tour === 'pkg_3') perPersonSubtotal += 200501;
+    if (tour === 'pkg_4') perPersonSubtotal += 131000;
+    if (tour === 'From India') perPersonSubtotal += 131000;
+    if (tour === 'From Outside India') perPersonSubtotal += 200501;
+    
+    return perPersonSubtotal;
+  };
 
-    if (wizardIntents.includes('Souvenir Article')) subtotal += 5900;
-    if (wizardIntents.includes('Souvenir Advertisement')) subtotal += 5900;
-    if (wizardIntents.includes('Donation Patron')) subtotal += 118000;
+  const calculateWizardTotal = () => {
+    let oneTimeSubtotal = 0;
+
+    if (wizardIntents.includes('Souvenir Article')) oneTimeSubtotal += 5900;
+    if (wizardIntents.includes('Souvenir Advertisement')) {
+      if (profileAdSize === 'ad_front_cover') oneTimeSubtotal += 500000;
+      else if (profileAdSize === 'ad_back_cover') oneTimeSubtotal += 200000;
+      else if (profileAdSize === 'ad_inside_cover') oneTimeSubtotal += 150000;
+      else if (profileAdSize === 'ad_double_spread') oneTimeSubtotal += 100000;
+      else if (profileAdSize === 'ad_full_page') oneTimeSubtotal += 50000;
+      else if (profileAdSize === 'ad_half_page') oneTimeSubtotal += 25000;
+      else if (profileAdSize === 'ad_quarter_page') oneTimeSubtotal += 15000;
+    }
+    if (wizardIntents.includes('Donation Patron')) oneTimeSubtotal += (Number(patronAmount) || 100000);
     
-    if (profilePackageTour === 'From India') subtotal += 131000;
-    if (profilePackageTour === 'From Outside India') subtotal += 200501;
+    const perPersonSubtotal = getPerPersonCost(wizardIntents, profilePackageTour);
     
-    return subtotal * (numDelegates || 1);
+    return (perPersonSubtotal * (numDelegates || 1)) + oneTimeSubtotal;
   };
 
   // Wizard Intents (What brings you here)
@@ -261,6 +314,8 @@ export default function MemberClientPage() {
   const [intentSearchQuery, setIntentSearchQuery] = useState<string>('');
   const [profileDietary, setProfileDietary] = useState("");
   const [profileCountry, setProfileCountry] = useState("India");
+  const [profileAdSize, setProfileAdSize] = useState("ad_quarter_page");
+  const [patronAmount, setPatronAmount] = useState<number | ''>(100000);
   const [profileLegalConsent, setProfileLegalConsent] = useState(false);
   const [groupType, setGroupType] = useState<'none' | 'family' | 'group'>('none');
   const [numDelegates, setNumDelegates] = useState<number | ''>(1);
@@ -273,6 +328,9 @@ export default function MemberClientPage() {
 
   const [headshotUploading, setHeadshotUploading] = useState(false);
   const [headshotProgress, setHeadshotProgress] = useState(0);
+
+  const [nationalIdUploading, setNationalIdUploading] = useState(false);
+  const [nationalIdProgress, setNationalIdProgress] = useState(0);
 
   const [passportFrontUploading, setPassportFrontUploading] = useState(false);
   const [passportFrontProgress, setPassportFrontProgress] = useState(0);
@@ -362,6 +420,7 @@ export default function MemberClientPage() {
               legalConsent: false,
               headshotUrl: "",
               passportFrontUrl: "", passportBackUrl: "",
+              nationalIdUrl: "",
               evidenceUrl: ""
             };
             await setDoc(userRef, newMember);
@@ -433,20 +492,27 @@ export default function MemberClientPage() {
       setProfilePassport(draft.profilePassport || data.passportNumber || "");
       setWizardStep(draft.wizardStep !== undefined ? draft.wizardStep : 0);
 
-      setProfileCity(data.city || "");
-      setProfileState(data.state || "");
-      setProfileWheelchair(data.wheelchairSupport || false);
-      setProfileDesignation(data.designation || "");
-      setProfileOrganization(data.organization || "");
-      setProfileSector(data.sector || "Academic/Research");
-      setProfilePhone(data.phone || "");
-      setProfileBio(data.bio || "");
-      setProfileAddress(data.fullAddress || "");
-      setProfileCategory(data.nominationCategory || "social-justice-leadership");
-      setProfileVisaSupport(data.visaSupport || false);
-      setProfileAccommodation(data.accommodationSupport || false);
-      setProfilePackageTour(data.packageTour || "None");
-      setProfileDietary(data.dietaryNotes || "");
+      setProfileCity(draft.profileCity || data.city || "");
+      setProfileState(draft.profileState || data.state || "");
+      setProfileWheelchair(draft.profileWheelchair !== undefined ? draft.profileWheelchair : (data.wheelchairSupport || false));
+      setProfileDesignation(draft.profileDesignation || data.designation || "");
+      setProfileOrganization(draft.profileOrganization || data.organization || "");
+      setProfileSector(draft.profileSector || data.sector || "Academic/Research");
+      setProfilePhone(draft.profilePhone || data.phone || "");
+      setProfileBio(draft.profileBio || data.bio || "");
+      setProfileAddress(draft.profileAddress || data.fullAddress || "");
+      setProfileCategory(draft.profileCategory || data.nominationCategory || "social-justice-leadership");
+      setProfileVisaSupport(draft.profileVisaSupport !== undefined ? draft.profileVisaSupport : (data.visaSupport || false));
+      setProfileAccommodation(draft.profileAccommodation !== undefined ? draft.profileAccommodation : (data.accommodationSupport || false));
+      setProfilePackageTour(draft.profilePackageTour || data.packageTour || "None");
+      setProfileDietary(draft.profileDietary || data.dietaryNotes || "");
+      
+      if (draft.numDelegates !== undefined) setNumDelegates(draft.numDelegates);
+      if (draft.groupType) setGroupType(draft.groupType);
+      if (draft.patronAmount !== undefined) setPatronAmount(draft.patronAmount);
+      if (draft.profileAdSize) setProfileAdSize(draft.profileAdSize);
+      if (draft.guestProfiles) setGuestProfiles(draft.guestProfiles);
+      if (draft.profileOrigin) setProfileOrigin(draft.profileOrigin);
       setProfileCountry(data.country || "India");
       setProfileLegalConsent(data.legalConsent || false);
       
@@ -469,10 +535,31 @@ export default function MemberClientPage() {
         profileGender,
         profileAge,
         profileNationality,
-        profilePassport
+        profilePassport,
+        profilePackageTour,
+        patronAmount,
+        profileAdSize,
+        groupType,
+        numDelegates,
+        guestProfiles,
+        profileOrigin,
+        profileCountry,
+        profileDietary,
+        profileWheelchair,
+        profileDesignation,
+        profileOrganization,
+        profileSector,
+        profilePhone,
+        profileBio,
+        profileAddress,
+        profileCategory,
+        profileVisaSupport,
+        profileAccommodation,
+        profileCity,
+        profileState
       }));
     }
-  }, [wizardStep, wizardIntents, wizardEventCategories, profileName, profileGender, profileAge, profileNationality, profilePassport, loading, memberData]);
+  }, [wizardStep, wizardIntents, wizardEventCategories, profileName, profileGender, profileAge, profileNationality, profilePassport, profilePackageTour, patronAmount, profileAdSize, groupType, numDelegates, guestProfiles, profileOrigin, profileCountry, profileDietary, profileWheelchair, profileDesignation, profileOrganization, profileSector, profilePhone, profileBio, profileAddress, profileCategory, profileVisaSupport, profileAccommodation, profileCity, profileState, loading, memberData]);
 
   // Handle slide rendering and navigation
 
@@ -511,8 +598,9 @@ export default function MemberClientPage() {
     if (!user) return;
     
     // Auto-calculate selections from wizard state
+    if (!profileLegalConsent) return showToast("You must agree to the Terms and Conditions.");
     const selectedItems: string[] = [];
-    let isTourSelected = (profilePackageTour === 'From India' || profilePackageTour === 'From Outside India');
+    let isTourSelected = (profilePackageTour !== 'None');
 
     for (let i = 0; i < (numDelegates || 1); i++) {
       if (!isTourSelected) {
@@ -522,17 +610,27 @@ export default function MemberClientPage() {
       }
 
       if (wizardIntents.includes('Souvenir Article')) selectedItems.push('reg_souvenir');
-      if (wizardIntents.includes('Souvenir Advertisement')) selectedItems.push('reg_souvenir');
+      if (wizardIntents.includes('Souvenir Advertisement')) selectedItems.push(profileAdSize);
       
       if (wizardIntents.includes('Donation Patron')) selectedItems.push('donation_patron');
 
-      if (profilePackageTour === 'From India') selectedItems.push('pkg_india');
-      if (profilePackageTour === 'From Outside India') selectedItems.push('pkg_intl');
+      if (profilePackageTour === 'pkg_1') selectedItems.push('pkg_1');
+      if (profilePackageTour === 'pkg_2') selectedItems.push('pkg_2');
+      if (profilePackageTour === 'pkg_3') selectedItems.push('pkg_3');
+      if (profilePackageTour === 'pkg_4') selectedItems.push('pkg_4');
+      // Legacy support
+      if (profilePackageTour === 'From India') selectedItems.push('pkg_4');
+      if (profilePackageTour === 'From Outside India') selectedItems.push('pkg_3');
     }
 
 
     if (selectedItems.length === 0) {
       showToast("Please select your event intent in the wizard to calculate total.");
+      return;
+    }
+
+    if (wizardIntents.includes('Donation Patron') && (Number(patronAmount) || 0) < 100) {
+      showToast("Minimum Patron Contribution amount is ₹100.");
       return;
     }
 
@@ -543,7 +641,7 @@ export default function MemberClientPage() {
     }
 
     // 1. Create order on the secure Server Action
-    const result = await createDynamicOrder(selectedItems);
+    const result = await createDynamicOrder(selectedItems, Number(patronAmount) || 100000);
 
     if (!result.success || !result.order) {
       alert(result.error || "Could not generate order order-id from checkout gateway.");
@@ -604,8 +702,30 @@ export default function MemberClientPage() {
     rzp.open();
   };
 
+  const removeDocument = async (field: string, guestIndex?: number) => {
+    if (!user) return;
+    const userRef = doc(db, "users", user.uid);
+    try {
+      if (guestIndex !== undefined) {
+        const updatedProfiles = [...guestProfiles];
+        if (updatedProfiles[guestIndex]) {
+          (updatedProfiles[guestIndex] as any)[field] = null;
+          setGuestProfiles(updatedProfiles);
+          await updateDoc(userRef, { guestProfiles: updatedProfiles });
+          setMemberData((prev: any) => ({ ...prev, guestProfiles: updatedProfiles }));
+        }
+      } else {
+        await updateDoc(userRef, { [`${field}Url`]: null });
+        setMemberData((prev: any) => ({ ...prev, [`${field}Url`]: null }));
+      }
+    } catch (error) {
+      console.error("Error removing document:", error);
+      showToast("Failed to remove document.");
+    }
+  };
+
   // Firebase Storage upload helper
-  const uploadFileToStorage = (file: File, type: 'headshot' | 'passportFront' | 'passportBack' | 'evidence' | 'businessDeck' | 'guestUpload', guestIndex?: number, guestField?: 'passportFrontUrl' | 'passportBackUrl' | 'nationalIdUrl') => {
+  const uploadFileToStorage = (file: File, type: 'headshot' | 'passportFront' | 'passportBack' | 'nationalId' | 'evidence' | 'businessDeck' | 'guestUpload', guestIndex?: number, guestField?: 'headshotUrl' | 'passportFrontUrl' | 'passportBackUrl' | 'nationalIdUrl') => {
     if (!user) return;
     
     // Set status
@@ -613,6 +733,7 @@ export default function MemberClientPage() {
       setGuestUploadState(prev => ({ ...prev, [`${guestIndex}_${guestField}`]: { uploading: true, progress: 0 } }));
     }
     if (type === 'headshot') { setHeadshotUploading(true); setHeadshotProgress(0); }
+    if (type === 'nationalId') { setNationalIdUploading(true); setNationalIdProgress(0); }
     if (type === 'passportFront') { setPassportFrontUploading(true); setPassportFrontProgress(0); }
     if (type === 'passportBack') { setPassportBackUploading(true); setPassportBackProgress(0); }
     if (type === 'evidence') { setEvidenceUploading(true); setEvidenceProgress(0); }
@@ -629,6 +750,7 @@ export default function MemberClientPage() {
           setGuestUploadState(prev => ({ ...prev, [`${guestIndex}_${guestField}`]: { uploading: true, progress } }));
         }
         if (type === 'headshot') setHeadshotProgress(progress);
+        if (type === 'nationalId') setNationalIdProgress(progress);
         if (type === 'passportFront') setPassportFrontProgress(progress);
         if (type === 'passportBack') setPassportBackProgress(progress);
         if (type === 'evidence') setEvidenceProgress(progress);
@@ -641,6 +763,7 @@ export default function MemberClientPage() {
           setGuestUploadState(prev => ({ ...prev, [`${guestIndex}_${guestField}`]: { uploading: false, progress: 0 } }));
         }
         if (type === 'headshot') setHeadshotUploading(false);
+        if (type === 'nationalId') setNationalIdUploading(false);
         if (type === 'passportFront') setPassportFrontUploading(false);
         if (type === 'passportBack') setPassportBackUploading(false);
         if (type === 'evidence') setEvidenceUploading(false);
@@ -662,6 +785,7 @@ export default function MemberClientPage() {
             }
           } else {
             const updateField = type === 'headshot' ? 'headshotUrl' : 
+                            type === 'nationalId' ? 'nationalIdUrl' :
                             type === 'passportFront' ? 'passportFrontUrl' : 
                             type === 'passportBack' ? 'passportBackUrl' : 
                             type === 'evidence' ? 'evidenceUrl' :
@@ -689,6 +813,7 @@ export default function MemberClientPage() {
             setGuestUploadState(prev => ({ ...prev, [`${guestIndex}_${guestField}`]: { uploading: false, progress: 100 } }));
           }
           if (type === 'headshot') setHeadshotUploading(false);
+          if (type === 'nationalId') setNationalIdUploading(false);
           if (type === 'passportFront') setPassportFrontUploading(false);
           if (type === 'passportBack') setPassportBackUploading(false);
           if (type === 'evidence') setEvidenceUploading(false);
@@ -922,7 +1047,7 @@ export default function MemberClientPage() {
   const showWizard = (!isRegistrationComplete) || reRegisterMode;
 
   // Generate dynamic slides array
-  const showTourStep = (profileOrigin !== 'I am from London' && profileOrigin !== '');
+  const showTourStep = (profileOrigin !== 'London (UK)' && profileOrigin !== '');
   const showEvents = (profilePackageTour === 'None');
   
   const visibleSlides = [
@@ -953,8 +1078,11 @@ export default function MemberClientPage() {
     
     // Documents
     { id: 'headshot', type: 'upload', title: 'Please upload a professional headshot.', subtitle: "This will be used for your Delegate ID Card.", field: 'headshot', url: memberData?.headshotUrl, uploading: headshotUploading, progress: headshotProgress },
-    { id: 'passportFront', type: 'upload', title: 'Please upload the front page of your passport.', field: 'passportFront', url: memberData?.passportFrontUrl, uploading: passportFrontUploading, progress: passportFrontProgress },
-    { id: 'passportBack', type: 'upload', title: 'Please upload the back page of your passport.', field: 'passportBack', url: memberData?.passportBackUrl, uploading: passportBackUploading, progress: passportBackProgress },
+    { id: 'nationalId', type: 'upload', title: 'Please upload your National ID (Aadhar/PAN).', field: 'nationalId', url: memberData?.nationalIdUrl, uploading: nationalIdUploading, progress: nationalIdProgress },
+    ...(profilePackageTour !== 'None' ? [
+      { id: 'passportFront', type: 'upload', title: 'Please upload the front page of your passport.', field: 'passportFront', url: memberData?.passportFrontUrl, uploading: passportFrontUploading, progress: passportFrontProgress },
+      { id: 'passportBack', type: 'upload', title: 'Please upload the back page of your passport.', field: 'passportBack', url: memberData?.passportBackUrl, uploading: passportBackUploading, progress: passportBackProgress }
+    ] : []),
     
     // Conditional: Award
     ...(wizardIntents.includes('Award Nominee') ? [
@@ -973,6 +1101,22 @@ export default function MemberClientPage() {
     ...(wizardIntents.includes('Business Presenter') ? [
       { id: 'business_proposal', type: 'textarea', title: 'What is your primary business objective or proposal?', state: businessProposalText, setState: setBusinessProposalText, required: true },
       { id: 'businessDeck', type: 'upload', title: 'Please upload your pitch deck or company profile.', subtitle: "Accepted formats: .pdf, .ppt", field: 'businessDeck', url: memberData?.businessDeckUrl, uploading: businessDeckUploading, progress: businessDeckProgress, accept: ".pdf,.ppt,.pptx" }
+    ] : []),
+
+    // Group/Family setup
+    {
+      id: 'group_type',
+      type: 'group_type',
+      title: 'Group or Family Setup',
+      subtitle: 'Are you attending with a Family or a Group?'
+    },
+    ...(groupType !== 'none' ? [
+      {
+        id: 'group_details',
+        type: 'group_details',
+        title: groupType === 'family' ? 'Family Details' : 'Group Details',
+        subtitle: 'Please provide the details for your additional members.'
+      }
     ] : []),
 
     // Logistics
@@ -998,11 +1142,7 @@ export default function MemberClientPage() {
         subtitle: 'Please provide the details for your additional members.'
       }
     ] : []),
-    ...(guestProfiles.flatMap((guest, index) => [
-      { id: `guest_${index}_passportFront`, type: 'upload_guest', title: `Please upload the front page of passport for ${guest.name || `Guest ${index + 1}`}`, field: 'passportFrontUrl', guestIndex: index, url: guest.passportFrontUrl },
-      { id: `guest_${index}_passportBack`, type: 'upload_guest', title: `Please upload the back page of passport for ${guest.name || `Guest ${index + 1}`}`, field: 'passportBackUrl', guestIndex: index, url: guest.passportBackUrl },
-      { id: `guest_${index}_nationalId`, type: 'upload_guest', title: `Please upload a National ID (Aadhar/PAN) for ${guest.name || `Guest ${index + 1}`}`, field: 'nationalIdUrl', guestIndex: index, url: guest.nationalIdUrl }
-    ])),
+
     { id: 'review_family', type: 'review_family', title: 'Review & Save Group Details' }
   ];
 
@@ -1022,18 +1162,24 @@ export default function MemberClientPage() {
   }, [wizardStep, visibleSlides.length]);
 
   useEffect(() => {
-    // Reveal the checkout screen precisely when the image loads
-    // Uses `transitioning` overlay (not `loading`) so wizard stays mounted
+    // Reveal the checkout screen precisely when the image loads and add a mandatory 2.5s delay
+    // Uses `transitioning` overlay (not `loading`) so wizard stays mounted and DOM layout stabilizes
     if (wizardStep === visibleSlides.length - 1 && paymentImageLoaded) {
       const t = setTimeout(() => {
         if (transitioning) setTransitioning(false);
         requestAnimationFrame(() => setCheckoutVisible(true));
-      }, 50);
+      }, 2500); // Wait 2.5 seconds for a smooth cinematic transition
       return () => clearTimeout(t);
     }
   }, [wizardStep, paymentImageLoaded, transitioning, visibleSlides.length]);
 
   const goNext = () => {
+    if (currentSlide.type === 'origin') {
+      if (profileOrigin === 'Other international location' && !profileCountry.trim()) {
+        showToast("Please select your country.");
+        return;
+      }
+    }
     if (currentSlide.type === 'intent' && wizardIntents.length === 0) {
       showToast("Please select at least one intent to proceed.");
       return;
@@ -1052,8 +1198,13 @@ export default function MemberClientPage() {
       }
     }
     if (currentSlide.type === 'group_details') {
-      if (guestProfiles.some(g => !g.name?.trim() || !g.relationship?.trim() || !g.passportNumber?.trim())) {
-        showToast("Please fill all details (Name, Relationship, Passport) for your guests.");
+      const isTourSelected = (profilePackageTour && profilePackageTour !== 'None');
+      if (guestProfiles.some(g => {
+        if (!g.name?.trim() || !g.title?.trim() || !g.gender?.trim() || !g.relationship?.trim() || !g.age?.trim() || !g.headshotUrl || !g.nationalIdUrl) return true;
+        if (isTourSelected && (!g.passportNumber?.trim() || !g.passportFrontUrl || !g.passportBackUrl)) return true;
+        return false;
+      })) {
+        showToast("Please provide all required details and documents for your guests.");
         return;
       }
     }
@@ -1081,17 +1232,22 @@ export default function MemberClientPage() {
   // Listen for Enter key to proceed
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Enter' && currentSlide.type !== 'textarea') {
-        // Prevent default form submission
-        e.preventDefault();
-        if (wizardStep < visibleSlides.length - 1 && activeTab === 'registration' && !isRegistrationComplete) {
+      if (e.key === 'Enter') {
+        const isMainWizardActive = (!memberData || reRegisterMode) && !isRegistrationComplete;
+        const isFamilyWizardActive = memberData && memberData.numDelegates > 1 && (!memberData.guests || memberData.guests.length === 0) && !reRegisterMode;
+
+        if (isMainWizardActive && wizardStep < visibleSlides.length - 1 && currentSlide.type !== 'textarea') {
+          e.preventDefault();
           goNext();
+        } else if (isFamilyWizardActive && familyWizardStep < familyVisibleSlides.length - 1 && currentFamilySlide.type !== 'textarea') {
+          e.preventDefault();
+          goFamilyNext();
         }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [wizardStep, currentSlide, wizardIntents, activeTab, isRegistrationComplete]);
+  }, [wizardStep, currentSlide, wizardIntents, memberData, reRegisterMode, isRegistrationComplete, familyWizardStep, currentFamilySlide]);
 
   const goFamilyNext = () => {
     if (currentFamilySlide.type === 'group_type' && groupType === 'none') {
@@ -1139,60 +1295,63 @@ export default function MemberClientPage() {
                 { val: 'family', label: 'Family' },
                 { val: 'group', label: 'Group' }
               ].map(opt => (
-                <label key={opt.val} className="flex items-center justify-between gap-3 py-3 cursor-pointer transition-all border-b border-slate-100 last:border-0 hover:bg-slate-50 rounded-xl px-2">
-                  <div className="flex-1 text-left">
-                    <h4 className="font-semibold text-sm text-slate-800 mb-0.5">{opt.label}</h4>
-                  </div>
-                  <div>
-                    <input 
-                      type="radio" 
-                      name="group_type"
-                      checked={groupType === opt.val}
-                      onChange={() => {
-                        setGroupType(opt.val as any);
-                        if (opt.val === 'none') {
-                          setNumDelegates(1);
-                          setGuestProfiles([]);
-                          setTimeout(goFamilyNext, 300);
-                        }
-                      }}
-                      className="w-5 h-5 text-brandBlue focus:ring-brandBlue border-slate-300"
-                    />
-                  </div>
-                </label>
-              ))}
-              {groupType !== 'none' && (
-                <div className="animate-in fade-in slide-in-from-top-4 pt-4 text-center">
-                  <p className="text-sm text-slate-500 font-semibold mb-4">Total Adult Delegates (18+)</p>
-                  <input 
-                    type="number" 
-                    min="1" 
-                    value={numDelegates} 
-                    onChange={(e) => {
-                      const rawVal = e.target.value;
-                      if (rawVal === '') {
-                        setNumDelegates('');
-                        setGuestProfiles([]);
-                        return;
-                      }
-                      const val = parseInt(rawVal);
-                      if (isNaN(val)) return;
-                      setNumDelegates(val);
-                      
-                      if (val > guestProfiles.length + 1) {
-                        const newGuests = Array.from({ length: val - 1 - guestProfiles.length }).map((_, i) => ({
-                          id: `guest_${Date.now()}_${i}`,
-                          name: '', relationship: '', passportNumber: '', passportFrontUrl: '', passportBackUrl: '', nationalIdUrl: ''
-                        }));
-                        setGuestProfiles([...guestProfiles, ...newGuests]);
-                      } else {
-                        setGuestProfiles(guestProfiles.slice(0, val - 1));
-                      }
-                    }}
-                    className="w-full max-w-[200px] mx-auto text-center text-3xl md:text-4xl text-brandBlue bg-transparent border-0 border-b-2 border-slate-200 focus:ring-0 focus:border-brandBlue focus:outline-none py-4 transition-colors placeholder:text-slate-300 mb-8"
-                  />
+                <div key={opt.val} className="flex flex-col border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-all rounded-xl px-2">
+                  <label className="flex items-center justify-between gap-3 py-3 cursor-pointer">
+                    <div className="flex-1 text-left">
+                      <h4 className="font-semibold text-sm text-slate-800 mb-0.5">{opt.label}</h4>
+                    </div>
+                    <div>
+                      <input 
+                        type="radio" 
+                        name="group_type"
+                        checked={groupType === opt.val}
+                        onChange={() => {
+                          setGroupType(opt.val as any);
+                          if (opt.val === 'none') {
+                            setNumDelegates(1);
+                            setGuestProfiles([]);
+                            setTimeout(goFamilyNext, 300);
+                          }
+                        }}
+                        className="w-5 h-5 text-brandBlue focus:ring-brandBlue border-slate-300"
+                      />
+                    </div>
+                  </label>
+                  {groupType === opt.val && opt.val !== 'none' && (
+                    <div className="animate-in fade-in slide-in-from-top-2 pb-4 pt-1 w-full pl-2 pr-2">
+                      <input 
+                        type="number"
+                        placeholder="Number of guests (excluding you)"
+                        min="0"
+                        value={numDelegates === '' ? '' : Math.max(0, Number(numDelegates) - 1)}
+                        onChange={(e) => {
+                          const rawVal = e.target.value;
+                          if (rawVal === '') {
+                            setNumDelegates('');
+                            setGuestProfiles([]);
+                            return;
+                          }
+                          const additional = parseInt(rawVal);
+                          if (isNaN(additional)) return;
+                          const val = additional + 1;
+                          setNumDelegates(val);
+                          
+                          if (val > guestProfiles.length + 1) {
+                            const newGuests = Array.from({ length: val - 1 - guestProfiles.length }).map((_, i) => ({
+                              id: `guest_${Date.now()}_${i}`,
+                              name: '', title: '', gender: '', relationship: '', age: '', passportNumber: '', headshotUrl: '', passportFrontUrl: '', passportBackUrl: '', nationalIdUrl: ''
+                            }));
+                            setGuestProfiles([...guestProfiles, ...newGuests]);
+                          } else {
+                            setGuestProfiles(guestProfiles.slice(0, val - 1));
+                          }
+                        }}
+                        className="w-full bg-white border border-slate-200 text-slate-700 text-sm font-medium rounded-xl px-4 py-3 focus:outline-none focus:border-brandBlue focus:ring-1 focus:ring-brandBlue shadow-sm"
+                      />
+                    </div>
+                  )}
                 </div>
-              )}
+              ))}
             </div>
           ) : currentFamilySlide.type === 'group_details' ? (
             <div className="max-w-2xl mx-auto w-full text-left space-y-8">
@@ -1201,29 +1360,36 @@ export default function MemberClientPage() {
                     <h4 className="font-bold text-lg text-slate-800">Guest {idx + 1}</h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
+                        <label className="text-xs font-semibold text-slate-500 uppercase">Title</label>
+                        <select value={guest.title} onChange={(e) => { const newG = [...guestProfiles]; newG[idx].title = e.target.value; setGuestProfiles(newG); }} className="w-full mt-1 border-slate-200 rounded-md text-sm">
+                          <option value="">Select...</option>
+                          <option value="Mr.">Mr.</option>
+                          <option value="Mrs.">Mrs.</option>
+                          <option value="Ms.">Ms.</option>
+                          <option value="Dr.">Dr.</option>
+                          <option value="Prof.">Prof.</option>
+                        </select>
+                      </div>
+                      <div>
                         <label className="text-xs font-semibold text-slate-500 uppercase">Full Name</label>
-                        <Input 
-                          value={guest.name}
-                          onChange={(e) => {
-                            const newG = [...guestProfiles];
-                            newG[idx].name = e.target.value;
-                            setGuestProfiles(newG);
-                          }}
-                          className="mt-1"
-                          placeholder="John Doe"
-                        />
+                        <Input value={guest.name} onChange={(e) => { const newG = [...guestProfiles]; newG[idx].name = e.target.value; setGuestProfiles(newG); }} className="mt-1" placeholder="John Doe" />
+                      </div>
+                      <div>
+                        <label className="text-xs font-semibold text-slate-500 uppercase">Gender</label>
+                        <select value={guest.gender} onChange={(e) => { const newG = [...guestProfiles]; newG[idx].gender = e.target.value; setGuestProfiles(newG); }} className="w-full mt-1 border-slate-200 rounded-md text-sm">
+                          <option value="">Select...</option>
+                          <option value="Male">Male</option>
+                          <option value="Female">Female</option>
+                          <option value="Other">Other</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-xs font-semibold text-slate-500 uppercase">Age</label>
+                        <Input type="number" value={guest.age} onChange={(e) => { const newG = [...guestProfiles]; newG[idx].age = e.target.value; setGuestProfiles(newG); }} className="mt-1" placeholder="25" />
                       </div>
                       <div>
                         <label className="text-xs font-semibold text-slate-500 uppercase">Relationship</label>
-                        <select 
-                          value={guest.relationship}
-                          onChange={(e) => {
-                            const newG = [...guestProfiles];
-                            newG[idx].relationship = e.target.value;
-                            setGuestProfiles(newG);
-                          }}
-                          className="w-full mt-1 border-slate-200 rounded-md text-sm"
-                        >
+                        <select value={guest.relationship} onChange={(e) => { const newG = [...guestProfiles]; newG[idx].relationship = e.target.value; setGuestProfiles(newG); }} className="w-full mt-1 border-slate-200 rounded-md text-sm">
                           <option value="">Select...</option>
                           <option value="Spouse">Spouse</option>
                           <option value="Child (18+)">Child (18+)</option>
@@ -1232,53 +1398,113 @@ export default function MemberClientPage() {
                           <option value="Other">Other</option>
                         </select>
                       </div>
-                      <div className="md:col-span-2">
-                        <label className="text-xs font-semibold text-slate-500 uppercase">Passport Number</label>
-                        <Input 
-                          value={guest.passportNumber}
-                          onChange={(e) => {
-                            const newG = [...guestProfiles];
-                            newG[idx].passportNumber = e.target.value;
-                            setGuestProfiles(newG);
-                          }}
-                          className="mt-1"
-                          placeholder="A1234567"
-                        />
+                      {profilePackageTour !== 'None' && (
+                        <div>
+                          <label className="text-xs font-semibold text-slate-500 uppercase">Passport Number</label>
+                          <Input value={guest.passportNumber} onChange={(e) => { const newG = [...guestProfiles]; newG[idx].passportNumber = e.target.value; setGuestProfiles(newG); }} className="mt-1" placeholder="A1234567" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="pt-4 border-t border-slate-100">
+                      <label className="text-xs font-semibold text-slate-500 uppercase mb-3 block">Required Documents</label>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        {/* Headshot */}
+                        <div className="relative border-2 border-dashed border-slate-200 rounded-xl h-24 flex flex-col items-center justify-center text-center bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer overflow-hidden group">
+                           {guest.headshotUrl ? (
+                             <>
+                               <img src={guest.headshotUrl} alt="Headshot" className="absolute inset-0 w-full h-full object-cover" />
+                               <button type="button" onClick={(e) => { e.preventDefault(); const newG = [...guestProfiles]; newG[idx].headshotUrl = ''; setGuestProfiles(newG); }} className="absolute top-1 right-1 bg-white/90 rounded-full p-1 shadow-sm hover:bg-white text-slate-700 hover:text-red-500 transition-colors z-10">
+                                 <X className="size-3" />
+                               </button>
+                             </>
+                           ) : (
+                             <>
+                               <Camera className="size-4 text-slate-400 mb-1 group-hover:text-brandBlue transition-colors" />
+                               <span className="text-[10px] text-slate-500 font-medium group-hover:text-brandBlue">Headshot</span>
+                             </>
+                           )}
+                           {guestUploadState[`${idx}_headshotUrl`]?.uploading && (
+                             <div className="absolute inset-0 bg-white/80 flex flex-col items-center justify-center">
+                               <span className="text-[10px] font-bold text-brandBlue">{guestUploadState[`${idx}_headshotUrl`].progress}%</span>
+                             </div>
+                           )}
+                           <input type="file" accept="image/*" onChange={(e) => { if (e.target.files?.[0]) uploadFileToStorage(e.target.files[0], 'guestUpload', idx, 'headshotUrl'); }} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                        </div>
+                        {/* National ID */}
+                        <div className="relative border-2 border-dashed border-slate-200 rounded-xl h-24 flex flex-col items-center justify-center text-center bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer overflow-hidden group">
+                           {guest.nationalIdUrl ? (
+                             <>
+                               {guest.nationalIdUrl.includes('.pdf') ? <FileCheck className="size-8 text-emerald-500" /> : <img src={guest.nationalIdUrl} alt="ID" className="absolute inset-0 w-full h-full object-cover" />}
+                               <button type="button" onClick={(e) => { e.preventDefault(); const newG = [...guestProfiles]; newG[idx].nationalIdUrl = ''; setGuestProfiles(newG); }} className="absolute top-1 right-1 bg-white/90 rounded-full p-1 shadow-sm hover:bg-white text-slate-700 hover:text-red-500 transition-colors z-10">
+                                 <X className="size-3" />
+                               </button>
+                             </>
+                           ) : (
+                             <>
+                               <FileCheck className="size-4 text-slate-400 mb-1 group-hover:text-brandBlue transition-colors" />
+                               <span className="text-[10px] text-slate-500 font-medium group-hover:text-brandBlue">National ID</span>
+                             </>
+                           )}
+                           {guestUploadState[`${idx}_nationalIdUrl`]?.uploading && (
+                             <div className="absolute inset-0 bg-white/80 flex flex-col items-center justify-center">
+                               <span className="text-[10px] font-bold text-brandBlue">{guestUploadState[`${idx}_nationalIdUrl`].progress}%</span>
+                             </div>
+                           )}
+                           <input type="file" accept="image/*,.pdf" onChange={(e) => { if (e.target.files?.[0]) uploadFileToStorage(e.target.files[0], 'guestUpload', idx, 'nationalIdUrl'); }} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                        </div>
+                        {/* Passport Front */}
+                        {profilePackageTour !== 'None' && (
+                          <div className="relative border-2 border-dashed border-slate-200 rounded-xl h-24 flex flex-col items-center justify-center text-center bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer overflow-hidden group">
+                             {guest.passportFrontUrl ? (
+                               <>
+                                 {guest.passportFrontUrl.includes('.pdf') ? <FileCheck className="size-8 text-emerald-500" /> : <img src={guest.passportFrontUrl} alt="Passport Front" className="absolute inset-0 w-full h-full object-cover" />}
+                                 <button type="button" onClick={(e) => { e.preventDefault(); const newG = [...guestProfiles]; newG[idx].passportFrontUrl = ''; setGuestProfiles(newG); }} className="absolute top-1 right-1 bg-white/90 rounded-full p-1 shadow-sm hover:bg-white text-slate-700 hover:text-red-500 transition-colors z-10">
+                                   <X className="size-3" />
+                                 </button>
+                               </>
+                             ) : (
+                               <>
+                                 <FileCheck className="size-4 text-slate-400 mb-1 group-hover:text-brandBlue transition-colors" />
+                                 <span className="text-[10px] text-slate-500 font-medium group-hover:text-brandBlue">Passport (Front)</span>
+                               </>
+                             )}
+                             {guestUploadState[`${idx}_passportFrontUrl`]?.uploading && (
+                               <div className="absolute inset-0 bg-white/80 flex flex-col items-center justify-center">
+                                 <span className="text-[10px] font-bold text-brandBlue">{guestUploadState[`${idx}_passportFrontUrl`].progress}%</span>
+                               </div>
+                             )}
+                             <input type="file" accept="image/*,.pdf" onChange={(e) => { if (e.target.files?.[0]) uploadFileToStorage(e.target.files[0], 'guestUpload', idx, 'passportFrontUrl'); }} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                          </div>
+                        )}
+                        {/* Passport Back */}
+                        {profilePackageTour !== 'None' && (
+                          <div className="relative border-2 border-dashed border-slate-200 rounded-xl h-24 flex flex-col items-center justify-center text-center bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer overflow-hidden group">
+                             {guest.passportBackUrl ? (
+                               <>
+                                 {guest.passportBackUrl.includes('.pdf') ? <FileCheck className="size-8 text-emerald-500" /> : <img src={guest.passportBackUrl} alt="Passport Back" className="absolute inset-0 w-full h-full object-cover" />}
+                                 <button type="button" onClick={(e) => { e.preventDefault(); const newG = [...guestProfiles]; newG[idx].passportBackUrl = ''; setGuestProfiles(newG); }} className="absolute top-1 right-1 bg-white/90 rounded-full p-1 shadow-sm hover:bg-white text-slate-700 hover:text-red-500 transition-colors z-10">
+                                   <X className="size-3" />
+                                 </button>
+                               </>
+                             ) : (
+                               <>
+                                 <FileCheck className="size-4 text-slate-400 mb-1 group-hover:text-brandBlue transition-colors" />
+                                 <span className="text-[10px] text-slate-500 font-medium group-hover:text-brandBlue">Passport (Back)</span>
+                               </>
+                             )}
+                             {guestUploadState[`${idx}_passportBackUrl`]?.uploading && (
+                               <div className="absolute inset-0 bg-white/80 flex flex-col items-center justify-center">
+                                 <span className="text-[10px] font-bold text-brandBlue">{guestUploadState[`${idx}_passportBackUrl`].progress}%</span>
+                               </div>
+                             )}
+                             <input type="file" accept="image/*,.pdf" onChange={(e) => { if (e.target.files?.[0]) uploadFileToStorage(e.target.files[0], 'guestUpload', idx, 'passportBackUrl'); }} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                          </div>
+                        )}
                       </div>
                     </div>
-                 </div>
-               ))}
-            </div>
-          ) : currentFamilySlide.type === 'upload_guest' ? (
-            <div className="border-2 border-dashed border-slate-200 rounded-3xl p-10 flex flex-col items-center justify-center text-center bg-slate-50/50 hover:bg-slate-50 transition-colors">
-              {currentFamilySlide.url ? (
-                <div className="space-y-4">
-                  <div className="w-24 h-24 rounded-full bg-emerald-100 flex items-center justify-center mx-auto text-emerald-600">
-                    <CheckCircle className="size-10" />
                   </div>
-                  <p className="text-emerald-700 font-bold text-lg">Document Uploaded Successfully</p>
-                  <Button variant="outline" onClick={goFamilyNext} className="mt-2 rounded-full px-8">Continue</Button>
-                </div>
-              ) : (guestUploadState[`${(currentFamilySlide as any).guestIndex}_${currentFamilySlide.field}`]?.uploading) ? (
-                <div className="w-full max-w-xs space-y-4">
-                  <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
-                    <div className="bg-brandBlue h-full transition-all" style={{ width: `${guestUploadState[`${(currentFamilySlide as any).guestIndex}_${currentFamilySlide.field}`]?.progress}%` }}></div>
-                  </div>
-                  <p className="text-brandBlue font-bold text-sm">Uploading... {guestUploadState[`${(currentFamilySlide as any).guestIndex}_${currentFamilySlide.field}`]?.progress || 0}%</p>
-                </div>
-              ) : (
-                <div className="relative w-full max-w-sm flex flex-col items-center">
-                  <Upload className="size-12 text-slate-400 mb-4" />
-                  <input type="file" accept="image/*,.pdf" onChange={(e) => { 
-                    if (e.target.files && e.target.files[0]) {
-                      uploadFileToStorage(e.target.files[0], 'guestUpload', (currentFamilySlide as any).guestIndex, currentFamilySlide.field as any);
-                    }
-                  }} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
-                  <Button type="button" className="bg-brandBlue hover:bg-brandBlue/90 text-white font-bold h-12 px-8 rounded-full shadow-lg pointer-events-none">Choose File to Upload</Button>
-                  <p className="text-xs text-slate-400 mt-4">Max file size: 5MB</p>
-                </div>
-              )}
-            </div>
+                ))}
+             </div>
           ) : currentFamilySlide.type === 'review_family' ? (
             <div className="text-center space-y-6 max-w-lg mx-auto">
               <div className="w-24 h-24 bg-emerald-100 rounded-full flex items-center justify-center mx-auto text-emerald-600">
@@ -1302,7 +1528,7 @@ export default function MemberClientPage() {
               </div>
             </div>
             
-            <div className="flex items-center gap-3 shrink-0 ml-auto w-full sm:w-auto justify-between sm:justify-end">
+            <div className={`flex items-center gap-3 shrink-0 ml-auto w-full sm:w-auto sm:justify-end ${familyWizardStep > 0 ? 'justify-between' : 'justify-end'}`}>
               {familyWizardStep > 0 && (
                 <Button 
                   type="button" 
@@ -1403,57 +1629,110 @@ export default function MemberClientPage() {
           ) : currentSlide.type === 'origin' ? (
             <div className="grid grid-cols-1 gap-4 max-w-md mx-auto w-full">
               {[
-                'I am from India',
-                'I am not from India',
-                'I am from London',
-                'I am not from London'
+                'India',
+                'London (UK)',
+                'Other international location'
               ].map(opt => (
-                <label key={opt} className="flex items-center justify-between gap-3 py-3 cursor-pointer transition-all border-b border-slate-100 last:border-0 hover:bg-slate-50 rounded-xl px-2">
-                  <div className="flex-1 text-left">
-                    <h4 className="font-semibold text-sm text-slate-800 mb-0.5">{opt}</h4>
-                  </div>
-                  <div>
-                    <input 
-                      type="radio" 
-                      name="origin"
-                      checked={profileOrigin === opt}
-                      onChange={() => {
-                        setProfileOrigin(opt);
-                        if (opt === 'I am from India') setProfilePackageTour('From India');
-                        else if (opt === 'I am from London') setProfilePackageTour('None');
-                        else setProfilePackageTour('From Outside India');
-                        setTimeout(goNext, 300);
-                      }}
-                      className="w-5 h-5 text-brandBlue focus:ring-brandBlue border-slate-300"
-                    />
-                  </div>
-                </label>
+                <div key={opt}>
+                  <label className="flex items-center justify-between gap-3 py-3 cursor-pointer transition-all border-b border-slate-100 last:border-0 hover:bg-slate-50 rounded-xl px-2">
+                    <div className="flex-1 text-left">
+                      <h4 className="font-semibold text-sm text-slate-800 mb-0.5">{opt}</h4>
+                    </div>
+                    <div>
+                      <input 
+                        type="radio" 
+                        name="origin"
+                        checked={profileOrigin === opt}
+                        onChange={() => {
+                          setProfileOrigin(opt);
+                          if (opt === 'India') {
+                            setProfilePackageTour('From India');
+                            setProfileCountry('India');
+                          } else if (opt === 'London (UK)') {
+                            setProfilePackageTour('None');
+                            setProfileCountry('United Kingdom');
+                          } else {
+                            setProfilePackageTour('From Outside India');
+                            if (profileCountry === 'India' || profileCountry === 'United Kingdom') {
+                              setProfileCountry(''); 
+                            }
+                          }
+                          if (opt !== 'Other international location') {
+                            setTimeout(goNext, 300);
+                          }
+                        }}
+                        className="w-5 h-5 text-brandBlue focus:ring-brandBlue border-slate-300"
+                      />
+                    </div>
+                  </label>
+                  {opt === 'Other international location' && profileOrigin === opt && (
+                    <div className="mt-2 mb-4 px-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                      <select
+                        value={profileCountry}
+                        onChange={(e) => setProfileCountry(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-800 focus:border-brandBlue focus:ring-1 focus:ring-brandBlue outline-none"
+                      >
+                        <option value="" disabled>Select your country...</option>
+                        {COUNTRIES_LIST.filter(c => c !== 'India' && c !== 'United Kingdom').map(c => (
+                          <option key={c} value={c}>{c}</option>
+                        ))}
+                      </select>
+                      <p className="text-[10px] text-slate-500 mt-1.5 ml-1">Please specify your country to help us tailor your experience.</p>
+                    </div>
+                  )}
+                </div>
               ))}
             </div>
           ) : currentSlide.type === 'tour_select' ? (
             <div className="grid grid-cols-1 gap-4 max-w-md mx-auto w-full">
               {[
-                { val: profileOrigin === 'I am from India' ? 'From India' : 'From Outside India', label: profileOrigin === 'I am from India' ? 'Yes, I want the Full Tour Package' : 'Yes, I want the Landing Package' },
-                { val: 'None', label: 'No, I will manage my own travel & logistics' }
+                { val: 'Tour', label: 'I want full package' },
+                { val: 'None', label: 'I will manage traveling on my own' }
               ].map(opt => (
-                <label key={opt.val} className="flex items-center justify-between gap-3 py-3 cursor-pointer transition-all border-b border-slate-100 last:border-0 hover:bg-slate-50 rounded-xl px-2">
-                  <div className="flex-1 text-left">
-                    <h4 className="font-semibold text-sm text-slate-800 mb-0.5">{opt.label}</h4>
-                  </div>
-                  <div>
-                    <input 
-                      type="radio" 
-                      name="tour" 
-                      value={opt.val} 
-                      checked={profilePackageTour === opt.val} 
-                      onChange={(e) => { 
-                        setProfilePackageTour(e.target.value); 
-                        setTimeout(goNext, 300); 
-                      }} 
-                      className="w-5 h-5 text-brandBlue focus:ring-brandBlue border-slate-300" 
-                    />
-                  </div>
-                </label>
+                <div key={opt.val}>
+                  <label className="flex items-center justify-between gap-3 py-3 cursor-pointer transition-all border-b border-slate-100 last:border-0 hover:bg-slate-50 rounded-xl px-2">
+                    <div className="flex-1 text-left">
+                      <h4 className="font-semibold text-sm text-slate-800 mb-0.5">{opt.label}</h4>
+                    </div>
+                    <div>
+                      <input 
+                        type="radio" 
+                        name="tour" 
+                        value={opt.val} 
+                        checked={opt.val === 'Tour' ? profilePackageTour !== 'None' : profilePackageTour === 'None'} 
+                        onChange={() => {
+                          if (opt.val === 'Tour') {
+                            setProfilePackageTour(profileOrigin === 'India' ? 'pkg_1' : 'pkg_3');
+                          } else {
+                            setProfilePackageTour('None');
+                            setTimeout(goNext, 300);
+                          }
+                        }} 
+                        className="w-5 h-5 text-brandBlue focus:ring-brandBlue border-slate-300" 
+                      />
+                    </div>
+                  </label>
+                  
+                  {opt.val === 'Tour' && profilePackageTour !== 'None' && (
+                    <div className="mt-2 mb-4 px-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                      <select
+                        value={profilePackageTour === 'From India' ? 'pkg_4' : profilePackageTour === 'From Outside India' ? 'pkg_3' : profilePackageTour}
+                        onChange={(e) => setProfilePackageTour(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-800 focus:border-brandBlue focus:ring-1 focus:ring-brandBlue outline-none"
+                      >
+                        {profileOrigin === 'India' && (
+                          <>
+                            <option value="pkg_1">Tour (Mumbai - London - Mumbai 7N/8D) - ₹3,10,000</option>
+                            <option value="pkg_2">Tour (Mumbai - London - Mumbai 4N/5D) - ₹2,35,000</option>
+                          </>
+                        )}
+                        <option value="pkg_3">Land (London Only, 7N/8D) - ₹2,00,500</option>
+                        <option value="pkg_4">Land (London Only, 4N/5D) - ₹1,31,000</option>
+                      </select>
+                      <p className="text-[10px] text-slate-500 mt-1.5 ml-1">Select your preferred package. Event Registration (Worth ₹23,600) is included!</p>
+                    </div>
+                  )}
+                </div>
               ))}
             </div>
           ) : currentSlide.type === 'events_general' ? (
@@ -1563,24 +1842,60 @@ export default function MemberClientPage() {
             <div className="grid grid-cols-1 gap-4 max-w-md mx-auto w-full">
               {[
                 { id: 'Souvenir Advertisement', label: 'I want to publish an Advertisement in the Souvenir Magazine' },
-                { id: 'Donation Patron', label: 'I want to make a Patron Donation' }
+                { id: 'Donation Patron', label: 'I want to make a Patron Contribution' }
               ].map(item => (
-                <label key={item.id} className="flex items-center justify-between gap-3 py-3 cursor-pointer transition-all border-b border-slate-100 last:border-0 hover:bg-slate-50 rounded-xl px-2">
-                  <div className="flex-1 text-left">
-                    <h4 className="font-semibold text-sm text-slate-800 mb-0.5">{item.label}</h4>
-                  </div>
-                  <div>
-                    <input 
-                      type="checkbox" 
-                      className="w-5 h-5 text-brandBlue focus:ring-brandBlue border-slate-300 rounded"
-                      checked={wizardIntents.includes(item.id)}
-                      onChange={(e) => {
-                        if (e.target.checked) setWizardIntents([...wizardIntents, item.id]);
-                        else setWizardIntents(wizardIntents.filter(i => i !== item.id));
-                      }}
-                    />
-                  </div>
-                </label>
+                <div key={item.id}>
+                  <label className="flex items-center justify-between gap-3 py-3 cursor-pointer transition-all border-b border-slate-100 last:border-0 hover:bg-slate-50 rounded-xl px-2">
+                    <div className="flex-1 text-left">
+                      <h4 className="font-semibold text-sm text-slate-800 mb-0.5">{item.label}</h4>
+                    </div>
+                    <div>
+                      <input 
+                        type="checkbox" 
+                        className="w-5 h-5 text-brandBlue focus:ring-brandBlue border-slate-300 rounded"
+                        checked={wizardIntents.includes(item.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) setWizardIntents([...wizardIntents, item.id]);
+                          else setWizardIntents(wizardIntents.filter(i => i !== item.id));
+                        }}
+                      />
+                    </div>
+                  </label>
+                  {item.id === 'Souvenir Advertisement' && wizardIntents.includes(item.id) && (
+                    <div className="mt-2 mb-4 px-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                      <select
+                        value={profileAdSize}
+                        onChange={(e) => setProfileAdSize(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-800 focus:border-brandBlue focus:ring-1 focus:ring-brandBlue outline-none"
+                      >
+                        <option value="ad_front_cover">Front Cover (Premium) - ₹5,00,000</option>
+                        <option value="ad_back_cover">Back Cover (Premium) - ₹2,00,000</option>
+                        <option value="ad_inside_cover">Inside Cover - ₹1,50,000</option>
+                        <option value="ad_double_spread">Double Spread - ₹1,00,000</option>
+                        <option value="ad_full_page">Full Page - ₹50,000</option>
+                        <option value="ad_half_page">Half Page - ₹25,000</option>
+                        <option value="ad_quarter_page">Quarter Page - ₹15,000</option>
+                      </select>
+                      <p className="text-[10px] text-slate-500 mt-1.5 ml-1">Select your preferred advertisement size.</p>
+                    </div>
+                  )}
+                  {item.id === 'Donation Patron' && wizardIntents.includes(item.id) && (
+                    <div className="mt-2 mb-4 px-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-medium">₹</span>
+                        <input
+                          type="number"
+                          min="100"
+                          value={patronAmount}
+                          onChange={(e) => setPatronAmount(e.target.value === '' ? '' : Number(e.target.value))}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-8 pr-3 py-2.5 text-sm text-slate-800 focus:border-brandBlue focus:ring-1 focus:ring-brandBlue outline-none"
+                          placeholder="Enter contribution amount (min ₹100)"
+                        />
+                      </div>
+                      <p className="text-[10px] text-slate-500 mt-1.5 ml-1">Custom contribution amount (Minimum ₹100).</p>
+                    </div>
+                  )}
+                </div>
               ))}
             </div>
           ) : currentSlide.type === 'group_type' ? (
@@ -1590,60 +1905,63 @@ export default function MemberClientPage() {
                 { val: 'family', label: 'Family' },
                 { val: 'group', label: 'Group' }
               ].map(opt => (
-                <label key={opt.val} className="flex items-center justify-between gap-3 py-3 cursor-pointer transition-all border-b border-slate-100 last:border-0 hover:bg-slate-50 rounded-xl px-2">
-                  <div className="flex-1 text-left">
-                    <h4 className="font-semibold text-sm text-slate-800 mb-0.5">{opt.label}</h4>
-                  </div>
-                  <div>
-                    <input 
-                      type="radio" 
-                      name="group_type"
-                      checked={groupType === opt.val}
-                      onChange={() => {
-                        setGroupType(opt.val as any);
-                        if (opt.val === 'none') {
-                          setNumDelegates(1);
-                          setGuestProfiles([]);
-                          setTimeout(goNext, 300);
-                        }
-                      }}
-                      className="w-5 h-5 text-brandBlue focus:ring-brandBlue border-slate-300"
-                    />
-                  </div>
-                </label>
-              ))}
-              {groupType !== 'none' && (
-                <div className="animate-in fade-in slide-in-from-top-4 pt-4 text-center">
-                  <p className="text-sm text-slate-500 font-semibold mb-4">Total Adult Delegates (18+)</p>
-                  <input 
-                    type="number" 
-                    min="1" 
-                    value={numDelegates} 
-                    onChange={(e) => {
-                      const rawVal = e.target.value;
-                      if (rawVal === '') {
-                        setNumDelegates('');
-                        setGuestProfiles([]);
-                        return;
-                      }
-                      const val = parseInt(rawVal);
-                      if (isNaN(val)) return;
-                      setNumDelegates(val);
-                      
-                      if (val > guestProfiles.length + 1) {
-                        const newGuests = Array.from({ length: val - 1 - guestProfiles.length }).map((_, i) => ({
-                          id: `guest_${Date.now()}_${i}`,
-                          name: '', relationship: '', passportNumber: '', passportFrontUrl: '', passportBackUrl: '', nationalIdUrl: ''
-                        }));
-                        setGuestProfiles([...guestProfiles, ...newGuests]);
-                      } else {
-                        setGuestProfiles(guestProfiles.slice(0, val - 1));
-                      }
-                    }}
-                    className="w-full max-w-[200px] mx-auto text-center text-3xl md:text-4xl text-brandBlue bg-transparent border-0 border-b-2 border-slate-200 focus:ring-0 focus:border-brandBlue focus:outline-none py-4 transition-colors placeholder:text-slate-300 mb-8"
-                  />
+                <div key={opt.val} className="flex flex-col border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-all rounded-xl px-2">
+                  <label className="flex items-center justify-between gap-3 py-3 cursor-pointer">
+                    <div className="flex-1 text-left">
+                      <h4 className="font-semibold text-sm text-slate-800 mb-0.5">{opt.label}</h4>
+                    </div>
+                    <div>
+                      <input 
+                        type="radio" 
+                        name="group_type"
+                        checked={groupType === opt.val}
+                        onChange={() => {
+                          setGroupType(opt.val as any);
+                          if (opt.val === 'none') {
+                            setNumDelegates(1);
+                            setGuestProfiles([]);
+                            setTimeout(goNext, 300);
+                          }
+                        }}
+                        className="w-5 h-5 text-brandBlue focus:ring-brandBlue border-slate-300"
+                      />
+                    </div>
+                  </label>
+                  {groupType === opt.val && opt.val !== 'none' && (
+                    <div className="animate-in fade-in slide-in-from-top-2 pb-4 pt-1 w-full pl-2 pr-2">
+                      <input 
+                        type="number"
+                        placeholder="Number of guests (excluding you)"
+                        min="0"
+                        value={numDelegates === '' ? '' : Math.max(0, Number(numDelegates) - 1)}
+                        onChange={(e) => {
+                          const rawVal = e.target.value;
+                          if (rawVal === '') {
+                            setNumDelegates('');
+                            setGuestProfiles([]);
+                            return;
+                          }
+                          const additional = parseInt(rawVal);
+                          if (isNaN(additional)) return;
+                          const val = additional + 1;
+                          setNumDelegates(val);
+                          
+                          if (val > guestProfiles.length + 1) {
+                            const newGuests = Array.from({ length: val - 1 - guestProfiles.length }).map((_, i) => ({
+                              id: `guest_${Date.now()}_${i}`,
+                              name: '', title: '', gender: '', relationship: '', age: '', passportNumber: '', headshotUrl: '', passportFrontUrl: '', passportBackUrl: '', nationalIdUrl: ''
+                            }));
+                            setGuestProfiles([...guestProfiles, ...newGuests]);
+                          } else {
+                            setGuestProfiles(guestProfiles.slice(0, val - 1));
+                          }
+                        }}
+                        className="w-full bg-white border border-slate-200 text-slate-700 text-sm font-medium rounded-xl px-4 py-3 focus:outline-none focus:border-brandBlue focus:ring-1 focus:ring-brandBlue shadow-sm"
+                      />
+                    </div>
+                  )}
                 </div>
-              )}
+              ))}
             </div>
           ) : currentSlide.type === 'group_details' ? (
             <div className="max-w-2xl mx-auto w-full text-left space-y-8">
@@ -1652,29 +1970,36 @@ export default function MemberClientPage() {
                     <h4 className="font-bold text-lg text-slate-800">Guest {idx + 1}</h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="text-xs font-semibold text-slate-500 uppercase">Full Name</label>
-                        <Input 
-                          value={guest.name}
-                          onChange={(e) => {
-                            const newG = [...guestProfiles];
-                            newG[idx].name = e.target.value;
-                            setGuestProfiles(newG);
-                          }}
-                          className="mt-1"
-                          placeholder="John Doe"
-                        />
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 ml-1 block">Title</label>
+                        <select value={guest.title} onChange={(e) => { const newG = [...guestProfiles]; newG[idx].title = e.target.value; setGuestProfiles(newG); }} className="h-10 w-full bg-slate-50 border border-slate-200 rounded-xl px-3 text-sm text-slate-800 focus:border-brandBlue focus:ring-1 focus:ring-brandBlue outline-none">
+                          <option value="">Select...</option>
+                          <option value="Mr.">Mr.</option>
+                          <option value="Mrs.">Mrs.</option>
+                          <option value="Ms.">Ms.</option>
+                          <option value="Dr.">Dr.</option>
+                          <option value="Prof.">Prof.</option>
+                        </select>
                       </div>
                       <div>
-                        <label className="text-xs font-semibold text-slate-500 uppercase">Relationship</label>
-                        <select 
-                          value={guest.relationship}
-                          onChange={(e) => {
-                            const newG = [...guestProfiles];
-                            newG[idx].relationship = e.target.value;
-                            setGuestProfiles(newG);
-                          }}
-                          className="w-full mt-1 border-slate-200 rounded-md text-sm"
-                        >
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 ml-1 block">Full Name</label>
+                        <Input value={guest.name} onChange={(e) => { const newG = [...guestProfiles]; newG[idx].name = e.target.value; setGuestProfiles(newG); }} className="h-10 bg-slate-50 border-slate-200 text-sm rounded-xl focus:border-brandBlue focus:ring-brandBlue text-slate-800" placeholder="John Doe" />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 ml-1 block">Gender</label>
+                        <select value={guest.gender} onChange={(e) => { const newG = [...guestProfiles]; newG[idx].gender = e.target.value; setGuestProfiles(newG); }} className="h-10 w-full bg-slate-50 border border-slate-200 rounded-xl px-3 text-sm text-slate-800 focus:border-brandBlue focus:ring-1 focus:ring-brandBlue outline-none">
+                          <option value="">Select...</option>
+                          <option value="Male">Male</option>
+                          <option value="Female">Female</option>
+                          <option value="Other">Other</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 ml-1 block">Age</label>
+                        <Input type="number" value={guest.age} onChange={(e) => { const newG = [...guestProfiles]; newG[idx].age = e.target.value; setGuestProfiles(newG); }} className="h-10 bg-slate-50 border-slate-200 text-sm rounded-xl focus:border-brandBlue focus:ring-brandBlue text-slate-800" placeholder="25" />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 ml-1 block">Relationship</label>
+                        <select value={guest.relationship} onChange={(e) => { const newG = [...guestProfiles]; newG[idx].relationship = e.target.value; setGuestProfiles(newG); }} className="h-10 w-full bg-slate-50 border border-slate-200 rounded-xl px-3 text-sm text-slate-800 focus:border-brandBlue focus:ring-1 focus:ring-brandBlue outline-none">
                           <option value="">Select...</option>
                           <option value="Spouse">Spouse</option>
                           <option value="Child (18+)">Child (18+)</option>
@@ -1683,18 +2008,104 @@ export default function MemberClientPage() {
                           <option value="Other">Other</option>
                         </select>
                       </div>
-                      <div className="md:col-span-2">
-                        <label className="text-xs font-semibold text-slate-500 uppercase">Passport Number</label>
-                        <Input 
-                          value={guest.passportNumber}
-                          onChange={(e) => {
-                            const newG = [...guestProfiles];
-                            newG[idx].passportNumber = e.target.value;
-                            setGuestProfiles(newG);
-                          }}
-                          className="mt-1"
-                          placeholder="A1234567"
-                        />
+                      {profilePackageTour !== 'None' && (
+                        <div>
+                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 ml-1 block">Passport Number</label>
+                          <Input value={guest.passportNumber} onChange={(e) => { const newG = [...guestProfiles]; newG[idx].passportNumber = e.target.value; setGuestProfiles(newG); }} className="h-10 bg-slate-50 border-slate-200 text-sm rounded-xl focus:border-brandBlue focus:ring-brandBlue text-slate-800" placeholder="A1234567" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="pt-4 border-t border-slate-100">
+                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-3 ml-1 block">Required Documents</label>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <div className="relative border-2 border-dashed border-slate-200 rounded-xl h-24 flex flex-col items-center justify-center text-center bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer overflow-hidden group">
+                           {guest.headshotUrl ? (
+                             <>
+                               <img src={guest.headshotUrl} alt="Headshot" className="absolute inset-0 w-full h-full object-cover" />
+                               <button type="button" onClick={(e) => { e.preventDefault(); const newG = [...guestProfiles]; newG[idx].headshotUrl = ''; setGuestProfiles(newG); }} className="absolute top-1 right-1 bg-white/90 rounded-full p-1 shadow-sm hover:bg-white text-slate-700 hover:text-red-500 transition-colors z-10">
+                                 <X className="size-3" />
+                               </button>
+                             </>
+                           ) : (
+                             <>
+                               <Camera className="size-4 text-slate-400 mb-1 group-hover:text-brandBlue transition-colors" />
+                               <span className="text-[10px] text-slate-500 font-medium group-hover:text-brandBlue">Headshot</span>
+                             </>
+                           )}
+                           {guestUploadState[`${idx}_headshotUrl`]?.uploading && (
+                             <div className="absolute inset-0 bg-white/80 flex flex-col items-center justify-center">
+                               <span className="text-[10px] font-bold text-brandBlue">{guestUploadState[`${idx}_headshotUrl`].progress}%</span>
+                             </div>
+                           )}
+                           <input type="file" accept="image/*" onChange={(e) => { if (e.target.files?.[0]) uploadFileToStorage(e.target.files[0], 'guestUpload', idx, 'headshotUrl'); }} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                        </div>
+                        <div className="relative border-2 border-dashed border-slate-200 rounded-xl h-24 flex flex-col items-center justify-center text-center bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer overflow-hidden group">
+                           {guest.nationalIdUrl ? (
+                             <>
+                               {guest.nationalIdUrl.includes('.pdf') ? <FileCheck className="size-8 text-emerald-500" /> : <img src={guest.nationalIdUrl} alt="ID" className="absolute inset-0 w-full h-full object-cover" />}
+                               <button type="button" onClick={(e) => { e.preventDefault(); const newG = [...guestProfiles]; newG[idx].nationalIdUrl = ''; setGuestProfiles(newG); }} className="absolute top-1 right-1 bg-white/90 rounded-full p-1 shadow-sm hover:bg-white text-slate-700 hover:text-red-500 transition-colors z-10">
+                                 <X className="size-3" />
+                               </button>
+                             </>
+                           ) : (
+                             <>
+                               <FileCheck className="size-4 text-slate-400 mb-1 group-hover:text-brandBlue transition-colors" />
+                               <span className="text-[10px] text-slate-500 font-medium group-hover:text-brandBlue">National ID</span>
+                             </>
+                           )}
+                           {guestUploadState[`${idx}_nationalIdUrl`]?.uploading && (
+                             <div className="absolute inset-0 bg-white/80 flex flex-col items-center justify-center">
+                               <span className="text-[10px] font-bold text-brandBlue">{guestUploadState[`${idx}_nationalIdUrl`].progress}%</span>
+                             </div>
+                           )}
+                           <input type="file" accept="image/*,.pdf" onChange={(e) => { if (e.target.files?.[0]) uploadFileToStorage(e.target.files[0], 'guestUpload', idx, 'nationalIdUrl'); }} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                        </div>
+                        {profilePackageTour !== 'None' && (
+                          <div className="relative border-2 border-dashed border-slate-200 rounded-xl h-24 flex flex-col items-center justify-center text-center bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer overflow-hidden group">
+                             {guest.passportFrontUrl ? (
+                               <>
+                                 {guest.passportFrontUrl.includes('.pdf') ? <FileCheck className="size-8 text-emerald-500" /> : <img src={guest.passportFrontUrl} alt="Passport Front" className="absolute inset-0 w-full h-full object-cover" />}
+                                 <button type="button" onClick={(e) => { e.preventDefault(); const newG = [...guestProfiles]; newG[idx].passportFrontUrl = ''; setGuestProfiles(newG); }} className="absolute top-1 right-1 bg-white/90 rounded-full p-1 shadow-sm hover:bg-white text-slate-700 hover:text-red-500 transition-colors z-10">
+                                   <X className="size-3" />
+                                 </button>
+                               </>
+                             ) : (
+                               <>
+                                 <FileCheck className="size-4 text-slate-400 mb-1 group-hover:text-brandBlue transition-colors" />
+                                 <span className="text-[10px] text-slate-500 font-medium group-hover:text-brandBlue">Passport (Front)</span>
+                               </>
+                             )}
+                             {guestUploadState[`${idx}_passportFrontUrl`]?.uploading && (
+                               <div className="absolute inset-0 bg-white/80 flex flex-col items-center justify-center">
+                                 <span className="text-[10px] font-bold text-brandBlue">{guestUploadState[`${idx}_passportFrontUrl`].progress}%</span>
+                               </div>
+                             )}
+                             <input type="file" accept="image/*,.pdf" onChange={(e) => { if (e.target.files?.[0]) uploadFileToStorage(e.target.files[0], 'guestUpload', idx, 'passportFrontUrl'); }} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                          </div>
+                        )}
+                        {profilePackageTour !== 'None' && (
+                          <div className="relative border-2 border-dashed border-slate-200 rounded-xl h-24 flex flex-col items-center justify-center text-center bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer overflow-hidden group">
+                             {guest.passportBackUrl ? (
+                               <>
+                                 {guest.passportBackUrl.includes('.pdf') ? <FileCheck className="size-8 text-emerald-500" /> : <img src={guest.passportBackUrl} alt="Passport Back" className="absolute inset-0 w-full h-full object-cover" />}
+                                 <button type="button" onClick={(e) => { e.preventDefault(); const newG = [...guestProfiles]; newG[idx].passportBackUrl = ''; setGuestProfiles(newG); }} className="absolute top-1 right-1 bg-white/90 rounded-full p-1 shadow-sm hover:bg-white text-slate-700 hover:text-red-500 transition-colors z-10">
+                                   <X className="size-3" />
+                                 </button>
+                               </>
+                             ) : (
+                               <>
+                                 <FileCheck className="size-4 text-slate-400 mb-1 group-hover:text-brandBlue transition-colors" />
+                                 <span className="text-[10px] text-slate-500 font-medium group-hover:text-brandBlue">Passport (Back)</span>
+                               </>
+                             )}
+                             {guestUploadState[`${idx}_passportBackUrl`]?.uploading && (
+                               <div className="absolute inset-0 bg-white/80 flex flex-col items-center justify-center">
+                                 <span className="text-[10px] font-bold text-brandBlue">{guestUploadState[`${idx}_passportBackUrl`].progress}%</span>
+                               </div>
+                             )}
+                             <input type="file" accept="image/*,.pdf" onChange={(e) => { if (e.target.files?.[0]) uploadFileToStorage(e.target.files[0], 'guestUpload', idx, 'passportBackUrl'); }} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                          </div>
+                        )}
                       </div>
                     </div>
                  </div>
@@ -1704,11 +2115,18 @@ export default function MemberClientPage() {
             <div className="border-2 border-dashed border-slate-200 rounded-3xl p-10 flex flex-col items-center justify-center text-center bg-slate-50/50 hover:bg-slate-50 transition-colors">
               {currentSlide.url ? (
                 <div className="space-y-4">
-                  <div className="w-24 h-24 rounded-full bg-emerald-100 flex items-center justify-center mx-auto text-emerald-600">
-                    <CheckCircle className="size-10" />
-                  </div>
+                  {currentSlide.url && currentSlide.url.includes('.pdf') ? (
+                    <div className="w-24 h-24 rounded-full bg-emerald-100 flex items-center justify-center mx-auto text-emerald-600 shadow-sm">
+                      <FileText className="size-10" />
+                    </div>
+                  ) : (
+                    <img src={currentSlide.url} alt="Uploaded Document" className="w-32 h-32 object-cover rounded-xl mx-auto shadow-sm border border-slate-200" />
+                  )}
                   <p className="text-emerald-700 font-bold text-lg">Document Uploaded Successfully</p>
-                  <Button variant="outline" onClick={goNext} className="mt-2 rounded-full px-8">Continue</Button>
+                  <div className="flex justify-center gap-3 mt-4">
+                    <Button variant="outline" onClick={() => removeDocument(currentSlide.field, (currentSlide as any).guestIndex)} className="rounded-full px-6 text-red-600 border-red-200 hover:bg-red-50 text-sm h-10 transition-colors">Remove</Button>
+                    <Button variant="outline" onClick={goNext} className="rounded-full px-8 bg-brandBlue text-white hover:bg-brandBlue/90 hover:text-white border-none text-sm h-10 shadow-sm transition-all">Continue</Button>
+                  </div>
                 </div>
               ) : (currentSlide.type === 'upload' ? currentSlide.uploading : guestUploadState[`${(currentSlide as any).guestIndex}_${currentSlide.field}`]?.uploading) ? (
                 <div className="w-full max-w-xs space-y-4">
@@ -1794,101 +2212,100 @@ export default function MemberClientPage() {
               <div className="p-8 md:p-12 flex flex-col h-full bg-white relative overflow-y-auto">
                 <div className="absolute top-0 left-0 w-full h-1 bg-brandBlue"></div>
                 
-                <div className="mb-6 pb-6 border-b border-slate-100">
+                <div className="mb-3 pb-3 border-b border-slate-100">
                   <h3 className="text-xl font-semibold text-slate-900 leading-tight">Registration Summary</h3>
                   <p className="text-sm text-slate-500 mt-1">Review your selected packages before proceeding to payment.</p>
                 </div>
 
-              <div className="space-y-4 flex-grow mb-6">
+              <div className="space-y-2 flex-grow mb-4">
                 
                 {wizardIntents.some(i => i.startsWith('Conference')) && (
                   <div className="flex justify-between items-start text-sm text-slate-600 pb-2">
                     <span className="flex items-start gap-2"><Check className="size-4 shrink-0 text-slate-900 mt-0.5" /> <span>International Conference</span></span>
-                    <span className="font-semibold text-slate-900">₹5,000</span>
+                    <span className={`font-semibold ${profilePackageTour !== 'None' ? 'text-brandBlue' : 'text-slate-900'}`}>{profilePackageTour !== 'None' ? 'INCLUDED' : '₹5,900'}</span>
                   </div>
                 )}
 
                 {wizardIntents.some(i => i.startsWith('Business')) && (
                   <div className="flex justify-between items-start text-sm text-slate-600 pb-2">
                     <span className="flex items-start gap-2"><Check className="size-4 shrink-0 text-slate-900 mt-0.5" /> <span>International Business Summit</span></span>
-                    <span className="font-semibold text-slate-900">₹10,000</span>
+                    <span className={`font-semibold ${profilePackageTour !== 'None' ? 'text-brandBlue' : 'text-slate-900'}`}>{profilePackageTour !== 'None' ? 'INCLUDED' : '₹11,800'}</span>
                   </div>
                 )}
                 
                 {wizardIntents.some(i => i.startsWith('Award')) && (
                   <div className="flex justify-between items-start text-sm text-slate-600 pb-2">
                     <span className="flex items-start gap-2"><Check className="size-4 shrink-0 text-slate-900 mt-0.5" /> <span>International Awards & Cultural Ceremony</span></span>
-                    <span className="font-semibold text-slate-900">₹5,000</span>
+                    <span className={`font-semibold ${profilePackageTour !== 'None' ? 'text-brandBlue' : 'text-slate-900'}`}>{profilePackageTour !== 'None' ? 'INCLUDED' : '₹5,900'}</span>
                   </div>
                 )}
 
                 {wizardIntents.includes('Souvenir Article') && (
                   <div className="flex justify-between items-start text-sm text-slate-600 pb-2">
                     <span className="flex items-start gap-2"><Check className="size-4 shrink-0 text-slate-900 mt-0.5" /> <span>Official Souvenir Article</span></span>
-                    <span className="font-semibold text-slate-900">₹5,000</span>
+                    <span className="font-semibold text-slate-900">₹5,900</span>
                   </div>
                 )}
 
                 {wizardIntents.includes('Souvenir Advertisement') && (
                   <div className="flex justify-between items-start text-sm text-slate-600 pb-2">
                     <span className="flex items-start gap-2"><Check className="size-4 shrink-0 text-slate-900 mt-0.5" /> <span>Official Souvenir Advertisement</span></span>
-                    <span className="font-semibold text-slate-900">₹5,000</span>
+                    <span className="font-semibold text-slate-900">
+                      {profileAdSize === 'ad_front_cover' ? '₹5,00,000' :
+                       profileAdSize === 'ad_back_cover' ? '₹2,00,000' :
+                       profileAdSize === 'ad_inside_cover' ? '₹1,50,000' :
+                       profileAdSize === 'ad_double_spread' ? '₹1,00,000' :
+                       profileAdSize === 'ad_full_page' ? '₹50,000' :
+                       profileAdSize === 'ad_half_page' ? '₹25,000' :
+                       '₹15,000'}
+                    </span>
                   </div>
                 )}
 
                 {wizardIntents.includes('Donation Patron') && (
                   <div className="flex justify-between items-start text-sm text-slate-600 pb-2">
-                    <span className="flex items-start gap-2"><Check className="size-4 shrink-0 text-emerald-600 mt-0.5" /> <span>High-Level Patronage Donation</span></span>
-                    <span className="font-semibold text-emerald-700">₹1,00,000</span>
+                    <span className="flex items-start gap-2"><Check className="size-4 shrink-0 text-emerald-600 mt-0.5" /> <span>High-Level Patronage Contribution</span></span>
+                    <span className="font-semibold text-emerald-700">₹{(Number(patronAmount) || 100000).toLocaleString('en-IN')}</span>
                   </div>
                 )}
                 {profilePackageTour !== 'None' && (
                   <div className="flex justify-between items-start text-sm text-slate-600 pb-2">
-                    <span className="flex items-start gap-2"><Check className="size-4 shrink-0 text-slate-900 mt-0.5" /> <span>Tour Package: {profilePackageTour}</span></span>
+                    <span className="flex items-start gap-2"><Check className="size-4 shrink-0 text-slate-900 mt-0.5" /> <span>Tour Package: {getPackageName(profilePackageTour)}</span></span>
                     <span className="font-semibold text-slate-900">
-                      ₹{profilePackageTour === 'From India' ? (131000).toLocaleString('en-IN') : (200501).toLocaleString('en-IN')}
+                      ₹{getPackagePrice(profilePackageTour).toLocaleString('en-IN')}
                     </span>
                   </div>
                 )}
+                {numDelegates && numDelegates > 1 ? (
+                  <div className="flex justify-between items-start text-sm text-slate-800 pb-2 pt-2 border-t border-slate-200 mt-2">
+                    <span className="flex items-start gap-2 font-semibold">
+                      <span>Total Delegates ({numDelegates})</span>
+                    </span>
+                    <span className="font-bold text-slate-900">
+                      x {numDelegates}
+                    </span>
+                  </div>
+                ) : null}
               </div>
               
 
               
-              <div className="pt-4 pb-4 border-t border-b border-slate-100 mb-6 flex flex-col gap-3 transition-all">
-                <div 
-                  className="flex justify-between items-center cursor-pointer group" 
-                  onClick={() => setShowGstDetails(!showGstDetails)}
-                >
+              <div className="pt-3 pb-3 border-t border-b border-slate-100 mb-4 flex flex-col gap-2 transition-all">
+                <div className="flex justify-between items-center">
                   <span className="text-sm font-semibold text-slate-900 flex items-center gap-2">
-                    GST (18%)
-                    <ChevronDown className={`size-4 text-slate-400 transition-transform duration-300 ${showGstDetails ? 'rotate-180' : ''}`} />
+                    All Taxes
                   </span>
-                  <span className="text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full uppercase tracking-wider group-hover:bg-amber-200 transition-colors">
-                    Calculated Automatically
+                  <span className="text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                    INCLUDED IN PRICES
                   </span>
                 </div>
-
-                {showGstDetails && (
-                  <div className="bg-slate-50 p-4 rounded-lg text-xs text-slate-600 space-y-3 animate-in slide-in-from-top-2 border border-slate-100">
-                    <div className="flex justify-between items-center">
-                      <span>Total Base Registration Amount</span>
-                      <span className="font-medium text-slate-900">₹{Math.round(calculateWizardTotal() / 1.18).toLocaleString('en-IN')}</span>
-                    </div>
-                    <div className="flex justify-between items-center text-amber-700">
-                      <span>+ 18% IGST/CGST</span>
-                      <span className="font-semibold">₹{Math.round(calculateWizardTotal() - (calculateWizardTotal() / 1.18)).toLocaleString('en-IN')}</span>
-                    </div>
-                    <div className="pt-2 mt-1 border-t border-slate-200 flex justify-between items-center font-bold text-slate-900 text-sm">
-                      <span>Gross Total</span>
-                      <span>₹{calculateWizardTotal().toLocaleString('en-IN')}</span>
-                    </div>
-                  </div>
-                )}
               </div>
 
-              <div className="bg-slate-900 p-6 rounded-xl flex items-center justify-between mb-8 shadow-md">
-                <span className="text-sm font-bold uppercase tracking-wider text-slate-400">Total Due Today</span>
-                <span className="text-3xl font-semibold text-white">
+              <div className="bg-slate-900 p-4 rounded-xl flex items-center justify-between mb-4 shadow-md">
+                <span className="text-sm font-bold uppercase tracking-wider text-slate-400">
+                  Total Due Today
+                </span>
+                <span className="text-2xl font-semibold text-white">
                   ₹{calculateWizardTotal().toLocaleString('en-IN')}
                 </span>
               </div>
@@ -1943,7 +2360,7 @@ export default function MemberClientPage() {
               </div>
             </div>
             
-            <div className="flex items-center gap-3 shrink-0 ml-auto w-full sm:w-auto justify-between sm:justify-end">
+            <div className={`flex items-center gap-3 shrink-0 ml-auto w-full sm:w-auto sm:justify-end ${wizardStep > 0 ? 'justify-between' : 'justify-end'}`}>
               {wizardStep > 0 && (
                 <Button 
                   type="button" 
@@ -2120,30 +2537,36 @@ export default function MemberClientPage() {
           <SidebarProvider>
             
             {/* Sidebar wrapper */}
-            <Sidebar collapsible="icon" className="!border-r-0 bg-white">
-              <SidebarHeader className="h-16 border-b border-slate-200 px-6 flex items-center justify-start shrink-0">
-                <a href="/" className="flex items-center">
-                  <img src="/assets/images/vishwaleader-logo-hd.png" alt="Vishwa Leader" className="h-8 w-auto object-contain" />
-                </a>
+            <Sidebar variant="inset" collapsible="icon" className="border-r border-border sticky top-0 h-screen">
+              <SidebarHeader>
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton size="lg" render={<div />}>
+                      <img src="/assets/images/vishwaleader-logo-hd.png" alt="VL" className="size-10 group-data-[collapsible=icon]:size-8 object-contain shrink-0" />
+                      <div className="flex flex-col gap-0.5 group-data-[collapsible=icon]:hidden">
+                        <span className="font-bold text-sm text-slate-800">VishwaLeader Member</span>
+                        <span className="text-[10px] text-brandBlue font-semibold flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-brandBlue animate-pulse inline-block" />
+                          Online
+                        </span>
+                      </div>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </SidebarMenu>
               </SidebarHeader>
 
-              <SidebarContent className="bg-white border-r border-slate-200">
+              <SidebarContent>
                 {/* Operations tabs selectors */}
                 <SidebarGroup>
-                  <SidebarGroupLabel className="text-slate-500 font-bold uppercase tracking-wider text-[10px] px-3 mb-1">Navigation</SidebarGroupLabel>
+                  <SidebarGroupLabel>Navigation</SidebarGroupLabel>
                   <SidebarGroupContent>
                     <SidebarMenu>
                       <SidebarMenuItem>
                         <MobileCloseSidebarMenuButton 
                           isActive={activeTab === 'dashboard'} 
                           onClick={() => setActiveTab('dashboard')}
-                          className={`w-full justify-start text-xs font-medium py-2 px-3 rounded-lg transition-all ${
-                            activeTab === 'dashboard' 
-                              ? 'bg-slate-100 text-slate-900 font-semibold' 
-                              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                          }`}
                         >
-                          <LayoutDashboard className="size-4 shrink-0 mr-2 text-brandBlue" />
+                          <LayoutDashboard />
                           <span>Overview Dashboard</span>
                         </MobileCloseSidebarMenuButton>
                       </SidebarMenuItem>
@@ -2151,13 +2574,8 @@ export default function MemberClientPage() {
                         <MobileCloseSidebarMenuButton 
                           isActive={activeTab === 'registration'} 
                           onClick={() => setActiveTab('registration')}
-                          className={`w-full justify-start text-xs font-medium py-2 px-3 rounded-lg transition-all ${
-                            activeTab === 'registration' 
-                              ? 'bg-slate-100 text-slate-900 font-semibold' 
-                              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                          }`}
                         >
-                          <UserIcon className="size-4 shrink-0 mr-2 text-brandBlue" />
+                          <UserIcon />
                           <span>User Profile</span>
                         </MobileCloseSidebarMenuButton>
                       </SidebarMenuItem>
@@ -2169,13 +2587,9 @@ export default function MemberClientPage() {
                               setActiveTab('checkout');
                               setWizardStep(visibleSlides.length - 1);
                             }}
-                            className={`w-full justify-start text-xs font-medium py-2 px-3 rounded-lg transition-all ${
-                              activeTab === 'checkout' 
-                                ? 'bg-amber-100 text-amber-900 font-semibold' 
-                                : 'text-amber-600 hover:text-amber-900 hover:bg-amber-50'
-                            }`}
+                            className="text-amber-600 hover:text-amber-700 hover:bg-amber-50"
                           >
-                            <CreditCard className="size-4 shrink-0 mr-2 text-amber-600" />
+                            <CreditCard />
                             <span>Pending Checkout</span>
                           </MobileCloseSidebarMenuButton>
                         </SidebarMenuItem>
@@ -2184,13 +2598,8 @@ export default function MemberClientPage() {
                         <MobileCloseSidebarMenuButton 
                           isActive={activeTab === 'settings'} 
                           onClick={() => setActiveTab('settings')}
-                          className={`w-full justify-start text-xs font-medium py-2 px-3 rounded-lg transition-all ${
-                            activeTab === 'settings' 
-                              ? 'bg-slate-100 text-slate-900 font-semibold' 
-                              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                          }`}
                         >
-                          <Settings className="size-4 shrink-0 mr-2 text-brandBlue" />
+                          <Settings />
                           <span>Settings</span>
                         </MobileCloseSidebarMenuButton>
                       </SidebarMenuItem>
@@ -2199,26 +2608,20 @@ export default function MemberClientPage() {
                 </SidebarGroup>
               </SidebarContent>
 
-              <SidebarFooter className="border-t border-slate-100 p-3 bg-white border-r border-slate-200">
+              <SidebarFooter>
                 <SidebarMenu>
                   <SidebarMenuItem className="mb-2">
                     <div id="sidebar-translate-container"></div>
                   </SidebarMenuItem>
                   <SidebarMenuItem>
-                    <MobileCloseSidebarMenuButton 
-                      onClick={() => window.location.href = "/"}
-                      className="w-full justify-start text-xs font-medium py-2 px-3 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-50"
-                    >
-                      <LogOut className="size-4 rotate-180 shrink-0 mr-2" />
+                    <MobileCloseSidebarMenuButton onClick={() => window.location.href = "/"}>
+                      <LogOut className="rotate-180" />
                       <span>Return to Website</span>
                     </MobileCloseSidebarMenuButton>
                   </SidebarMenuItem>
                   <SidebarMenuItem>
-                    <MobileCloseSidebarMenuButton 
-                      onClick={handleLogout}
-                      className="w-full justify-start text-xs font-medium py-2.5 px-3 rounded-lg text-rose-600 hover:text-rose-700 hover:bg-rose-50"
-                    >
-                      <LogOut className="size-4 shrink-0 mr-2" />
+                    <MobileCloseSidebarMenuButton onClick={handleLogout} className="text-rose-600 hover:text-rose-700 hover:bg-rose-50">
+                      <LogOut />
                       <span>Sign Out Session</span>
                     </MobileCloseSidebarMenuButton>
                   </SidebarMenuItem>
@@ -2228,19 +2631,19 @@ export default function MemberClientPage() {
             </Sidebar>
 
             {/* Inset Main Pane */}
-            <SidebarInset className="bg-slate-50 h-screen overflow-y-auto min-h-0">
+            <SidebarInset className="min-h-0 bg-slate-50 h-screen overflow-y-auto">
               {/* Sticky Header bar */}
-              <header className="flex h-16 shrink-0 items-center justify-between border-b border-slate-200 px-6 gap-4 bg-white sticky top-0 z-30">
-                <div className="flex items-center gap-2">
-                  <SidebarTrigger className="text-slate-500 hover:text-slate-900" />
+              <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4 bg-white/80 backdrop-blur-sm sticky top-0 z-40">
+                <div className="flex items-center gap-2 flex-1">
+                  <SidebarTrigger className="-ml-1" />
                   <Breadcrumb>
                     <BreadcrumbList>
                       <BreadcrumbItem className="hidden md:block">
-                        <BreadcrumbLink href="#" className="text-slate-550 hover:text-slate-700">Member Portal</BreadcrumbLink>
+                        <BreadcrumbLink href="#">Member Portal</BreadcrumbLink>
                       </BreadcrumbItem>
-                      <BreadcrumbSeparator className="hidden md:block text-slate-300" />
+                      <BreadcrumbSeparator className="hidden md:block" />
                       <BreadcrumbItem>
-                        <BreadcrumbPage className="text-slate-900 capitalize font-semibold">
+                        <BreadcrumbPage>
                           {activeTab === 'dashboard' && 'Dashboard Overview'}
                           {activeTab === 'registration' && 'Delegate Registration'}
                           {activeTab === 'uploads' && 'Document Upload Center'}
@@ -2251,7 +2654,59 @@ export default function MemberClientPage() {
                   </Breadcrumb>
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 relative">
+                  
+                  {/* Notification Bell */}
+                  <button 
+                    onClick={() => setShowNotifications(!showNotifications)}
+                    className="relative p-2 rounded-full hover:bg-slate-100 transition-colors text-slate-600"
+                  >
+                    <Bell className="size-5" />
+                    <span className="absolute top-1.5 right-2 w-2 h-2 bg-rose-500 rounded-full border border-white"></span>
+                  </button>
+
+                  {/* Notification Dropdown */}
+                  {showNotifications && (
+                    <div className="absolute top-12 right-12 w-80 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 overflow-hidden animate-in slide-in-from-top-2">
+                      <div className="p-3 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
+                        <span className="text-xs font-bold uppercase tracking-wider text-slate-800">Notifications</span>
+                        <span className="text-[10px] text-brandBlue font-semibold cursor-pointer hover:underline">Mark all as read</span>
+                      </div>
+                      <div className="max-h-64 overflow-y-auto">
+                        <div className="p-3 border-b border-slate-50 hover:bg-slate-50 cursor-pointer flex gap-3">
+                          <div className="size-8 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
+                            <CheckCircle className="size-4 text-emerald-600" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-semibold text-slate-800 leading-tight">Registration Approved</p>
+                            <p className="text-xs text-slate-500 mt-0.5">Your primary delegate pass has been confirmed.</p>
+                            <p className="text-[9px] text-slate-400 mt-1 font-mono">Just now</p>
+                          </div>
+                        </div>
+                        <div className="p-3 border-b border-slate-50 hover:bg-slate-50 cursor-pointer flex gap-3">
+                          <div className="size-8 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
+                            <Clock className="size-4 text-amber-600" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-semibold text-slate-800 leading-tight">Pending Payment</p>
+                            <p className="text-xs text-slate-500 mt-0.5">Complete your checkout to secure your seats.</p>
+                            <p className="text-[9px] text-slate-400 mt-1 font-mono">2 hours ago</p>
+                          </div>
+                        </div>
+                        <div className="p-3 hover:bg-slate-50 cursor-pointer flex gap-3">
+                          <div className="size-8 rounded-full bg-brandBlue/10 flex items-center justify-center shrink-0">
+                            <Lock className="size-4 text-brandBlue" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-semibold text-slate-800 leading-tight">Security Alert</p>
+                            <p className="text-xs text-slate-500 mt-0.5">New login detected on Windows PC (Mumbai).</p>
+                            <p className="text-[9px] text-slate-400 mt-1 font-mono">Yesterday</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="text-right hidden sm:block">
                     <p className="text-xs font-bold text-slate-800">{memberData?.name || user.displayName || "Delegate"}</p>
                     <p className="text-[9px] text-slate-400 font-mono">Member ID: VL-2026-{(user.uid.substring(0, 4)).toUpperCase()}</p>
@@ -2261,7 +2716,7 @@ export default function MemberClientPage() {
               </header>
 
               {/* Main Workspace Scroll View */}
-              <main className="flex-grow p-6 md:p-8 space-y-6 max-w-6xl w-full">
+              <main className={`flex-grow w-full ${activeTab === 'registration' ? 'p-0 h-[calc(100vh-4rem)] overflow-hidden' : 'max-w-6xl mx-auto ' + (activeTab === 'checkout' ? 'p-4 md:p-6' : 'p-6 md:p-8 space-y-6')}`}>
                 
                 {/* ═════════════════════ TAB: DASHBOARD OVERVIEW ═════════════════════ */}
                 {activeTab === 'dashboard' && (
@@ -2284,10 +2739,8 @@ export default function MemberClientPage() {
 
                           {/* Card Top */}
                           <div className="flex items-center justify-between border-b border-white/10 pb-3.5 relative z-10">
-                            <div className="flex items-center gap-2">
-                              <img src="/assets/images/vishwaleader-logo-globe.png" className="h-14 w-auto brightness-0 invert" alt="Logo" />
-                              <Wifi className="size-5 text-slate-300 rotate-90 ml-1" />
-                              <span className="text-[8px] font-black uppercase tracking-widest text-slate-300">Vishwa Leader</span>
+                            <div className="flex items-center">
+                              <img src="/assets/images/vishwaleader-logo-hd.png" className="h-12 w-auto object-contain brightness-0 invert opacity-90" alt="Vishwa Leader" />
                             </div>
                             <span className="text-[8px] font-black uppercase tracking-widest text-amber-500 border border-amber-500/20 px-2 py-0.5 rounded bg-amber-500/5">
                               Member Card
@@ -2373,209 +2826,26 @@ export default function MemberClientPage() {
 
                 {/* ═════════════════════ TAB: PROFILE SETTINGS ═════════════════════ */}
                 {activeTab === 'registration' && (
-                  <div className="space-y-6">
-                    <div className="flex items-center justify-between border-b border-slate-200 pb-4 shrink-0">
-                      <div>
-                        <h2 className="text-2xl font-black font-display text-slate-900 uppercase tracking-tight">User Profile</h2>
-                        <p className="text-xs text-slate-550 mt-0.5 font-medium">All your registration details — update and save any changes.</p>
-                      </div>
+                  <div className="flex flex-col w-full h-full relative bg-slate-900">
+                    
+                    <div className="flex-1 w-full h-full relative">
+                      {memberData ? (
+                        <CustomPDFViewer doc={<ProfilePDF memberData={memberData} guestProfiles={guestProfiles} />} />
+                      ) : (
+                        <div className="flex items-center justify-center h-full text-slate-400">Generating Profile Dossier...</div>
+                      )}
                     </div>
-
-                    <form className="space-y-6 max-w-4xl" onSubmit={(e) => {
-                      e.preventDefault();
-                      handleSaveRegistration();
-                      showToast("Profile updated successfully!");
-                    }}>
-
-                      {/* Personal Information */}
-                      <Card className="border-slate-200 bg-white rounded-2xl shadow-sm">
-                        <CardHeader className="pb-3">
-                          <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-500">Personal Information</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-1.5">
-                              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Full Name</label>
-                              <Input type="text" value={profileName} onChange={(e) => setProfileName(e.target.value)} className="bg-slate-50 border-slate-200 text-xs rounded-xl focus:border-brandBlue text-slate-800" required />
-                            </div>
-                            <div className="space-y-1.5">
-                              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Gender</label>
-                              <select value={profileGender} onChange={(e) => setProfileGender(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:border-brandBlue focus:ring-1 focus:ring-brandBlue outline-none">
-                                <option value="">Select gender</option>
-                                <option value="Male">Male</option>
-                                <option value="Female">Female</option>
-                                <option value="Non-binary">Non-binary</option>
-                                <option value="Prefer not to say">Prefer not to say</option>
-                              </select>
-                            </div>
-                            <div className="space-y-1.5">
-                              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Age</label>
-                              <Input type="text" value={profileAge} onChange={(e) => setProfileAge(e.target.value)} className="bg-slate-50 border-slate-200 text-xs rounded-xl focus:border-brandBlue text-slate-800" />
-                            </div>
-                            <div className="space-y-1.5">
-                              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Nationality</label>
-                              <Input type="text" value={profileNationality} onChange={(e) => setProfileNationality(e.target.value)} className="bg-slate-50 border-slate-200 text-xs rounded-xl focus:border-brandBlue text-slate-800" />
-                            </div>
-                            <div className="space-y-1.5">
-                              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">City</label>
-                              <Input type="text" value={profileCity} onChange={(e) => setProfileCity(e.target.value)} className="bg-slate-50 border-slate-200 text-xs rounded-xl focus:border-brandBlue text-slate-800" />
-                            </div>
-                            <div className="space-y-1.5">
-                              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Country</label>
-                              <Input type="text" value={profileCountry} onChange={(e) => setProfileCountry(e.target.value)} className="bg-slate-50 border-slate-200 text-xs rounded-xl focus:border-brandBlue text-slate-800" />
-                            </div>
-                            <div className="space-y-1.5">
-                              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Phone</label>
-                              <Input type="text" value={profilePhone} onChange={(e) => setProfilePhone(e.target.value)} className="bg-slate-50 border-slate-200 text-xs rounded-xl focus:border-brandBlue text-slate-800" />
-                            </div>
-                            <div className="space-y-1.5">
-                              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Passport Number</label>
-                              <Input type="text" value={profilePassport} onChange={(e) => setProfilePassport(e.target.value)} className="bg-slate-50 border-slate-200 text-xs rounded-xl focus:border-brandBlue text-slate-800" />
-                            </div>
-                          </div>
-                          <div className="space-y-1.5 mt-4">
-                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Full Address</label>
-                            <textarea value={profileAddress} onChange={(e) => setProfileAddress(e.target.value)} rows={2} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:border-brandBlue focus:ring-1 focus:ring-brandBlue outline-none" />
-                          </div>
-                          <div className="space-y-1.5 mt-4">
-                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Short Bio</label>
-                            <textarea value={profileBio} onChange={(e) => setProfileBio(e.target.value)} rows={3} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:border-brandBlue focus:ring-1 focus:ring-brandBlue outline-none" />
-                          </div>
-                        </CardContent>
-                      </Card>
-
-                      {/* Professional Details */}
-                      <Card className="border-slate-200 bg-white rounded-2xl shadow-sm">
-                        <CardHeader className="pb-3">
-                          <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-500">Professional Details</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-1.5">
-                              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Designation</label>
-                              <Input type="text" value={profileDesignation} onChange={(e) => setProfileDesignation(e.target.value)} className="bg-slate-50 border-slate-200 text-xs rounded-xl focus:border-brandBlue text-slate-800" />
-                            </div>
-                            <div className="space-y-1.5">
-                              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Organization</label>
-                              <Input type="text" value={profileOrganization} onChange={(e) => setProfileOrganization(e.target.value)} className="bg-slate-50 border-slate-200 text-xs rounded-xl focus:border-brandBlue text-slate-800" />
-                            </div>
-                            <div className="space-y-1.5">
-                              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Sector</label>
-                              <select value={profileSector} onChange={(e) => setProfileSector(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:border-brandBlue focus:ring-1 focus:ring-brandBlue outline-none">
-                                <option value="Academic/Research">Academic / Research</option>
-                                <option value="Government">Government</option>
-                                <option value="Corporate">Corporate</option>
-                                <option value="NGO/Non-Profit">NGO / Non-Profit</option>
-                                <option value="Media">Media</option>
-                                <option value="Healthcare">Healthcare</option>
-                                <option value="Legal">Legal</option>
-                                <option value="Other">Other</option>
-                              </select>
-                            </div>
-                            <div className="space-y-1.5">
-                              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Delegate Type</label>
-                              <select value={profileDelegateType} onChange={(e) => setProfileDelegateType(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:border-brandBlue focus:ring-1 focus:ring-brandBlue outline-none">
-                                <option value="conference">Conference Delegate</option>
-                                <option value="business">Business Summit Delegate</option>
-                                <option value="award">Award Nominee</option>
-                                <option value="observer">Observer</option>
-                                <option value="speaker">Speaker / Panelist</option>
-                              </select>
-                            </div>
-                            <div className="space-y-1.5">
-                              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Nomination Category</label>
-                              <select value={profileCategory} onChange={(e) => setProfileCategory(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:border-brandBlue focus:ring-1 focus:ring-brandBlue outline-none">
-                                <option value="ambedkar-awards">Dr. B. R. Ambedkar Awards</option>
-                                <option value="social-justice-leadership">Social Justice Leadership</option>
-                                <option value="education-innovation">Education Innovation</option>
-                                <option value="women-empowerment">Women Empowerment</option>
-                                <option value="human-rights">Human Rights</option>
-                                <option value="environmental-justice">Environmental Justice</option>
-                                <option value="youth-leadership">Youth Leadership</option>
-                                <option value="global-peace">Global Peace</option>
-                              </select>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-
-                      {/* Event Preferences */}
-                      <Card className="border-slate-200 bg-white rounded-2xl shadow-sm">
-                        <CardHeader className="pb-3">
-                          <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-500">Event Preferences &amp; Support</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                            <div className="space-y-1.5">
-                              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Package Tour</label>
-                              <select value={profilePackageTour} onChange={(e) => setProfilePackageTour(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:border-brandBlue focus:ring-1 focus:ring-brandBlue outline-none">
-                                <option value="None">No Package Tour</option>
-                                <option value="From India">From India (₹1,31,000)</option>
-                                <option value="From Outside India">From Outside India (₹2,00,501)</option>
-                              </select>
-                            </div>
-                          </div>
-                          <div className="space-y-1.5 mb-4">
-                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Dietary / Special Notes</label>
-                            <textarea value={profileDietary} onChange={(e) => setProfileDietary(e.target.value)} rows={2} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:border-brandBlue focus:ring-1 focus:ring-brandBlue outline-none" />
-                          </div>
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                            <label className="flex items-center gap-3 cursor-pointer bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 hover:bg-slate-100 transition-colors">
-                              <input type="checkbox" checked={profileVisaSupport} onChange={(e) => setProfileVisaSupport(e.target.checked)} className="w-4 h-4 rounded accent-brandBlue" />
-                              <span className="text-xs font-semibold text-slate-700">Visa Support Needed</span>
-                            </label>
-                            <label className="flex items-center gap-3 cursor-pointer bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 hover:bg-slate-100 transition-colors">
-                              <input type="checkbox" checked={profileAccommodation} onChange={(e) => setProfileAccommodation(e.target.checked)} className="w-4 h-4 rounded accent-brandBlue" />
-                              <span className="text-xs font-semibold text-slate-700">Accommodation Assistance</span>
-                            </label>
-                            <label className="flex items-center gap-3 cursor-pointer bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 hover:bg-slate-100 transition-colors">
-                              <input type="checkbox" checked={profileWheelchair} onChange={(e) => setProfileWheelchair(e.target.checked)} className="w-4 h-4 rounded accent-brandBlue" />
-                              <span className="text-xs font-semibold text-slate-700">Wheelchair Support</span>
-                            </label>
-                          </div>
-                        </CardContent>
-                      </Card>
-
-                      <div className="pb-6">
-                        <Button type="submit" className="w-full md:w-auto bg-brandBlue hover:bg-brandBlue/90 text-white font-bold px-10 py-2.5 rounded-xl transition-all shadow text-xs uppercase tracking-wider">
-                          Save All Changes
-                        </Button>
-                      </div>
-                    </form>
                   </div>
                 )}
 
                 {/* ═════════════════════ TAB: CHECKOUT ═════════════════════ */}
                 {activeTab === 'checkout' && memberData?.paymentStatus !== 'Paid' && (
                   <div className="space-y-4">
-                    {/* Header with Re-register button */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4 shrink-0">
-                      <div>
-                        <h2 className="text-2xl font-black font-display text-slate-900 uppercase tracking-tight">Pending Checkout</h2>
-                        <p className="text-xs text-slate-500 mt-0.5 font-medium">Review your selections and complete your registration payment.</p>
-                      </div>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => {
-                          if (!user) return;
-                          setShowReRegisterModal(true);
-                        }}
-                        className="shrink-0 rounded-xl border-amber-300 text-amber-700 hover:bg-amber-50 hover:border-amber-400 font-bold text-xs px-5 h-10 gap-2 transition-all"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="size-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
-                          <path d="M3 3v5h5"/>
-                        </svg>
-                        Re-register / Edit Selections
-                      </Button>
-                    </div>
-
                     {/* Full-screen payment page design */}
-                    <div className="grid grid-cols-1 lg:grid-cols-[1fr_550px] gap-0 bg-white overflow-hidden rounded-2xl border border-slate-200 shadow-sm min-h-[80vh]">
+                    <div className="grid grid-cols-1 lg:grid-cols-[1fr_550px] gap-0 bg-white overflow-hidden rounded-2xl border border-slate-200 shadow-sm h-[calc(100vh-6.5rem)]">
 
                       {/* Left Column: Image Wallpaper */}
-                      <div className="hidden lg:flex flex-col justify-between p-10 relative text-white">
+                      <div className="hidden lg:flex flex-col justify-between p-10 relative text-white h-full">
                         <Image src="/assets/images/payment-bg.jpg" alt="Payment Background" fill sizes="(max-width: 1024px) 100vw, 50vw" priority className="object-cover object-left" />
                         <div className="absolute inset-0 bg-gradient-to-br from-slate-900/90 via-slate-900/60 to-transparent"></div>
                         <div className="relative z-10">
@@ -2600,99 +2870,106 @@ export default function MemberClientPage() {
                       </div>
 
                       {/* Right Column: Receipt UI */}
-                      <div className="p-8 md:p-12 flex flex-col bg-white relative overflow-y-auto">
+                      <div className="p-6 md:p-8 flex flex-col bg-white relative overflow-y-auto">
                         <div className="absolute top-0 left-0 w-full h-1 bg-brandBlue"></div>
 
-                        <div className="mb-6 pb-6 border-b border-slate-100">
-                          <h3 className="text-xl font-semibold text-slate-900 leading-tight">Registration Summary</h3>
-                          <p className="text-sm text-slate-500 mt-1">Review your selected packages before proceeding to payment.</p>
+                        <div className="mb-3 pb-3 border-b border-slate-100">
+                          <h3 className="text-xl font-semibold text-slate-900 leading-tight">Pending Checkout</h3>
+                          <p className="text-sm text-slate-500 mt-1">Review your selections and complete your registration payment.</p>
                         </div>
 
-                        <div className="space-y-4 flex-grow mb-6">
+                        <div className="space-y-2 flex-grow mb-4">
                           
                           {(memberData?.wizardIntents || wizardIntents).some((i: string) => i.startsWith('Conference')) && (
                             <div className="flex justify-between items-start text-sm text-slate-600 pb-2">
                               <span className="flex items-start gap-2"><Check className="size-4 shrink-0 text-slate-900 mt-0.5" /> <span>International Conference</span></span>
-                              <span className="font-semibold text-slate-900">₹5,000</span>
+                              <span className="font-semibold text-slate-900">₹5,900</span>
                             </div>
                           )}
                           {(memberData?.wizardIntents || wizardIntents).some((i: string) => i.startsWith('Business')) && (
                             <div className="flex justify-between items-start text-sm text-slate-600 pb-2">
                               <span className="flex items-start gap-2"><Check className="size-4 shrink-0 text-slate-900 mt-0.5" /> <span>International Business Summit</span></span>
-                              <span className="font-semibold text-slate-900">₹10,000</span>
+                              <span className="font-semibold text-slate-900">₹11,800</span>
                             </div>
                           )}
                           {(memberData?.wizardIntents || wizardIntents).some((i: string) => i.startsWith('Award')) && (
                             <div className="flex justify-between items-start text-sm text-slate-600 pb-2">
                               <span className="flex items-start gap-2"><Check className="size-4 shrink-0 text-slate-900 mt-0.5" /> <span>International Awards &amp; Cultural Ceremony</span></span>
-                              <span className="font-semibold text-slate-900">₹5,000</span>
+                              <span className="font-semibold text-slate-900">₹5,900</span>
                             </div>
                           )}
                           {(memberData?.wizardIntents || wizardIntents).includes('Souvenir Article') && (
                             <div className="flex justify-between items-start text-sm text-slate-600 pb-2">
                               <span className="flex items-start gap-2"><Check className="size-4 shrink-0 text-slate-900 mt-0.5" /> <span>Official Souvenir Article</span></span>
-                              <span className="font-semibold text-slate-900">₹5,000</span>
+                              <span className="font-semibold text-slate-900">₹5,900</span>
                             </div>
                           )}
                           {(memberData?.wizardIntents || wizardIntents).includes('Souvenir Advertisement') && (
                             <div className="flex justify-between items-start text-sm text-slate-600 pb-2">
                               <span className="flex items-start gap-2"><Check className="size-4 shrink-0 text-slate-900 mt-0.5" /> <span>Official Souvenir Advertisement</span></span>
-                              <span className="font-semibold text-slate-900">₹5,000</span>
+                              <span className="font-semibold text-slate-900">₹{(() => {
+                                const size = memberData?.profileAdSize || profileAdSize;
+                                if (size === 'ad_front_cover') return '5,00,000';
+                                if (size === 'ad_back_cover') return '2,00,000';
+                                if (size === 'ad_inside_cover') return '1,50,000';
+                                if (size === 'ad_double_spread') return '1,00,000';
+                                if (size === 'ad_full_page') return '50,000';
+                                if (size === 'ad_half_page') return '25,000';
+                                if (size === 'ad_quarter_page') return '15,000';
+                                return '15,000';
+                              })()}</span>
                             </div>
                           )}
                           {(memberData?.wizardIntents || wizardIntents).includes('Donation Patron') && (
                             <div className="flex justify-between items-start text-sm text-slate-600 pb-2">
-                              <span className="flex items-start gap-2"><Check className="size-4 shrink-0 text-emerald-600 mt-0.5" /> <span>High-Level Patronage Donation</span></span>
-                              <span className="font-semibold text-emerald-700">₹1,00,000</span>
+                              <span className="flex items-start gap-2"><Check className="size-4 shrink-0 text-emerald-600 mt-0.5" /> <span>High-Level Patronage Contribution</span></span>
+                              <span className="font-semibold text-emerald-700">₹{(Number(memberData?.patronAmount || patronAmount) || 100000).toLocaleString('en-IN')}</span>
                             </div>
                           )}
-                          {(memberData?.packageTour || profilePackageTour) !== 'None' && (memberData?.packageTour || profilePackageTour) && (
+                          {profilePackageTour !== 'None' && profilePackageTour && (
                             <div className="flex justify-between items-start text-sm text-slate-600 pb-2">
-                              <span className="flex items-start gap-2"><Check className="size-4 shrink-0 text-slate-900 mt-0.5" /> <span>Tour Package: {memberData?.packageTour || profilePackageTour}</span></span>
+                              <span className="flex items-start gap-2"><Check className="size-4 shrink-0 text-slate-900 mt-0.5" /> <span>Tour Package: {getPackageName(profilePackageTour)}</span></span>
                               <span className="font-semibold text-slate-900">
-                                ₹{(memberData?.packageTour || profilePackageTour) === 'From India' ? (131000).toLocaleString('en-IN') : (200501).toLocaleString('en-IN')}
+                                ₹{getPackagePrice(profilePackageTour).toLocaleString('en-IN')}
                               </span>
                             </div>
                           )}
+                          {(memberData?.numDelegates || numDelegates) > 1 ? (
+                            <div className="flex justify-between items-start text-sm text-slate-800 pb-2 pt-2 border-t border-slate-200 mt-2">
+                              <span className="flex items-start gap-2 font-semibold">
+                                <span>Total Delegates ({(memberData?.numDelegates || numDelegates)})</span>
+                              </span>
+                              <span className="font-bold text-slate-900">
+                                x {(memberData?.numDelegates || numDelegates)}
+                              </span>
+                            </div>
+                          ) : null}
                         </div>
 
 
                         {/* GST breakdown */}
-                        <div className="pt-4 pb-4 border-t border-b border-slate-100 mb-6 flex flex-col gap-3">
-                          <div className="flex justify-between items-center cursor-pointer group" onClick={() => setShowGstDetails(!showGstDetails)}>
+                        <div className="pt-3 pb-3 border-t border-b border-slate-100 mb-4 flex flex-col gap-2">
+                          <div className="flex justify-between items-center">
                             <span className="text-sm font-semibold text-slate-900 flex items-center gap-2">
-                              GST (18%)
-                              <ChevronDown className={`size-4 text-slate-400 transition-transform duration-300 ${showGstDetails ? 'rotate-180' : ''}`} />
+                              All Taxes
                             </span>
-                            <span className="text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full uppercase tracking-wider">Calculated Automatically</span>
+                            <span className="text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                              INCLUDED IN PRICES
+                            </span>
                           </div>
-                          {showGstDetails && (
-                            <div className="bg-slate-50 p-4 rounded-lg text-xs text-slate-600 space-y-3 border border-slate-100">
-                              <div className="flex justify-between items-center">
-                                <span>Total Base Registration Amount</span>
-                                <span className="font-medium text-slate-900">₹{Math.round(calculateWizardTotal() / 1.18).toLocaleString('en-IN')}</span>
-                              </div>
-                              <div className="flex justify-between items-center text-amber-700">
-                                <span>+ 18% IGST/CGST</span>
-                                <span className="font-semibold">₹{Math.round(calculateWizardTotal() - (calculateWizardTotal() / 1.18)).toLocaleString('en-IN')}</span>
-                              </div>
-                              <div className="pt-2 mt-1 border-t border-slate-200 flex justify-between items-center font-bold text-slate-900 text-sm">
-                                <span>Gross Total</span>
-                                <span>₹{calculateWizardTotal().toLocaleString('en-IN')}</span>
-                              </div>
-                            </div>
-                          )}
                         </div>
 
                         {/* Total */}
-                        <div className="bg-slate-900 p-6 rounded-xl flex items-center justify-between mb-8 shadow-md">
-                          <span className="text-sm font-bold uppercase tracking-wider text-slate-400">Total Due Today</span>
+                        <div className="bg-slate-900 p-4 rounded-xl flex items-center justify-between mb-4 shadow-md">
+                          <span className="text-sm font-bold uppercase tracking-wider text-slate-400">
+                            Total Due Today
+                          </span>
                           <span className="text-3xl font-semibold text-white">₹{calculateWizardTotal().toLocaleString('en-IN')}</span>
                         </div>
 
                         {/* Legal consent */}
                         <div>
-                          <label className="flex items-start space-x-3 p-4 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer hover:border-slate-300 transition-colors">
+                          <label className="flex items-start space-x-3 p-3 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer hover:border-slate-300 transition-colors">
                             <input type="checkbox" checked={profileLegalConsent} onChange={(e) => setProfileLegalConsent(e.target.checked)} className="mt-0.5 size-4 rounded text-slate-900 focus:ring-slate-900 shrink-0" />
                             <span className="text-sm text-slate-600 leading-tight">
                               I confirm that all information provided is accurate and I agree to the <a href="/terms" className="font-semibold text-slate-900 hover:underline">Terms and Conditions</a> to finalize this transaction.
@@ -2700,8 +2977,23 @@ export default function MemberClientPage() {
                           </label>
                         </div>
 
-                        {/* Pay button */}
-                        <div className="mt-8 pt-6 border-t border-slate-100 flex items-center justify-end gap-3">
+                        {/* Action buttons */}
+                        <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between gap-3">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => {
+                              if (!user) return;
+                              setShowReRegisterModal(true);
+                            }}
+                            className="border-amber-300 text-amber-700 hover:bg-amber-50 hover:border-amber-400 font-bold h-12 px-4 md:px-6 rounded-xl transition-all text-sm flex items-center gap-2 shadow-sm"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="size-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                              <path d="M3 3v5h5"/>
+                            </svg>
+                            Re-register
+                          </Button>
                           <Button
                             type="button"
                             onClick={async () => {
@@ -2788,69 +3080,105 @@ export default function MemberClientPage() {
                         </div>
                       </Card>
 
-                      {/* Card 2: Passport Front */}
+                      {/* Card 1.5: National ID */}
                       <Card className="border-slate-200 bg-white p-5 rounded-2xl flex flex-col justify-between shadow-sm">
                         <div className="space-y-4">
                           <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">2. Passport Front</span>
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">National ID</span>
                             <FileText className="size-4 text-brandBlue" />
                           </div>
-                          {memberData?.passportFrontUrl ? (
+                          {memberData?.nationalIdUrl ? (
                             <div className="h-24 w-full bg-emerald-50/50 border border-emerald-100 rounded-xl flex flex-col items-center justify-center p-3 text-center space-y-1">
                               <FileCheck className="size-6 text-emerald-500" />
                               <span className="text-[9px] font-bold text-emerald-700 uppercase">Uploaded</span>
-                              <a href={memberData.passportFrontUrl} target="_blank" className="text-[9px] font-extrabold text-brandBlue hover:underline uppercase tracking-wide pt-1">View File</a>
+                              <a href={memberData.nationalIdUrl} target="_blank" className="text-[9px] font-extrabold text-brandBlue hover:underline uppercase tracking-wide pt-1">View File</a>
                             </div>
                           ) : (
-                            <div className="h-24 w-full bg-slate-50 border border-dashed border-slate-200 rounded-xl flex items-center justify-center text-[10px] text-slate-400">Awaiting front copy</div>
+                            <div className="h-24 w-full bg-slate-50 border border-dashed border-slate-200 rounded-xl flex items-center justify-center text-[10px] text-slate-400">Awaiting ID copy</div>
                           )}
                         </div>
                         <div className="pt-4 border-t border-slate-100 mt-4 space-y-3">
-                          {passportFrontUploading ? (
+                          {nationalIdUploading ? (
                             <div className="space-y-1">
-                              <div className="flex justify-between text-[9px] font-mono text-slate-500"><span>Uploading...</span><span>{passportFrontProgress}%</span></div>
-                              <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden"><div className="bg-brandBlue h-full rounded-full transition-all" style={{ width: `${passportFrontProgress}%` }}></div></div>
+                              <div className="flex justify-between text-[9px] font-mono text-slate-500"><span>Uploading...</span><span>{nationalIdProgress}%</span></div>
+                              <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden"><div className="bg-brandBlue h-full rounded-full transition-all" style={{ width: `${nationalIdProgress}%` }}></div></div>
                             </div>
                           ) : (
                             <div className="relative w-full">
-                              <input type="file" accept="application/pdf,image/*" onChange={(e) => { if (e.target.files && e.target.files[0]) uploadFileToStorage(e.target.files[0], 'passportFront'); }} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
-                              <Button className="w-full bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold py-2 rounded-xl flex items-center justify-center gap-1.5 border border-slate-200"><Upload className="size-3.5" /><span>Upload Front</span></Button>
+                              <input type="file" accept="application/pdf,image/*" onChange={(e) => { if (e.target.files && e.target.files[0]) uploadFileToStorage(e.target.files[0], 'nationalId'); }} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                              <Button className="w-full bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold py-2 rounded-xl flex items-center justify-center gap-1.5 border border-slate-200"><Upload className="size-3.5" /><span>Upload ID</span></Button>
                             </div>
                           )}
                         </div>
                       </Card>
 
-                      {/* Card 3: Passport Back */}
-                      <Card className="border-slate-200 bg-white p-5 rounded-2xl flex flex-col justify-between shadow-sm">
-                        <div className="space-y-4">
-                          <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">3. Passport Back</span>
-                            <FileText className="size-4 text-brandBlue" />
-                          </div>
-                          {memberData?.passportBackUrl ? (
-                            <div className="h-24 w-full bg-emerald-50/50 border border-emerald-100 rounded-xl flex flex-col items-center justify-center p-3 text-center space-y-1">
-                              <FileCheck className="size-6 text-emerald-500" />
-                              <span className="text-[9px] font-bold text-emerald-700 uppercase">Uploaded</span>
-                              <a href={memberData.passportBackUrl} target="_blank" className="text-[9px] font-extrabold text-brandBlue hover:underline uppercase tracking-wide pt-1">View File</a>
+                      {profileCountry === 'India' && (
+                        <>
+                          {/* Card 2: Passport Front */}
+                          <Card className="border-slate-200 bg-white p-5 rounded-2xl flex flex-col justify-between shadow-sm">
+                            <div className="space-y-4">
+                              <div className="flex items-center justify-between">
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Passport Front</span>
+                                <FileText className="size-4 text-brandBlue" />
+                              </div>
+                              {memberData?.passportFrontUrl ? (
+                                <div className="h-24 w-full bg-emerald-50/50 border border-emerald-100 rounded-xl flex flex-col items-center justify-center p-3 text-center space-y-1">
+                                  <FileCheck className="size-6 text-emerald-500" />
+                                  <span className="text-[9px] font-bold text-emerald-700 uppercase">Uploaded</span>
+                                  <a href={memberData.passportFrontUrl} target="_blank" className="text-[9px] font-extrabold text-brandBlue hover:underline uppercase tracking-wide pt-1">View File</a>
+                                </div>
+                              ) : (
+                                <div className="h-24 w-full bg-slate-50 border border-dashed border-slate-200 rounded-xl flex items-center justify-center text-[10px] text-slate-400">Awaiting front copy</div>
+                              )}
                             </div>
-                          ) : (
-                            <div className="h-24 w-full bg-slate-50 border border-dashed border-slate-200 rounded-xl flex items-center justify-center text-[10px] text-slate-400">Awaiting back copy</div>
-                          )}
-                        </div>
-                        <div className="pt-4 border-t border-slate-100 mt-4 space-y-3">
-                          {passportBackUploading ? (
-                            <div className="space-y-1">
-                              <div className="flex justify-between text-[9px] font-mono text-slate-500"><span>Uploading...</span><span>{passportBackProgress}%</span></div>
-                              <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden"><div className="bg-brandBlue h-full rounded-full transition-all" style={{ width: `${passportBackProgress}%` }}></div></div>
+                            <div className="pt-4 border-t border-slate-100 mt-4 space-y-3">
+                              {passportFrontUploading ? (
+                                <div className="space-y-1">
+                                  <div className="flex justify-between text-[9px] font-mono text-slate-500"><span>Uploading...</span><span>{passportFrontProgress}%</span></div>
+                                  <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden"><div className="bg-brandBlue h-full rounded-full transition-all" style={{ width: `${passportFrontProgress}%` }}></div></div>
+                                </div>
+                              ) : (
+                                <div className="relative w-full">
+                                  <input type="file" accept="application/pdf,image/*" onChange={(e) => { if (e.target.files && e.target.files[0]) uploadFileToStorage(e.target.files[0], 'passportFront'); }} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                                  <Button className="w-full bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold py-2 rounded-xl flex items-center justify-center gap-1.5 border border-slate-200"><Upload className="size-3.5" /><span>Upload Front</span></Button>
+                                </div>
+                              )}
                             </div>
-                          ) : (
-                            <div className="relative w-full">
-                              <input type="file" accept="application/pdf,image/*" onChange={(e) => { if (e.target.files && e.target.files[0]) uploadFileToStorage(e.target.files[0], 'passportBack'); }} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
-                              <Button className="w-full bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold py-2 rounded-xl flex items-center justify-center gap-1.5 border border-slate-200"><Upload className="size-3.5" /><span>Upload Back</span></Button>
+                          </Card>
+
+                          {/* Card 3: Passport Back */}
+                          <Card className="border-slate-200 bg-white p-5 rounded-2xl flex flex-col justify-between shadow-sm">
+                            <div className="space-y-4">
+                              <div className="flex items-center justify-between">
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Passport Back</span>
+                                <FileText className="size-4 text-brandBlue" />
+                              </div>
+                              {memberData?.passportBackUrl ? (
+                                <div className="h-24 w-full bg-emerald-50/50 border border-emerald-100 rounded-xl flex flex-col items-center justify-center p-3 text-center space-y-1">
+                                  <FileCheck className="size-6 text-emerald-500" />
+                                  <span className="text-[9px] font-bold text-emerald-700 uppercase">Uploaded</span>
+                                  <a href={memberData.passportBackUrl} target="_blank" className="text-[9px] font-extrabold text-brandBlue hover:underline uppercase tracking-wide pt-1">View File</a>
+                                </div>
+                              ) : (
+                                <div className="h-24 w-full bg-slate-50 border border-dashed border-slate-200 rounded-xl flex items-center justify-center text-[10px] text-slate-400">Awaiting back copy</div>
+                              )}
                             </div>
-                          )}
-                        </div>
-                      </Card>
+                            <div className="pt-4 border-t border-slate-100 mt-4 space-y-3">
+                              {passportBackUploading ? (
+                                <div className="space-y-1">
+                                  <div className="flex justify-between text-[9px] font-mono text-slate-500"><span>Uploading...</span><span>{passportBackProgress}%</span></div>
+                                  <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden"><div className="bg-brandBlue h-full rounded-full transition-all" style={{ width: `${passportBackProgress}%` }}></div></div>
+                                </div>
+                              ) : (
+                                <div className="relative w-full">
+                                  <input type="file" accept="application/pdf,image/*" onChange={(e) => { if (e.target.files && e.target.files[0]) uploadFileToStorage(e.target.files[0], 'passportBack'); }} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                                  <Button className="w-full bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold py-2 rounded-xl flex items-center justify-center gap-1.5 border border-slate-200"><Upload className="size-3.5" /><span>Upload Back</span></Button>
+                                </div>
+                              )}
+                            </div>
+                          </Card>
+                        </>
+                      )}
 
                       {/* Card 3: Supporting Evidence */}
                       <Card className="border-slate-200 bg-white p-5 rounded-2xl flex flex-col justify-between shadow-sm">
@@ -3090,13 +3418,94 @@ export default function MemberClientPage() {
                     </Card>
                   </div>
                 )}
+                {/* ═════════════════════ TAB: SETTINGS ═════════════════════ */}
+                {activeTab === 'settings' && (
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between border-b border-slate-200 pb-4">
+                      <div>
+                        <h2 className="text-2xl font-black font-display text-slate-900 uppercase tracking-tight">Account Settings</h2>
+                        <p className="text-xs text-slate-550 mt-0.5 font-medium">Manage your security, profile details, and privacy preferences.</p>
+                      </div>
+                    </div>
 
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      {/* Left Column */}
+                      <div className="space-y-6">
+                        
+                        {/* PROFILE & IDENTITY */}
+                        <Card className="border-slate-200 bg-white p-5 rounded-2xl shadow-sm">
+                          <h3 className="text-sm font-bold uppercase tracking-wider text-slate-800 mb-4 flex items-center gap-2">
+                            <UserIcon className="size-4 text-brandBlue" /> Profile &amp; Identity
+                          </h3>
+                          <div className="space-y-4">
+                            <div>
+                              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Display Name</label>
+                              <div className="flex gap-2">
+                                <input type="text" defaultValue={memberData?.name || ''} className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg px-3 py-2 focus:ring-1 focus:ring-brandBlue" />
+                                <Button variant="outline" className="text-xs font-semibold px-4 rounded-lg bg-slate-100 hover:bg-slate-200 border-slate-200">Update</Button>
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Language</label>
+                                <select className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg px-3 py-2">
+                                  <option>English (US)</option>
+                                  <option>Hindi (IN)</option>
+                                </select>
+                              </div>
+                              <div>
+                                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Timezone</label>
+                                <select className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg px-3 py-2">
+                                  <option>(UTC+05:30) Asia/Kolkata</option>
+                                  <option>(UTC+00:00) GMT</option>
+                                </select>
+                              </div>
+                            </div>
+                          </div>
+                        </Card>
+
+                        {/* Right Column */}
+                      </div>
+
+                      <div className="space-y-6">
+                        {/* PRIVACY & DATA */}
+                        <Card className="border-slate-200 bg-white p-5 rounded-2xl shadow-sm">
+                          <h3 className="text-sm font-bold uppercase tracking-wider text-slate-800 mb-4 flex items-center gap-2">
+                            <ShieldAlert className="size-4 text-brandBlue" /> Privacy &amp; Data
+                          </h3>
+                          <div className="space-y-4">
+                            <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
+                              <div>
+                                <p className="text-sm font-semibold text-slate-800">Download My Data</p>
+                                <p className="text-[10px] text-slate-500 mt-0.5">Export a JSON file of all your account data.</p>
+                              </div>
+                              <Button variant="outline" className="text-xs font-semibold bg-white rounded-lg px-4 border-slate-200 hover:bg-slate-100 flex items-center gap-1.5">
+                                <Download className="size-3.5" /> Export
+                              </Button>
+                            </div>
+                            <div className="flex items-center justify-between p-3 bg-rose-50 rounded-xl border border-rose-100">
+                              <div>
+                                <p className="text-sm font-semibold text-rose-800">Account Deletion</p>
+                                <p className="text-[10px] text-rose-600/70 mt-0.5">Permanently delete your account and data.</p>
+                              </div>
+                              <Button variant="destructive" className="text-xs font-semibold rounded-lg px-4 bg-rose-600 hover:bg-rose-700 text-white">
+                                Request Deletion
+                              </Button>
+                            </div>
+                          </div>
+                        </Card>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </main>
 
               {/* Corporate Footer */}
-              <footer className="border-t border-slate-200 bg-white py-6 text-center text-[10px] text-slate-500 font-normal">
-                <p>© 2026 <span translate="no" className="notranslate">Vishwa Leader</span> Techmedia Private Limited. All Rights Reserved.</p>
-              </footer>
+              {activeTab !== 'checkout' && (
+                <footer className="border-t border-slate-200 bg-white py-6 text-center text-[10px] text-slate-500 font-normal mt-auto">
+                  <p>© 2026 <span translate="no" className="notranslate">Vishwa Leader</span> Techmedia Private Limited. All Rights Reserved.</p>
+                </footer>
+              )}
 
             </SidebarInset>
 
