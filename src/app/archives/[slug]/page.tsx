@@ -27,9 +27,8 @@ export default async function ArchiveDocumentPage(props: { params: Promise<{ slu
     }
 
     return (
-        <div className="min-h-screen bg-slate-100 flex flex-col font-sans pb-10">
-
-            <div className="flex-grow flex flex-col lg:flex-row max-w-7xl mx-auto w-full mt-6 shadow-2xl rounded-2xl overflow-hidden border border-slate-200 bg-white">
+        <div className="h-[calc(100vh-64px)] md:h-[calc(100vh-80px)] bg-slate-100 flex flex-col font-sans">
+            <div className="flex-grow flex flex-col lg:flex-row w-full overflow-hidden bg-white">
                 <div className="hidden lg:flex w-80 shrink-0 border-r border-slate-200 bg-slate-50 p-6 flex-col justify-between overflow-y-auto">
                     <div className="space-y-6">
                         <div className="aspect-[3/4] w-48 mx-auto rounded-xl overflow-hidden bg-white border border-slate-200 shadow-lg relative">
@@ -61,11 +60,11 @@ export default async function ArchiveDocumentPage(props: { params: Promise<{ slu
                         </div>
                     </div>
                 </div>
-                <div className="flex-grow p-0 md:p-6 lg:p-8 bg-slate-100 relative flex justify-center items-center min-h-[600px] lg:min-h-0">
+                <div className="flex-grow p-0 bg-slate-900 relative flex justify-center items-center h-full w-full">
                     {type === 'pdf' ? (
-                        <iframe src={`/pdfs/${item.file}`} className="w-full h-full border-none md:border md:border-slate-200 md:rounded-2xl shadow-none md:shadow-xl bg-white" style={{ minHeight: 'calc(100vh - 200px)' }}></iframe>
+                        <iframe src={`/pdfs/${item.file}#pagemode=thumbs`} className="w-full h-full border-none bg-white" />
                     ) : (
-                        <img src={encodeURI(`/magazine-covers/${item.src}`)} className="max-w-full max-h-[calc(100vh-200px)] object-contain md:rounded-xl md:shadow-xl bg-white" />
+                        <img src={encodeURI(`/magazine-covers/${item.src}`)} className="max-w-full max-h-full object-contain bg-white shadow-2xl" />
                     )}
                 </div>
             </div>
