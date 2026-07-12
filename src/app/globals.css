@@ -53,6 +53,8 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 
   --animate-ticker-train: ticker-train 75s linear infinite;
+  --animate-ticker-logos-forward: ticker-train 45s linear infinite;
+  --animate-ticker-logos-backward: ticker-train-reverse 40s linear infinite;
   
   @keyframes ticker-train {
     0% {
@@ -60,6 +62,15 @@
     }
     100% {
       transform: translate3d(-50%, 0, 0);
+    }
+  }
+
+  @keyframes ticker-train-reverse {
+    0% {
+      transform: translate3d(-50%, 0, 0);
+    }
+    100% {
+      transform: translate3d(0, 0, 0);
     }
   }
 }
