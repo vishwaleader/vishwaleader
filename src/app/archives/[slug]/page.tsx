@@ -28,21 +28,6 @@ export default async function ArchiveDocumentPage(props: { params: Promise<{ slu
 
     return (
         <div className="min-h-screen bg-slate-100 flex flex-col font-sans pb-10">
-            <div className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between shadow-sm sticky top-[64px] md:top-[80px] z-30">
-                <div className="flex items-center gap-4">
-                    <Link href="/archives" className="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-600 flex items-center justify-center text-base transition-colors" title="Back to Archives">
-                        <ArrowLeft className="w-5 h-5" />
-                    </Link>
-                    <div className="flex items-center gap-3">
-                        <span className="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded tracking-wider bg-brandBlue text-white hidden sm:inline-block">
-                            {type === 'pdf' ? 'PDF DOCUMENT' : 'ARCHIVED ISSUE'}
-                        </span>
-                        <h1 className="font-display font-bold text-slate-900 text-sm md:text-lg leading-tight truncate max-w-[200px] sm:max-w-md md:max-w-2xl">
-                            {item.title}
-                        </h1>
-                    </div>
-                </div>
-            </div>
 
             <div className="flex-grow flex flex-col lg:flex-row max-w-7xl mx-auto w-full mt-6 shadow-2xl rounded-2xl overflow-hidden border border-slate-200 bg-white">
                 <div className="hidden lg:flex w-80 shrink-0 border-r border-slate-200 bg-slate-50 p-6 flex-col justify-between overflow-y-auto">
