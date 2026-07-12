@@ -25,6 +25,7 @@ print_help() {
     echo "  kill             Force-kills any process stuck on port $PORT"
     echo "  openkill [port]  Force-kills any process stuck on the given port (default: $PORT)"
     echo "  clean            Removes the .next cache folder completely"
+    echo "  deploy           Commits & pushes to Git and deploys via Vercel CLI"
     echo "  --help           Shows this help menu"
     print_bold "================================================="
 }
@@ -75,6 +76,28 @@ clean_cache() {
     print_success "Cache completely wiped."
 }
 
+deploy_project() {
+    print_bold "=== Starting Git & Vercel Deployment ==="
+    echo "Staging files for Git..."
+    git add .
+    
+    read -p "Enter commit message (Press Enter for 'update: workspace sync'): " msg
+    if [ -z "$msg" ]; then
+        msg="update: workspace sync"
+    fi
+    
+    echo "Committing: '$msg'..."
+    git commit -m "$msg" || echo "No changes to commit in Git."
+    
+    echo "Pushing codebase to GitHub (upstream main)..."
+    git push upstream main || echo "Git push failed or up to date, continuing to deployment..."
+    
+    echo "Deploying directly to Vercel via CLI..."
+    npx vercel --prod --yes
+    
+    print_success "=== Deployment Finished Successfully! ==="
+}
+
 cd "$PROJECT_DIR" || exit
 
 case "$1" in
@@ -92,6 +115,9 @@ case "$1" in
         ;;
     clean)
         clean_cache
+        ;;
+    deploy)
+        deploy_project
         ;;
     help|--help|-h|"")
         print_help
