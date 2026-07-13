@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import Link from "next/link";
 import Preloader from "@/components/Preloader";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -321,7 +322,7 @@ export default function AdminClientPage() {
             </form>
             <div className="cp-links">
               <a href="/auth/member">Login as Member</a>
-              <a href="/">← Back to Home</a>
+              <Link href="/">← Back to Home</Link>
             </div>
           </div>
         </div>

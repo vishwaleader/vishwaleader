@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import dynamic from 'next/dynamic';
@@ -249,7 +250,7 @@ export default function MemberClientPage() {
 
   const getPerPersonCost = (intents: string[], tour: string) => {
     let perPersonSubtotal = 0; 
-    let isTourSelected = (tour && tour !== 'None');
+    const isTourSelected = (tour && tour !== 'None');
 
     if (!isTourSelected) {
       if (intents.some(i => i.startsWith('Conference'))) perPersonSubtotal += 5900;
@@ -601,7 +602,7 @@ export default function MemberClientPage() {
     // Auto-calculate selections from wizard state
     if (!profileLegalConsent) return showToast("You must agree to the Terms and Conditions.");
     const selectedItems: string[] = [];
-    let isTourSelected = (profilePackageTour !== 'None');
+    const isTourSelected = (profilePackageTour !== 'None');
 
     for (let i = 0; i < (numDelegates || 1); i++) {
       if (!isTourSelected) {
@@ -2453,7 +2454,7 @@ export default function MemberClientPage() {
                       <a href="/auth/admin"><i className="fa-solid fa-user-shield"></i> Login as Team</a>
                   </div>
                   <div className="cp-mback">
-                      <a href="/"><i className="fa-solid fa-arrow-left"></i> Back to Home</a>
+                      <Link href="/"><i className="fa-solid fa-arrow-left"></i> Back to Home</Link>
                   </div>
               </div>
           </div>
@@ -2466,9 +2467,9 @@ export default function MemberClientPage() {
           {/* Standalone Wizard Header */}
           <header className="h-16 flex items-center justify-between px-4 sm:px-8 bg-white border-b border-slate-200 shrink-0 shadow-sm z-10 relative">
             <div className="flex items-center gap-4">
-              <a href="/" className="flex items-center">
+              <Link href="/" className="flex items-center">
                 <img src="/assets/images/vishwaleader-logo-hd.png" alt="Vishwa Leader" className="h-8 w-auto object-contain" />
-              </a>
+              </Link>
               <div className="hidden sm:block h-6 w-[1px] bg-slate-200"></div>
               <h1 className="text-sm sm:text-base font-black font-display text-slate-900 uppercase tracking-tight">Delegate Onboarding</h1>
             </div>
