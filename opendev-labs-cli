@@ -94,7 +94,7 @@ deploy_project() {
     
     echo "Deploying directly to Vercel via CLI..."
     # Deploy and capture the deployment URL; timeout after 3min so CLI never hangs
-    DEPLOY_URL=$(timeout 180 npx vercel --prod --yes 2>&1 | tee /dev/stderr | grep -E 'https://vishwaleader.*\.vercel\.app' | tail -1 | tr -d '[:space:]')
+    DEPLOY_URL=$(timeout 180 npx vercel --prod --yes 2>&1 | tee /dev/stderr | grep -oE 'https://vishwaleader[^[:space:]]+\.vercel\.app' | tail -1)
     
     if [ -n "$DEPLOY_URL" ]; then
         print_success "Deployed to: $DEPLOY_URL"

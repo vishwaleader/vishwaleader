@@ -899,13 +899,13 @@ export default function HomeClientPage() {
                     </p>
                 </div>
 
-                {/* DACII */}
+                {/* DACC */}
                 <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm flex flex-col items-center text-center hover:shadow-md transition-shadow">
                     <div className="h-64 flex items-center justify-center mb-4">
-                        <img src="/assets/images/DACCI-2-hd.png" alt="Ambedkar Chamber of Commerce and Industry" className="max-h-64 w-full object-contain mix-blend-multiply" />
+                        <img src="/assets/images/DACCI-2-hd.png" alt="Dr. Ambedkar Chamber of Commerce" className="max-h-64 w-full object-contain mix-blend-multiply" />
                     </div>
-                    <span className="text-xs font-bold tracking-widest text-brandBlue mb-1">(DACII)</span>
-                    <h3 className="font-bold text-lg text-slate-900 mb-4 min-h-[3.5rem] flex items-center justify-center">Ambedkar Chamber of Commerce and Industry</h3>
+                    <span className="text-xs font-bold tracking-widest text-brandBlue mb-1">(DACC)</span>
+                    <h3 className="font-bold text-lg text-slate-900 mb-4 min-h-[3.5rem] flex items-center justify-center">Dr. Ambedkar Chamber of Commerce</h3>
                     <p className="text-xs text-slate-600 mb-4 leading-relaxed min-h-[4.5rem]">
                         An Indian non-profit organization focused on promoting Economic Democracy and empowering first-generation entrepreneurs from marginalized communities.
                     </p>
