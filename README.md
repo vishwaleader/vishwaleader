@@ -32,6 +32,6 @@ Visit our official website to learn more, access our archives, and stay updated 
 
 ---
 <div align="center">
-  <em>Inspiring global change through thought leadership and advocacy.</em><br><br>
+  <em>Inspiring global change through thought leadership and advocacy.</em><br><br> 
   <strong>&copy; Vishwa Leader. All rights reserved.</strong>
 </div>
