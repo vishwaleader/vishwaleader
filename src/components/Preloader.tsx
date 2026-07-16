@@ -49,17 +49,17 @@ export default function Preloader({ loading = true, onFadeComplete, isComingSoon
       </div>
 
       {/* Brand name */}
-      <p translate="no" className="notranslate" style={{ marginTop: "18px", fontFamily: "'Outfit', sans-serif", fontWeight: 900, fontSize: "15px", letterSpacing: "0.04em", color: "#0056CA" }}>
+      <p translate="no" className="notranslate" suppressHydrationWarning style={{ marginTop: "18px", fontFamily: "'Outfit', sans-serif", fontWeight: 900, fontSize: "15px", letterSpacing: "0.04em", color: "#0056CA" }}>
         VISHWA LEADER
       </p>
       
       {/* Subtitles */}
       <div className="flex flex-col items-center mt-[2px]">
-          <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "10px", fontWeight: 700, letterSpacing: "0.18em", color: "#1e3a8a", textTransform: "uppercase" }}>
+          <p suppressHydrationWarning style={{ fontFamily: "'Inter', sans-serif", fontSize: "10px", fontWeight: 700, letterSpacing: "0.18em", color: "#1e3a8a", textTransform: "uppercase" }}>
             TECHMEDIA
           </p>
           {isComingSoon && (
-            <p className="animate-pulse" style={{ fontFamily: "'Inter', sans-serif", fontSize: "10px", fontWeight: 700, letterSpacing: "0.18em", color: "#1e3a8a", textTransform: "uppercase", marginTop: "4px" }}>
+            <p suppressHydrationWarning className="animate-pulse" style={{ fontFamily: "'Inter', sans-serif", fontSize: "10px", fontWeight: 700, letterSpacing: "0.18em", color: "#1e3a8a", textTransform: "uppercase", marginTop: "4px" }}>
               COMING SOON
             </p>
           )}

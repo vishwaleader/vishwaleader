@@ -12,12 +12,7 @@ export default function GlobalPreloader() {
   const [isComingSoon, setIsComingSoon] = useState(false);
 
   useEffect(() => {
-    const isProductionDomain = window.location.hostname === 'vishwaleader.com' || window.location.hostname === 'www.vishwaleader.com';
-    // The middleware rewrites the main page to /coming-soon.
-    // If we are on production domain and not on an admin/api route, we are on the coming soon page.
-    if (isProductionDomain && !window.location.pathname.startsWith('/admin') && !window.location.pathname.startsWith('/api')) {
-      setIsComingSoon(true);
-    } else if (pathname === '/coming-soon') {
+    if (pathname === '/coming-soon') {
       setIsComingSoon(true);
     }
   }, [pathname]);

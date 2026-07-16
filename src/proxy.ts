@@ -10,14 +10,7 @@ export function proxy(request: NextRequest) {
     const isProductionDomain = hostname === 'vishwaleader.com' || hostname === 'www.vishwaleader.com';
 
     // 1. Coming Soon Logic:
-    // If on the production domain, NOT accessing admin, API, or static files, rewrite to coming soon page
-    if (isProductionDomain && 
-        !pathname.startsWith('/admin') && 
-        !pathname.startsWith('/api') && 
-        !pathname.startsWith('/_next') &&
-        !pathname.includes('.')) {
-        return NextResponse.rewrite(new URL('/coming-soon', request.url));
-    }
+    // (Removed to serve main page on production domain)
 
     // 2. Admin Authentication Logic:
     // If the user is trying to access an admin page and is not authenticated,

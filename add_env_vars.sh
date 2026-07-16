@@ -26,7 +26,7 @@ REMOVE_VARS=(
 declare -A ENV_VARS
 
 # 1. Populate the Firebase values from the configuration
-ENV_VARS[NEXT_PUBLIC_FIREBASE_API_KEY]="REMOVED_SECURE_API_KEY"
+ENV_VARS[NEXT_PUBLIC_FIREBASE_API_KEY]="AIzaSyByn-fsGhqcz3FRSIOIsYQA7mevKX77UTM"
 ENV_VARS[NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN]="vishwaleader-techmedia.firebaseapp.com"
 ENV_VARS[NEXT_PUBLIC_FIREBASE_PROJECT_ID]="vishwaleader-techmedia"
 ENV_VARS[NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET]="vishwaleader-techmedia.firebasestorage.app"

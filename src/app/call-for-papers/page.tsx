@@ -160,8 +160,8 @@ export default function CallForPapersPage() {
                   <div className="grid sm:grid-cols-2 gap-5">
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Author Name *</label>
-                      <input required value={form.author} onChange={e => setForm(p => ({ ...p, author: e.target.value }))}
-                        defaultValue={user?.displayName || ''} className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brandBlue bg-slate-50" />
+                      <input required value={form.author || user?.displayName || ''} onChange={e => setForm(p => ({ ...p, author: e.target.value }))}
+                        className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brandBlue bg-slate-50" />
                     </div>
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Affiliation *</label>

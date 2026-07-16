@@ -5,8 +5,9 @@ import { usePathname } from "next/navigation";
 import { auth, db } from "@/lib/firebase";
 import { onAuthStateChanged, signOut, User } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
-import { checkAdminSession, logoutAdmin } from "@/app/actions/adminAuth";
+import { checkAdminSession, logoutAdmin, getAnnouncementSettings } from "@/app/actions/adminAuth";
 import Link from "next/link";
+import { AnimatePresence, motion } from "framer-motion";
 
 export default function SiteHeader() {
     const pathname = usePathname();
@@ -14,6 +15,8 @@ export default function SiteHeader() {
     const [memberData, setMemberData] = useState<any>(null);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [announcement, setAnnouncement] = useState({ enabled: false, message: "" });
+    const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
     // All hooks run unconditionally — guard is AFTER hooks below
     useEffect(() => {
@@ -47,10 +50,29 @@ export default function SiteHeader() {
                     }
                 }
             });
+
+            try {
+                const res = await getAnnouncementSettings();
+                if (res.success && res.data) {
+                    setAnnouncement(res.data as any);
+                }
+            } catch (err) {
+                console.error("Announcement fetch failed:", err);
+            }
         };
 
         initAuth();
-        return () => unsubscribe();
+
+        const handleBeforeInstallPrompt = (e: Event) => {
+            e.preventDefault();
+            setDeferredPrompt(e);
+        };
+        window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+        return () => {
+            unsubscribe();
+            window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+        };
     }, [pathname]);
 
     const handleLogout = async () => {
@@ -67,24 +89,19 @@ export default function SiteHeader() {
         }
     };
 
-    // Guard placed AFTER all hooks — safe to return null here
-    if (pathname?.startsWith("/auth") || pathname?.startsWith("/checkout")) {
-        return null;
-    }
+    const hideNav = pathname?.startsWith("/auth") || pathname?.startsWith("/checkout");
 
     return (
         <>
-            <div className="bg-brandBlue text-white py-3 px-4 text-center border-b border-white/10 text-xs tracking-wide font-semibold relative z-50">
-                <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6">
-                    <a id="nav-abstract-strip" href="/call-for-papers" className="hover:text-amber-300 transition-colors flex items-center gap-1.5"><i className="fa-solid fa-graduation-cap"></i> Call for Abstracts</a>
-                    <span className="hidden sm:inline text-white/30">|</span>
-                    <a id="nav-business-strip" href="/business-summit" className="hover:text-amber-300 transition-colors flex items-center gap-1.5"><i className="fa-solid fa-briefcase"></i> Call for Business Participation</a>
-                    <span className="hidden sm:inline text-white/30">|</span>
-                    <a id="nav-award-strip" href="/awards" className="hover:text-amber-300 transition-colors flex items-center gap-1.5"><i className="fa-solid fa-trophy"></i> Call for Award Nominations</a>
+            {announcement.enabled && !hideNav && (
+                <div className="bg-brandBlue text-white py-2.5 px-4 text-center border-b border-white/10 text-sm tracking-wide font-bold relative z-50 overflow-hidden flex items-center">
+                    <div className="flex-1 overflow-hidden whitespace-nowrap relative">
+                        <span className="animate-news-ticker">{announcement.message}</span>
+                    </div>
                 </div>
-            </div>
+            )}
 
-            {/* Navigation Header */}
+            {!hideNav && (
             <header className="bg-white/80 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-40 view-transition-header">
                 <div className="max-w-7xl mx-auto px-4 md:px-6 h-16 md:h-20 flex items-center justify-between">
                     <div className="flex items-center gap-4">
@@ -139,6 +156,8 @@ export default function SiteHeader() {
                         <Link href="/#networks" className="hover:text-brandBlue transition-colors">Networks</Link>
                         <Link href="/organizers" className="hover:text-brandBlue transition-colors">Organizers</Link>
 
+
+
                         {/* Auth State */}
                         {!user ? (
                         <div id="nav-login-links">
@@ -159,7 +178,7 @@ export default function SiteHeader() {
                             </button>
 
                             {/* Dropdown card */}
-                            <div id="nav-user-dropdown" className={`vl-dropdown absolute right-0 top-[calc(100%+8px)] w-64 bg-white border border-slate-200 rounded-2xl shadow-2xl p-4 z-50 ${isDropdownOpen ? 'block' : 'hidden'}`}>
+                            <div id="nav-user-dropdown" className={`vl-dropdown absolute right-0 top-[calc(100%+8px)] w-64 bg-white border border-blue-500/25 rounded-[4px] shadow-[15px_30px_30px_rgba(0,0,0,0.15),_0_0_15px_rgba(59,130,246,0.1)] p-4 z-50 ${isDropdownOpen ? 'block' : 'hidden'}`}>
                                 {/* User info */}
                                 <div className="flex items-center gap-3 mb-3 pb-3 border-b border-slate-100">
                                     <div id="nav-avatar" className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold text-white shrink-0 bg-brandBlue">
@@ -167,7 +186,7 @@ export default function SiteHeader() {
                                     </div>
                                     <div className="overflow-hidden">
                                         <p id="nav-display-name" className="text-xs font-bold text-slate-900 truncate">{user.displayName || 'User'}</p>
-                                        <p id="nav-display-email" className="text-[10px] text-slate-405 truncate">{user.email}</p>
+                                        <p id="nav-display-email" className="text-[10px] text-slate-500 truncate">{user.email}</p>
                                     </div>
                                 </div>
                                 {/* Role badge */}
@@ -175,13 +194,32 @@ export default function SiteHeader() {
                                     {memberData?.role || 'Member'}
                                 </div>
                                 {/* Actions */}
-                                <div className="space-y-1.5">
-                                    <Link id="nav-portal-link" href={(user as any)?.isAdmin ? "/auth/admin" : "/auth/member"} className="flex items-center gap-2 w-full text-left text-xs font-semibold text-slate-700 hover:text-brandBlue hover:bg-brandBlue/5 px-3 py-2 rounded-xl transition-all">
-                                        <i id="nav-portal-icon" className="fa-solid fa-user text-brandBlue"></i>
-                                        <span id="nav-portal-text">{(user as any)?.isAdmin ? "Go to Dashboard" : "Go to Profile"}</span>
+                                <div className="space-y-1">
+                                    <Link href={(user as any)?.isAdmin ? "/auth/admin" : "/auth/member/dashboard"} className="flex items-center gap-3 w-full text-left text-xs font-semibold text-slate-700 hover:text-brandBlue hover:bg-brandBlue/5 px-3 py-2 rounded-xl transition-all">
+                                        <i className="fa-solid fa-gauge text-brandBlue w-4 text-center"></i>
+                                        <span>Overview Dashboard</span>
                                     </Link>
-                                    <button onClick={handleLogout} className="flex items-center gap-2 w-full text-left text-xs font-semibold text-rose-600 hover:bg-rose-50 px-3 py-2 rounded-xl transition-all">
-                                        <i className="fa-solid fa-right-from-bracket text-rose-500"></i> Sign Out
+                                    <Link href={(user as any)?.isAdmin ? "/auth/admin" : "/auth/member/settings"} className="flex items-center gap-3 w-full text-left text-xs font-semibold text-slate-700 hover:text-brandBlue hover:bg-brandBlue/5 px-3 py-2 rounded-xl transition-all">
+                                        <i className="fa-solid fa-user text-brandBlue w-4 text-center"></i>
+                                        <span>User Profile</span>
+                                    </Link>
+                                    <Link href={(user as any)?.isAdmin ? "/auth/admin" : "/auth/member/checkout"} className="flex items-center gap-3 w-full text-left text-xs font-semibold text-slate-700 hover:text-brandBlue hover:bg-brandBlue/5 px-3 py-2 rounded-xl transition-all">
+                                        <i className="fa-solid fa-cart-shopping text-brandBlue w-4 text-center"></i>
+                                        <span>Pending Checkout</span>
+                                    </Link>
+                                    <Link href={(user as any)?.isAdmin ? "/auth/admin" : "/auth/member/donations"} className="flex items-center gap-3 w-full text-left text-xs font-semibold text-slate-700 hover:text-brandBlue hover:bg-brandBlue/5 px-3 py-2 rounded-xl transition-all">
+                                        <i className="fa-solid fa-hand-holding-dollar text-brandBlue w-4 text-center"></i>
+                                        <span>Donation History</span>
+                                    </Link>
+                                    <Link href={(user as any)?.isAdmin ? "/auth/admin" : "/auth/member/settings"} className="flex items-center gap-3 w-full text-left text-xs font-semibold text-slate-700 hover:text-brandBlue hover:bg-brandBlue/5 px-3 py-2 rounded-xl transition-all">
+                                        <i className="fa-solid fa-gear text-brandBlue w-4 text-center"></i>
+                                        <span>Settings</span>
+                                    </Link>
+                                    
+                                    <div className="h-px bg-slate-100 my-2"></div>
+                                    
+                                    <button onClick={handleLogout} className="flex items-center gap-3 w-full text-left text-xs font-semibold text-rose-600 hover:text-rose-700 hover:bg-rose-50 px-3 py-2 rounded-xl transition-all">
+                                        <i className="fa-solid fa-right-from-bracket text-rose-500 w-4 text-center"></i> Sign Out
                                     </button>
                                 </div>
                             </div>
@@ -191,8 +229,16 @@ export default function SiteHeader() {
                 </div>
 
                 {/* Mobile Navigation */}
-                <div className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${isMobileMenuOpen ? 'max-h-[80vh] overflow-y-auto border-t border-slate-200' : 'max-h-0'}`}>
-                    <nav className="flex flex-col py-4 px-4 gap-4 text-sm font-semibold text-slate-600 bg-white shadow-inner">
+                <AnimatePresence>
+                {isMobileMenuOpen && (
+                <motion.div 
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                    className="md:hidden overflow-hidden border-t border-slate-200"
+                >
+                    <nav className="flex flex-col py-4 px-4 gap-4 text-sm font-semibold text-slate-600 bg-white shadow-inner max-h-[80vh] overflow-y-auto">
                         <Link href="/mission" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-brandBlue transition-colors font-bold text-slate-800">Mission</Link>
                         <Link href="/#about" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-brandBlue transition-colors">Corporate</Link>
                         <Link href="/pricing" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-brandBlue transition-colors">Pricing</Link>
@@ -212,6 +258,30 @@ export default function SiteHeader() {
                         <Link href="/#networks" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-brandBlue transition-colors">Networks</Link>
                         <Link href="/organizers" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-brandBlue transition-colors">Organizers</Link>
                         
+
+                        
+                        {/* PWA Install App Button */}
+                        {deferredPrompt && (
+                            <div className="pt-2 pb-1">
+                                <button 
+                                    onClick={async () => {
+                                        if (deferredPrompt) {
+                                            deferredPrompt.prompt();
+                                            const { outcome } = await deferredPrompt.userChoice;
+                                            if (outcome === 'accepted') {
+                                                setDeferredPrompt(null);
+                                            }
+                                        }
+                                    }} 
+                                    className="w-full flex items-center justify-center gap-2 bg-brandBlue text-white font-bold rounded-xl py-3 shadow-lg shadow-brandBlue/20 hover:bg-brandBlue/90 hover:scale-[1.02] active:scale-95 transition-all"
+                                >
+                                    <i className="fa-solid fa-download"></i> Install App
+                                </button>
+                            </div>
+                        )}
+
+                        {/* Mobile Translate Container Removed */}
+
                         {/* Auth State for Mobile */}
                         {!user ? (
                             <div className="pt-4 border-t border-slate-100">
@@ -231,8 +301,20 @@ export default function SiteHeader() {
                                     </div>
                                 </div>
                                 <div className="flex flex-col gap-3">
-                                    <Link href={(user as any)?.isAdmin ? "/auth/admin" : "/auth/member"} onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 text-sm font-semibold text-slate-700 hover:text-brandBlue">
-                                        <i className="fa-solid fa-user text-brandBlue w-4 text-center"></i> {(user as any)?.isAdmin ? "Dashboard" : "Profile"}
+                                    <Link href={(user as any)?.isAdmin ? "/auth/admin" : "/auth/member/dashboard"} onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 text-sm font-semibold text-slate-700 hover:text-brandBlue">
+                                        <i className="fa-solid fa-gauge text-brandBlue w-4 text-center"></i> Overview Dashboard
+                                    </Link>
+                                    <Link href={(user as any)?.isAdmin ? "/auth/admin" : "/auth/member/settings"} onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 text-sm font-semibold text-slate-700 hover:text-brandBlue">
+                                        <i className="fa-solid fa-user text-brandBlue w-4 text-center"></i> User Profile
+                                    </Link>
+                                    <Link href={(user as any)?.isAdmin ? "/auth/admin" : "/auth/member/checkout"} onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 text-sm font-semibold text-slate-700 hover:text-brandBlue">
+                                        <i className="fa-solid fa-cart-shopping text-brandBlue w-4 text-center"></i> Pending Checkout
+                                    </Link>
+                                    <Link href={(user as any)?.isAdmin ? "/auth/admin" : "/auth/member/donations"} onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 text-sm font-semibold text-slate-700 hover:text-brandBlue">
+                                        <i className="fa-solid fa-hand-holding-dollar text-brandBlue w-4 text-center"></i> Donation History
+                                    </Link>
+                                    <Link href={(user as any)?.isAdmin ? "/auth/admin" : "/auth/member/settings"} onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 text-sm font-semibold text-slate-700 hover:text-brandBlue">
+                                        <i className="fa-solid fa-gear text-brandBlue w-4 text-center"></i> Settings
                                     </Link>
                                     <button onClick={() => { setIsMobileMenuOpen(false); handleLogout(); }} className="flex items-center gap-2 text-sm font-semibold text-rose-600 text-left">
                                         <i className="fa-solid fa-right-from-bracket text-rose-500 w-4 text-center"></i> Sign Out
@@ -241,8 +323,11 @@ export default function SiteHeader() {
                             </div>
                         )}
                     </nav>
-                </div>
+                </motion.div>
+                )}
+                </AnimatePresence>
             </header>
+            )}
         </>
     );
 }

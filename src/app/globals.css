@@ -380,3 +380,14 @@ body {
 .animate-global-fade-in {
   animation: global-fade-in 1.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
+@keyframes newsTicker {
+  0% { transform: translateX(100vw); }
+  100% { transform: translateX(-100%); }
+}
+
+.animate-news-ticker {
+  animation: newsTicker 25s linear infinite;
+  white-space: nowrap;
+  display: inline-block;
+  will-change: transform;
+}

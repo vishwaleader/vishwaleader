@@ -1,12 +1,7 @@
-import { Suspense } from "react";
-import MemberClientPage from "./member-client";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
 export default function Page() {
-  return (
-    <Suspense fallback={<div className="h-screen w-screen bg-white"></div>}>
-      <MemberClientPage />
-    </Suspense>
-  );
+  redirect("/auth/member/dashboard");
 }

@@ -2,14 +2,18 @@
 import { useState, useEffect } from "react";
 import { auth, db } from "@/lib/firebase";
 import { onAuthStateChanged, signOut, User, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
-import { doc, getDoc, collection, addDoc, getDocs, query, orderBy, serverTimestamp, limit } from "firebase/firestore";
+import { doc, getDoc, collection, addDoc, getDocs, query, orderBy, serverTimestamp, limit, where } from "firebase/firestore";
+import Link from "next/link";
 import { checkAdminSession, logoutAdmin } from "@/app/actions/adminAuth";
 import { getTestimonials } from "@/app/actions/testimonials";
+import { getRecentDonors } from "@/app/actions/donationActions";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { motion } from "framer-motion";
+import NetworkBackground from "@/components/NetworkBackground";
+import AdPlaceholder from "@/components/AdPlaceholder";
 
 const magazineCoversList = [
   { src: '1001702539.jpg', title: '1001702539', date: '1001702539' },
@@ -62,6 +66,7 @@ export default function HomeClientPage() {
   const [testimonials, setTestimonials] = useState<any[]>([]);
   const [testimonialStatus, setTestimonialStatus] = useState<'idle'|'submitting'|'success'>('idle');
   const [activeTestimonialIndex, setActiveTestimonialIndex] = useState(1);
+  const [recentDonors, setRecentDonors] = useState<any[]>([]);
 
   useEffect(() => {
     let unsubscribe = () => {};
@@ -123,6 +128,22 @@ export default function HomeClientPage() {
     fetchTestimonials();
   }, []);
 
+  useEffect(() => {
+    const fetchRecentDonors = async () => {
+      try {
+        const res = await getRecentDonors();
+        if (res.success && res.data) {
+          setRecentDonors(res.data as any);
+        } else {
+          console.error("Error fetching homepage recent donors via server action:", res.error);
+        }
+      } catch (e) {
+        console.error("Error fetching homepage recent donors:", e);
+      }
+    };
+    fetchRecentDonors();
+  }, []);
+
   const handleGoogleSignIn = async () => {
     try {
       const provider = new GoogleAuthProvider();
@@ -136,45 +157,56 @@ export default function HomeClientPage() {
     e.preventDefault();
     if (!user) return;
     setInquiryStatus('submitting');
-    try {
-      const formData = new FormData(e.target);
-      await addDoc(collection(db, "inquiries"), {
-        category: formData.get("category"),
-        message: formData.get("message"),
-        name: user.displayName || 'Unknown',
-        email: user.email,
-        createdAt: serverTimestamp()
-      });
-      setInquiryStatus('success');
-      e.target.reset();
-    } catch (err) {
-      console.error(err);
-      setInquiryStatus('idle');
-    }
+    
+    const formData = new FormData(e.target);
+    const message = formData.get("message");
+    const target = e.target;
+
+    setTimeout(async () => {
+      try {
+        await addDoc(collection(db, "inquiries"), {
+          message: message,
+          name: user.displayName || 'Unknown',
+          email: user.email,
+          createdAt: serverTimestamp()
+        });
+        setInquiryStatus('success');
+        target.reset();
+      } catch (err) {
+        console.error(err);
+        setInquiryStatus('idle');
+      }
+    }, 0);
   };
 
   const submitTestimonial = async (e: any) => {
     e.preventDefault();
     if (!user) return;
     setTestimonialStatus('submitting');
-    try {
-      const formData = new FormData(e.target);
-      const newTestimonial = {
-        text: formData.get("text"),
-        name: user.displayName || 'Anonymous User',
-        email: user.email,
-        photoURL: user.photoURL || '',
-        createdAt: serverTimestamp()
-      };
-      await addDoc(collection(db, "testimonials"), newTestimonial);
-      setTestimonialStatus('success');
-      e.target.reset();
-      // Optimistically update list
-      setTestimonials(prev => [{ id: Math.random().toString(), ...newTestimonial }, ...prev].slice(0,6));
-    } catch (err) {
-      console.error(err);
-      setTestimonialStatus('idle');
-    }
+    
+    const formData = new FormData(e.target);
+    const text = formData.get("text");
+    const target = e.target;
+
+    setTimeout(async () => {
+      try {
+        const newTestimonial = {
+          text: text,
+          name: user.displayName || 'Anonymous User',
+          email: user.email,
+          photoURL: user.photoURL || '',
+          createdAt: serverTimestamp()
+        };
+        await addDoc(collection(db, "testimonials"), newTestimonial);
+        setTestimonialStatus('success');
+        target.reset();
+        // Optimistically update list
+        setTestimonials(prev => [{ id: Math.random().toString(), ...newTestimonial }, ...prev].slice(0,6));
+      } catch (err) {
+        console.error(err);
+        setTestimonialStatus('idle');
+      }
+    }, 0);
   };
 
   const handleSmoothScroll = (e: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
@@ -216,20 +248,12 @@ export default function HomeClientPage() {
 
     
     
-    {/* ═══════════════════════════════════════════════════════════════════════════════════════ */}
-
-
-
-
-
     {/* Main Hero Section */}
     <section id="home" className="relative py-20 md:py-28 bg-brandDark text-white border-b border-slate-900 overflow-hidden">
         
-        {/* 3D Background from Three.js snippet */}
-        <iframe src="/three-bg.html" className="absolute inset-0 w-full h-full border-0 pointer-events-none z-0" title="3D Background"></iframe>
-
-        {/* Subtle grid background */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-70 z-0 pointer-events-none"></div>
+        {/* 2D Network connecting dots background */}
+        <NetworkBackground />
+        
         {/* Ambient radial glow */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-brandBlue/20 rounded-full blur-[120px] pointer-events-none z-0"></div>
 
@@ -327,6 +351,10 @@ export default function HomeClientPage() {
         </div>
     </section>
 
+    <div className="max-w-7xl mx-auto px-6">
+      <AdPlaceholder />
+    </div>
+
     {/* Stats Bar */}
     <section className="bg-slate-50 border-b border-slate-200/60 py-10">
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
@@ -355,7 +383,7 @@ export default function HomeClientPage() {
             <div className="flex justify-center mb-6">
                 <img src="/assets/images/vishwaleader-legacy-logo.png" 
                      alt="Old Vishwa Leader Logo" 
-                     className="h-16 w-auto object-contain opacity-95 hover:opacity-100 transition-opacity" />
+                     className="h-28 md:h-36 w-auto object-contain drop-shadow-2xl transition-all hover:scale-105" />
             </div>
             <span className="text-[10px] font-extrabold tracking-widest text-amber-400 uppercase bg-amber-400/10 px-3 py-1 rounded-full">Legacy Archive</span>
             <h3 className="font-display text-2xl md:text-3xl font-black text-white mt-3">Our Historical Print Publications</h3>
@@ -374,6 +402,7 @@ export default function HomeClientPage() {
                 <div id="ticker-track" className="animate-ticker-train flex w-max gap-6 hover:[animation-play-state:paused] py-2">
                     {[...magazineCoversList, ...magazineCoversList].map((cover, i) => (
                         <a key={i} href={`/archives/covers/MAGAZINE COVER-${cover.title}`} 
+                           suppressHydrationWarning
                            className="flex-shrink-0 w-[200px] md:w-[260px] aspect-[3/4] relative group rounded-xl overflow-hidden shadow-md bg-slate-900 border border-slate-700/50 hover:border-amber-400/80 transition-all cursor-pointer">
                             <Image src={encodeURI(`/magazine-covers/${cover.src}`)} alt={cover.title} fill sizes="(max-width: 768px) 200px, 260px" className="object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy" />
                             <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/25 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3 text-left">
@@ -923,28 +952,32 @@ export default function HomeClientPage() {
             <div className="flex flex-col gap-6 md:gap-8 items-center">
                 
                 {/* Logos Above Header */}
-                <div className="flex flex-wrap items-center justify-center gap-8">
-                    <img src="/assets/images/vishwaleader-logo-hd.png" alt="Vishwa Leader" className="h-16 md:h-20 lg:h-24 object-contain" />
-                    <div className="text-brandBlue text-3xl md:text-4xl">
+                <div className="flex items-center justify-center w-full max-w-4xl mx-auto">
+                    <div className="flex-1 flex justify-end pr-5 md:pr-10">
+                        <img src="/assets/images/Azad-TV.png" alt="Azad TV" className="h-24 md:h-32 lg:h-40 object-contain mix-blend-multiply" />
+                    </div>
+                    <div className="text-brandBlue text-4xl md:text-5xl shrink-0 flex items-center justify-center w-12 md:w-16">
                         <i className="fa-solid fa-handshake"></i>
                     </div>
-                    <img src="/assets/images/Azad-TV.png" alt="Azad TV" className="h-16 md:h-20 lg:h-24 object-contain mix-blend-multiply" />
+                    <div className="flex-1 flex justify-start pl-5 md:pl-10">
+                        <img src="/assets/images/vishwaleader-logo-hd.png" alt="Vishwa Leader" className="h-24 md:h-32 lg:h-40 object-contain" />
+                    </div>
                 </div>
 
                 {/* Header Text */}
                 <div className="text-center space-y-4">
                     <span className="text-xs font-bold tracking-widest text-brandBlue uppercase">Strategic Partnership</span>
                     <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-black tracking-tight text-slate-900 leading-tight">
-                        Vishwa Leader & Azad-TV UK
+                        Azad TV UK & Vishwa Leader
                     </h2>
                 </div>
                     
                     {/* Collaboration Photo */}
                     <div className="rounded-2xl overflow-hidden shadow-xl border border-slate-200 bg-white">
-                        <img src="/assets/images/Shirsh-Ramteke-and-Ramesh-Klair.jpg" alt="Shirish Ramteke and Ramesh Klair" className="w-full h-auto max-h-[600px] object-contain bg-slate-50" />
+                        <img src="/assets/images/new-ramesh-klair-and-shirish-ramteke.png" alt="Ramesh Klair and Shirish Ramteke" className="w-full h-auto max-h-[600px] object-contain bg-slate-50" />
                         <div className="p-4 bg-white border-t border-slate-100 text-center">
-                            <p className="text-sm font-semibold text-slate-800">Shirish Ramteke <span className="text-slate-400 font-normal mx-2">|</span> Ramesh Klair</p>
-                            <p className="text-xs text-brandBlue uppercase tracking-wider mt-1 font-bold">Vishwa Leader & Azad TV UK</p>
+                            <p className="text-sm font-semibold text-slate-800">Ramesh Klair <span className="text-slate-400 font-normal mx-2">|</span> Shirish Ramteke</p>
+                            <p className="text-xs text-brandBlue uppercase tracking-wider mt-1 font-bold">Azad TV UK & Vishwa Leader</p>
                         </div>
                     </div>
 
@@ -1306,6 +1339,8 @@ export default function HomeClientPage() {
         </div>
     </section>
 
+
+
     {/* Contact Section */}
     <section id="contact" className="py-20 md:py-24 bg-white">
         <div className="max-w-7xl mx-auto px-6">
@@ -1352,6 +1387,18 @@ export default function HomeClientPage() {
                             </div>
                         </div>
                     </div>
+
+                    <div className="mt-8 rounded-xl overflow-hidden border border-slate-200 shadow-sm h-64 bg-slate-100">
+                        <iframe 
+                            src="https://maps.google.com/maps?q=Patanwala%20Industrial%20Estate,%20Mumbai&t=k&z=17&ie=UTF8&iwloc=&output=embed" 
+                            width="100%" 
+                            height="100%" 
+                            style={{ border: 0 }} 
+                            allowFullScreen={false} 
+                            loading="lazy" 
+                            referrerPolicy="no-referrer-when-downgrade"
+                        ></iframe>
+                    </div>
                 </div>
 
                 {/* Form Column (Google-Verified Inquiry) */}
@@ -1395,6 +1442,13 @@ export default function HomeClientPage() {
                         </div>
                     ) : (
                         <div id="inquiry-auth-container" className="space-y-6">
+                            <div className="space-y-2 text-center md:text-left mb-4">
+                                <h3 className="font-display text-lg font-extrabold text-slate-900 tracking-tight">Send Us a Message</h3>
+                                <p className="text-[13px] text-slate-550 leading-relaxed">
+                                    We’d love to hear from you! Whether you need support, have a question, or are interested in working together, just enter your message in the field below. Please provide your name and email so we can follow up with you directly. Our coordination team aims to respond to all inquiries within one business day. We're here and ready to help!
+                                </p>
+                            </div>
+                            
                             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
                                 <div className="flex items-center gap-3">
                                     {user.photoURL ? (
@@ -1415,15 +1469,7 @@ export default function HomeClientPage() {
                             </div>
 
                             <form onSubmit={submitInquiry} className="space-y-4 text-xs">
-                                <div className="space-y-1">
-                                    <label className="font-bold uppercase tracking-wider text-slate-500">Inquiry Category</label>
-                                    <select name="category" className="w-full bg-slate-50 border border-slate-200 rounded px-4 py-3 text-slate-800 focus:outline-none focus:border-brandBlue focus:ring-1 focus:ring-brandBlue text-xs">
-                                        <option>SOAS Conference 2026 - Article Submission</option>
-                                        <option>Dr. Ambedkar Awards - Attendee Registration</option>
-                                        <option>Vishwa Leader Magazine - Subscriptions & Print Ads</option>
-                                        <option>General Information Inquiry</option>
-                                    </select>
-                                </div>
+
                                 <div className="space-y-1">
                                     <label className="font-bold uppercase tracking-wider text-slate-500">Message Detail</label>
                                     <textarea name="message" rows={4} required className="w-full bg-slate-50 border border-slate-200 rounded px-4 py-3 text-slate-800 focus:outline-none focus:border-brandBlue focus:ring-1 focus:ring-brandBlue text-xs" placeholder="Type your inquiry or message here..."></textarea>
@@ -1442,6 +1488,93 @@ export default function HomeClientPage() {
                     )}
                 </div>
             </div>
+        </div>
+    </section>
+
+    {/* Patron Recognition Section */}
+    <section id="patrons" className="py-24 bg-[#0a0f1d] text-white border-t border-white/5 relative overflow-hidden">
+        {/* Glow Effects */}
+        <div className="absolute top-[-20%] left-[-10%] w-[400px] h-[400px] rounded-full bg-brandBlue/15 blur-3xl pointer-events-none" />
+        <div className="absolute bottom-[-20%] right-[-10%] w-[400px] h-[400px] rounded-full bg-emerald-500/5 blur-3xl pointer-events-none" />
+
+        <div className="max-w-7xl mx-auto px-6 relative z-10">
+            <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-brandBlue/10 text-brandBlue border border-brandBlue/20 rounded-full text-xs font-extrabold uppercase tracking-widest">
+                    <i className="fa-solid fa-medal text-amber-400"></i> Patron Recognition
+                </span>
+                <h2 className="font-display text-4xl md:text-5xl font-black tracking-tight uppercase leading-none">
+                    Our Valued Patrons &amp; Donors
+                </h2>
+                <p className="text-slate-400 text-sm leading-relaxed font-semibold">
+                    We extend our deepest gratitude to the visionary individuals and organizations who support our mission. 
+                    Your contributions make international recognition and scholarly growth possible.
+                </p>
+            </div>
+
+            {recentDonors.length === 0 ? (
+                <div className="max-w-md mx-auto bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-3xl p-8 text-center space-y-6">
+                    <div className="size-16 rounded-full bg-slate-800/80 text-brandBlue flex items-center justify-center mx-auto shadow-inner">
+                        <i className="fa-solid fa-heart-pulse text-3xl"></i>
+                    </div>
+                    <div className="space-y-2">
+                        <h3 className="text-lg font-bold text-slate-100 uppercase tracking-tight">Become Our First Patron</h3>
+                        <p className="text-xs text-slate-400 leading-relaxed font-medium">
+                            Join us in supporting leadership excellence and scholarship. 
+                            Choose to display your name here to inspire others.
+                        </p>
+                    </div>
+                    <Link 
+                        href="/donate" 
+                        className="inline-flex items-center gap-2 bg-brandBlue text-white font-bold px-6 py-3 rounded-xl text-xs hover:bg-brandBlue/90 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-brandBlue/20"
+                    >
+                        <i className="fa-solid fa-hand-holding-heart"></i> Become a Patron
+                    </Link>
+                </div>
+            ) : (
+                <div className="space-y-12">
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+                        {recentDonors.map((donor, idx) => {
+                            const nameInitial = donor.name ? donor.name.charAt(0).toUpperCase() : 'P';
+                            const isHighPatron = donor.amount >= 2500 || donor.purpose === 'Patron Membership';
+                            return (
+                                <motion.div
+                                    key={donor.id}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true }}
+                                    transition={{ duration: 0.5, delay: idx * 0.05 }}
+                                    className="bg-slate-900/40 backdrop-blur-md border border-slate-800 hover:border-brandBlue/35 p-5 rounded-2xl flex flex-col items-center text-center gap-3 transition-all hover:scale-[1.03] group relative"
+                                >
+                                    {isHighPatron && (
+                                        <div className="absolute top-2 right-2 text-amber-400 text-xs animate-pulse">
+                                            <i className="fa-solid fa-crown"></i>
+                                        </div>
+                                    )}
+                                    <div className="size-12 rounded-full bg-gradient-to-tr from-brandBlue to-blue-500 text-white font-black font-display text-base flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
+                                        {nameInitial}
+                                    </div>
+                                    <div>
+                                        <p className="font-bold text-xs text-slate-100 group-hover:text-brandBlue transition-colors line-clamp-1">{donor.name}</p>
+                                        <p className="text-[9px] text-slate-400 mt-0.5 font-bold uppercase tracking-wider">{donor.purpose}</p>
+                                    </div>
+                                    <div className="px-2.5 py-0.5 rounded-full bg-slate-800 border border-slate-700 text-[10px] font-extrabold text-brandBlue/90">
+                                        ₹{donor.amount.toLocaleString('en-IN')}
+                                    </div>
+                                </motion.div>
+                            );
+                        })}
+                    </div>
+
+                    <div className="text-center">
+                        <Link 
+                            href="/donate" 
+                            className="inline-flex items-center gap-2 bg-brandBlue text-white font-bold px-8 py-3.5 rounded-xl text-xs hover:bg-brandBlue/90 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-brandBlue/20"
+                        >
+                            <i className="fa-solid fa-circle-dollar-to-slot"></i> Join Our Patron List
+                        </Link>
+                    </div>
+                </div>
+            )}
         </div>
     </section>
 

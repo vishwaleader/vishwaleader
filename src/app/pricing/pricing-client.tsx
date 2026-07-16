@@ -2,7 +2,8 @@
 
 import React, { useEffect, useState } from "react";
 import Preloader from "@/components/Preloader";
-import { Check, Image as ImageIcon, Send } from "lucide-react";
+import OceanBackground from "@/components/OceanBackground";
+import { Check, Image as ImageIcon, Send, Heart } from "lucide-react";
 
 const adRates = [
   { name: "Front Cover (Premium)", type: "Full Page", price: "₹5,00,000", color: "bg-[#111111] border-[#222222] text-white", labelColor: "text-slate-400" },
@@ -13,6 +14,7 @@ const adRates = [
   { name: "Full Page", type: "Full Page", price: "₹50,000", color: "bg-white border-slate-200 text-slate-900", labelColor: "text-slate-400" },
   { name: "Half Page", type: "-", price: "₹25,000", color: "bg-white border-slate-200 text-slate-900", labelColor: "text-slate-400" },
   { name: "Quarter Page", type: "-", price: "₹15,000", color: "bg-white border-slate-200 text-slate-900", labelColor: "text-slate-400" },
+  { name: "Website Banner (Global Digital)", type: "Digital Ad", price: "₹10,000 / mo", color: "bg-blue-50 border-brandBlue/30 text-brandBlue shadow-lg shadow-blue-500/10", labelColor: "text-brandBlue" },
 ];
 
 export default function PricingClientPage() {
@@ -33,7 +35,9 @@ export default function PricingClientPage() {
   return (
     <>
 
-      <main className="min-h-screen bg-white font-sans pb-32">
+      <main className="min-h-screen relative font-sans pb-32">
+        <OceanBackground />
+        
         {/* Header Section */}
         <section className="pt-32 pb-16 md:pt-40 md:pb-20 text-center px-6">
           <h1 className="text-4xl md:text-5xl font-semibold text-slate-900 tracking-tight mb-4">
@@ -236,6 +240,18 @@ export default function PricingClientPage() {
                   <span>Accepted formats: <strong>PDF, JPG, PNG, AI, CDR</strong>.</span>
                 </li>
               </ul>
+            </div>
+
+            <div className="bg-white border border-slate-200 rounded-xl p-8 shadow-sm">
+              <h3 className="text-xl font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                <Heart className="w-6 h-6 text-rose-500 fill-rose-500" /> Support the Vision
+              </h3>
+              <p className="text-slate-600 mb-6 leading-relaxed text-sm md:text-base">
+                Become a Patron of Vishwa Leader and help us support academic excellence and social justice worldwide. Your contribution makes a lasting impact.
+              </p>
+              <a href="/patron" className="inline-flex items-center justify-center gap-2 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 font-semibold py-3 px-8 rounded-xl transition-all w-full sm:w-auto group shadow-sm hover:shadow">
+                <Heart className="w-5 h-5 text-rose-500 fill-rose-500 group-hover:scale-110 transition-transform" /> Become a Patron
+              </a>
             </div>
           </div>
         </section>

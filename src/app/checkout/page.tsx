@@ -138,7 +138,7 @@ function CheckoutContent() {
       {/* Left: payment-bg.jpg wallpaper */}
       <div className="hidden lg:flex flex-col justify-between p-10 relative text-white">
         <Image
-          src="/assets/images/payment-bg.jpg"
+          src="/assets/images/newest-background-for-checkout.jpeg"
           alt="Payment Background"
           fill
           sizes="(max-width: 1024px) 100vw, 50vw"
@@ -147,14 +147,14 @@ function CheckoutContent() {
         />
         <div className="absolute inset-0 bg-gradient-to-br from-slate-900/90 via-slate-900/60 to-transparent" />
         <div className="relative z-10">
-          <div className="flex items-center gap-4 mb-6">
+          <div className="flex items-center gap-6 mb-6">
             <ShieldAlert className="size-12 text-brandBlue drop-shadow-md shrink-0" />
-            <h2 className="text-3xl lg:text-4xl font-bold tracking-tight drop-shadow-sm">Secure Checkout</h2>
+            <h2 className="text-3xl lg:text-4xl font-bold tracking-tight drop-shadow-sm shrink-0 whitespace-nowrap">Secure Checkout</h2>
+            <p className="text-slate-200 text-sm opacity-90 leading-snug drop-shadow-sm border-l border-white/20 pl-6 max-w-md">
+              Your payment is secured with industry-standard 256-bit encryption.
+              Completing your registration guarantees your seat at the Vishwa Leader summit.
+            </p>
           </div>
-          <p className="text-slate-200 text-base opacity-90 leading-relaxed max-w-sm drop-shadow-sm">
-            Your payment is secured with industry-standard 256-bit encryption.
-            Completing your registration guarantees your seat at the Vishwa Leader summit.
-          </p>
         </div>
         <div className="relative z-10 flex items-end justify-between w-full mt-auto">
           <div className="flex items-center gap-6 text-sm font-medium opacity-80">
@@ -169,7 +169,6 @@ function CheckoutContent() {
 
       {/* Right: receipt form */}
       <div className="p-8 md:p-12 flex flex-col h-full bg-white relative overflow-y-auto">
-        <div className="absolute top-0 left-0 w-full h-1 bg-brandBlue" />
 
         <div className="mb-6 pb-4 border-b border-slate-100">
           <h3 className="text-xl font-semibold text-slate-900 leading-tight">Registration Summary</h3>

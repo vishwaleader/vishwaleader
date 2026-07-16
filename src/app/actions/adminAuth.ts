@@ -141,3 +141,101 @@ export async function getAllUsers() {
   if (!res.success || !res.data) return { success: false, error: res.error };
   return { success: true, users: res.data.users };
 }
+
+// ── Announcement Settings ──────────────────────────────────────────────────
+export async function getAnnouncementSettings() {
+  try {
+    const db = getAdminDb();
+    const docSnap = await db.collection("settings").doc("announcement").get();
+    if (docSnap.exists) {
+      return { success: true, data: docSnap.data() };
+    }
+    return { success: true, data: { enabled: false, message: "" } };
+  } catch (e: any) {
+    return { success: false, error: e.message };
+  }
+}
+
+export async function updateAnnouncementSettings(enabled: boolean, message: string) {
+  const isAdmin = await checkAdminSession();
+  if (!isAdmin) return { success: false, error: "Unauthorized" };
+
+  try {
+    const db = getAdminDb();
+    await db.collection("settings").doc("announcement").set({
+      enabled,
+      message,
+      updatedAt: new Date().toISOString()
+    });
+    return { success: true };
+  } catch (e: any) {
+    return { success: false, error: e.message };
+  }
+}
+
+// ── Ad Settings ────────────────────────────────────────────────────────────
+export async function getAdSettings() {
+  try {
+    const db = getAdminDb();
+    const docSnap = await db.collection("settings").doc("ads").get();
+    if (docSnap.exists) {
+      return { success: true, data: docSnap.data() };
+    }
+    return { success: true, data: { enabled: false } };
+  } catch (e: any) {
+    return { success: false, error: e.message };
+  }
+}
+
+export async function updateAdSettings(enabled: boolean) {
+  const isAdmin = await checkAdminSession();
+  if (!isAdmin) return { success: false, error: "Unauthorized" };
+
+  try {
+    const db = getAdminDb();
+    await db.collection("settings").doc("ads").set({
+      enabled,
+      updatedAt: new Date().toISOString()
+    });
+    return { success: true };
+  } catch (e: any) {
+    return { success: false, error: e.message };
+  }
+}
+
+export async function verifyUserDocuments(
+  userId: string, 
+  userEmail: string, 
+  userName: string,
+  verificationData: Record<string, { approved: boolean, feedback: string, label: string }>
+) {
+  const isAdmin = await checkAdminSession();
+  if (!isAdmin) return { success: false, error: "Unauthorized" };
+
+  try {
+    const db = getAdminDb();
+    
+    // Save verification data to Firestore
+    await db.collection("users").doc(userId).update({
+      verificationStatus: verificationData,
+      lastVerifiedAt: new Date().toISOString()
+    });
+
+    // Check if any items are rejected
+    const rejectedItems = Object.entries(verificationData)
+      .filter(([_, data]) => !data.approved)
+      .map(([key, data]) => ({ key, label: data.label, feedback: data.feedback }));
+
+    // Send email if there are rejections
+    if (rejectedItems.length > 0 && userEmail) {
+      // Import dynamically to avoid circular dependency issues if any
+      const { sendReuploadNotification } = await import("./emailActions");
+      await sendReuploadNotification(userEmail, userName, rejectedItems);
+    }
+
+    return { success: true };
+  } catch (e: any) {
+    console.error("verifyUserDocuments error:", e);
+    return { success: false, error: e.message };
+  }
+}

@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { createPortal } from "react-dom";
 import Script from "next/script";
 import { usePathname } from "next/navigation";
+import Image from "next/image";
 import { Globe, Search, ChevronDown, X } from "lucide-react";
 
 declare global {
@@ -137,8 +138,7 @@ export default function GoogleTranslate() {
   const pathname = usePathname();
 
   useEffect(() => {
-    const isProd = window.location.hostname === 'vishwaleader.com' || window.location.hostname === 'www.vishwaleader.com';
-    if ((isProd && !window.location.pathname.startsWith('/admin') && !window.location.pathname.startsWith('/api')) || pathname === '/coming-soon') {
+    if (pathname === '/coming-soon') {
       setIsComingSoon(true);
     } else {
       setIsComingSoon(false);
@@ -149,7 +149,9 @@ export default function GoogleTranslate() {
 
   useEffect(() => {
     const checkTarget = () => {
-      const target = document.getElementById("sidebar-translate-container");
+      const mobileTarget = document.getElementById("mobile-translate-container");
+      const sidebarTarget = document.getElementById("sidebar-translate-container");
+      const target = mobileTarget || sidebarTarget;
       if (target !== portalTarget) setPortalTarget(target);
     };
     checkTarget();
@@ -213,7 +215,7 @@ export default function GoogleTranslate() {
           className="w-full flex items-center justify-between text-xs font-medium py-2 px-3 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-all border border-transparent"
         >
           <div className="flex items-center gap-2">
-            <Globe className="w-4 h-4 text-brandBlue" />
+            <Image src="/google-translate-logo.png" alt="Google Translate" width={16} height={16} />
             <span>Google Translate</span>
           </div>
           <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? "rotate-180" : ""}`} />
@@ -221,17 +223,14 @@ export default function GoogleTranslate() {
       ) : (
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="flex items-center gap-2 bg-white text-gray-800 rounded-full border border-gray-100 hover:bg-gray-50 transition-all font-medium px-4 py-3 shadow-lg"
+          className="flex items-center justify-center transition-all hover:opacity-80 drop-shadow-md hover:scale-105 relative z-20"
         >
-          <Globe className="w-5 h-5 text-blue-600" />
-          <span>Translate</span>
-          <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+          <Image src="/google-translate-logo.png" alt="Google Translate" width={48} height={48} className="shrink-0" />
         </button>
       )}
-
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className={`absolute w-64 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden transform transition-all ${portalTarget ? 'bottom-full mb-2 origin-bottom-left left-0' : 'bottom-full mb-2 origin-bottom-right right-0'}`}>
+        <div className={`absolute ${portalTarget ? 'w-full' : 'w-64'} bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden transform transition-all z-10 ${portalTarget ? 'bottom-full mb-2 origin-bottom-left left-0' : 'bottom-0 right-0 origin-bottom-right'}`}>
             {!showAll ? (
               <div className="p-2">
                 <div className="text-xs font-semibold text-gray-400 uppercase px-3 py-2">
@@ -249,7 +248,7 @@ export default function GoogleTranslate() {
                 <div className="border-t border-gray-100 mt-2 pt-2">
                   <button
                     onClick={() => setShowAll(true)}
-                    className="w-full text-center px-3 py-2 text-blue-600 font-medium hover:bg-blue-50 rounded-md transition-colors"
+                    className="w-full text-left px-3 py-2 text-blue-600 font-medium hover:bg-blue-50 rounded-md transition-colors"
                   >
                     More Languages...
                   </button>

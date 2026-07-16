@@ -1,9 +1,20 @@
 import type { NextConfig } from "next";
+import withPWAInit from "@ducanh2912/next-pwa";
+
+const withPWA = withPWAInit({
+  dest: "public",
+  disable: process.env.NODE_ENV === "development",
+  register: true,
+});
 
 const nextConfig: NextConfig = {
   experimental: {
     viewTransition: true,
   },
+  // Silence Turbopack warning caused by @ducanh2912/next-pwa webpack plugin
+  turbopack: {},
+  // Fix ESM import issues with @react-pdf/renderer in webpack builds
+  transpilePackages: ["@react-pdf/renderer"],
   async headers() {
     const headers = [];
     // Check if the deployment environment is a preview (not production)
@@ -22,4 +33,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withPWA(nextConfig);

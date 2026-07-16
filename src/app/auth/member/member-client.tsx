@@ -2,15 +2,17 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import dynamic from 'next/dynamic';
 import { auth, db, storage } from "@/lib/firebase";
-import { onAuthStateChanged, signOut, type User, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { onAuthStateChanged, signOut, type User, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs, addDoc, deleteDoc, serverTimestamp } from "firebase/firestore";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { createDynamicOrder, verifyDynamicPayment } from "@/app/actions/paymentActions";
 import Preloader from "@/components/Preloader";
+import NetworkBackground from "@/components/NetworkBackground";
+import AdPlaceholder from "@/components/AdPlaceholder";
 import { 
   Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter 
 } from "@/components/ui/card";
@@ -29,7 +31,7 @@ import {
 } from "@/components/ui/table";
 import { 
   LayoutDashboard, User as UserIcon, FileText, LogOut, 
-  MapPin, Plus, Trash2, CheckCircle, Clock, Upload, ShieldAlert, CreditCard, Camera, FileCheck, Settings, Wifi, Check, ChevronDown, X, Download, Lock, Bell
+  MapPin, Plus, Trash2, CheckCircle, Clock, Upload, ShieldAlert, CreditCard, Camera, FileCheck, Settings, Wifi, Check, ChevronDown, X, Download, Lock, Bell, Heart, Loader2, AlertCircle
 } from "lucide-react";
 import { ProfilePDF } from '@/components/ProfilePDF';
 
@@ -229,14 +231,27 @@ const AutocompleteInput = ({ value, onChange, options, placeholder, required, cl
   );
 };
 
+let globalAuthChecked = false;
+let globalUser: any = null;
+let globalMemberData: any = null;
+
 export default function MemberClientPage() {
   const searchParams = useSearchParams();
-  const defaultTab = searchParams.get('tab') as 'dashboard' | 'registration' | 'checkout' | 'uploads' | 'submissions' | 'settings' || 'dashboard';
+  const params = useParams();
+  const router = useRouter();
+  const urlTab = (params?.tab as string) || searchParams.get('tab');
+  const defaultTab = urlTab as 'dashboard' | 'registration' | 'checkout' | 'uploads' | 'submissions' | 'settings' | 'donations' || 'dashboard';
 
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(globalUser);
+  const [loading, setLoading] = useState(!globalAuthChecked);
   // null = not yet fetched from Firestore
-  const [memberData, setMemberData] = useState<any>(null);
+  const [memberData, setMemberData] = useState<any>(globalMemberData);
+
+  useEffect(() => {
+    if (user) globalUser = user;
+    if (memberData) globalMemberData = memberData;
+    if (!loading) globalAuthChecked = true;
+  }, [user, memberData, loading]);
   // true = brand-new account that hasn't seen the wizard yet
   const [isNewMember, setIsNewMember] = useState(false);
   
@@ -245,8 +260,72 @@ export default function MemberClientPage() {
   const [transitioning, setTransitioning] = useState(false);
   const [reRegisterMode, setReRegisterMode] = useState(false);
   const [showReRegisterModal, setShowReRegisterModal] = useState(false);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'registration' | 'checkout' | 'uploads' | 'submissions' | 'settings'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'registration' | 'checkout' | 'uploads' | 'submissions' | 'settings' | 'donations'>(defaultTab);
+
+  useEffect(() => {
+    const tab = (params?.tab as string) || searchParams.get('tab');
+    if (tab && tab !== activeTab) {
+      setActiveTab(tab as typeof activeTab);
+    }
+  }, [params?.tab, searchParams]);
+
+  useEffect(() => {
+    if (user && activeTab && params?.tab !== activeTab) {
+      router.push(`/auth/member/${activeTab}`);
+    }
+  }, [activeTab, params?.tab, user, router]);
+  const [donations, setDonations] = useState<any[]>([]);
+  const [donationsLoading, setDonationsLoading] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+
+  // Auth form states
+  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
+  const [isInfoOpen, setIsInfoOpen] = useState(false);
+  const [userVal, setUserVal] = useState('');
+  const [passVal, setPassVal] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [inlineError, setInlineError] = useState('');
+  const [userError, setUserError] = useState<'warning' | 'save' | 'close' | null>(null);
+  const [passError, setPassError] = useState<'warning' | 'save' | 'close' | null>(null);
+
+  // Handle traditional email/password login and signup
+  const handleDoLoginSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsInfoOpen(false);
+    setUserError(null);
+    setPassError(null);
+    setInlineError('');
+
+    let proceed = true;
+    if (!userVal.trim()) {
+        setUserError('warning');
+        proceed = false;
+    }
+    if (!passVal.trim()) {
+        setPassError('warning');
+        proceed = false;
+    }
+    if (!proceed) return;
+
+    setIsProcessing(true);
+    try {
+      if (authMode === 'login') {
+        await signInWithEmailAndPassword(auth, userVal.trim(), passVal);
+        setUserError('save');
+        setPassError('save');
+      } else {
+        await createUserWithEmailAndPassword(auth, userVal.trim(), passVal);
+        setUserError('save');
+        setPassError('save');
+        alert('Account created successfully!');
+      }
+    } catch (err: any) {
+      setPassError('close');
+      setInlineError(err.message || 'Authentication failed. Please check your credentials.');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   const getPerPersonCost = (intents: string[], tour: string) => {
     let perPersonSubtotal = 0; 
@@ -359,7 +438,7 @@ export default function MemberClientPage() {
   const [profilePurpose, setProfilePurpose] = useState("");
   const [submissions, setSubmissions] = useState<any[]>([]);
   const [showSubForm, setShowSubForm] = useState(true);
-  const [showBilling, setShowBilling] = useState(false);
+
   const [subFileName, setSubFileName] = useState("");
 
   // Toast status alert
@@ -473,6 +552,30 @@ export default function MemberClientPage() {
       unsubscribe();
     };
   }, []);
+
+  // Fetch user donations on tab select
+  useEffect(() => {
+    if (activeTab === 'donations' && user?.email) {
+      const fetchDonations = async () => {
+        setDonationsLoading(true);
+        try {
+          const q = query(
+            collection(db, "donations"),
+            where("email", "==", user.email)
+          );
+          const snap = await getDocs(q);
+          const list = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          list.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+          setDonations(list);
+        } catch (e) {
+          console.error("Error fetching user donations:", e);
+        } finally {
+          setDonationsLoading(false);
+        }
+      };
+      fetchDonations();
+    }
+  }, [activeTab, user]);
 
   // Sync state variables once memberData is loaded
   useEffect(() => {
@@ -793,8 +896,18 @@ export default function MemberClientPage() {
                             type === 'evidence' ? 'evidenceUrl' :
                             'businessDeckUrl';
             
-            await updateDoc(userRef, { [updateField]: downloadURL });
-            setMemberData((prev: any) => ({ ...prev, [updateField]: downloadURL }));
+            const updates: any = { [updateField]: downloadURL };
+            
+            // Auto-reset verification status if this field was rejected
+            if (memberData?.verificationStatus?.[type] && memberData.verificationStatus[type].approved === false) {
+              updates.verificationStatus = {
+                ...memberData.verificationStatus,
+                [type]: { ...memberData.verificationStatus[type], approved: true }
+              };
+            }
+            
+            await updateDoc(userRef, updates);
+            setMemberData((prev: any) => ({ ...prev, ...updates }));
           }
           // Log file upload to admin activity feed
           try {
@@ -1072,7 +1185,7 @@ export default function MemberClientPage() {
     { id: 'gender', type: 'select', title: 'What is your gender?', options: ['Male', 'Female', 'Prefer not to say'], state: profileGender, setState: setProfileGender, required: true },
     { id: 'age', type: 'number', title: 'How old are you?', state: profileAge, setState: setProfileAge, required: true },
     { id: 'nationality', type: 'autocomplete', title: 'What is your nationality?', options: COUNTRIES_LIST, state: profileNationality, setState: setProfileNationality, required: true },
-    { id: 'passport', type: 'text', title: 'What is your passport number?', subtitle: "Required for Visa invitation letters.", state: profilePassport, setState: setProfilePassport, required: false },
+    { id: 'passport', type: 'text', title: 'What is your passport number?', subtitle: "Required for Visa invitation letters.", state: profilePassport, setState: setProfilePassport, required: true },
     { id: 'designation', type: 'text', title: 'What is your current designation or job title?', state: profileDesignation, setState: setProfileDesignation, required: true },
     { id: 'organization', type: 'text', title: 'Which organization or university are you affiliated with?', state: profileOrganization, setState: setProfileOrganization, required: true },
     { id: 'phone', type: 'autocomplete', title: 'What is your contact number? (WhatsApp enabled)', subtitle: "Include country code e.g., +91 9876543210", options: PHONE_CODES_LIST, state: profilePhone, setState: setProfilePhone, required: true },
@@ -1095,7 +1208,7 @@ export default function MemberClientPage() {
     // Conditional: Presenter
     ...(wizardIntents.includes('Conference Presenter') ? [
       { id: 'paper_title', type: 'text', title: 'What is the title of your research paper?', state: subTitle, setState: setSubTitle, required: true },
-      { id: 'paper_authors', type: 'text', title: 'Who are the co-authors? (If any)', state: subAuthors, setState: setSubAuthors, required: false },
+      { id: 'paper_authors', type: 'text', title: 'Who are the co-authors? (If any)', state: subAuthors, setState: setSubAuthors, required: true },
       { id: 'paper_abstract', type: 'textarea', title: 'Please provide a short abstract.', subtitle: "Maximum 300 words.", state: subAbstract, setState: setSubAbstract, required: true }
     ] : []),
 
@@ -1123,7 +1236,7 @@ export default function MemberClientPage() {
 
     // Logistics
     { id: 'logistics', type: 'logistics', title: 'Do you require any logistics support?' },
-    { id: 'dietary', type: 'text', title: 'Do you have any specific dietary requirements?', subtitle: "e.g. Vegetarian, Halal, Kosher. Leave blank if none.", state: profileDietary, setState: setProfileDietary, required: false },
+    { id: 'dietary', type: 'text', title: 'Do you have any specific dietary requirements?', subtitle: "e.g. Vegetarian, Halal, Kosher. Leave blank if none.", state: profileDietary, setState: setProfileDietary, required: true },
 
     // Final Review
     { id: 'review', type: 'review', title: 'Review & Secure Checkout' }
@@ -2186,7 +2299,7 @@ export default function MemberClientPage() {
               
               {/* Left Column: Image Wallpaper */}
               <div className="hidden lg:flex flex-col justify-between p-10 relative text-white">
-                <Image src="/assets/images/payment-bg.jpg" alt="Payment Background" fill sizes="(max-width: 1024px) 100vw, 50vw" priority className="object-cover object-left" onLoad={() => setPaymentImageLoaded(true)} />
+                <Image src="/assets/images/newest-background-for-checkout.jpeg" alt="Payment Background" fill sizes="(max-width: 1024px) 100vw, 50vw" priority className="object-cover object-left" onLoad={() => setPaymentImageLoaded(true)} />
                 <div className="absolute inset-0 bg-gradient-to-br from-slate-900/90 via-slate-900/60 to-transparent"></div>
                 <div className="relative z-10">
                   <div className="flex items-center gap-4 mb-6">
@@ -2340,7 +2453,7 @@ export default function MemberClientPage() {
                       return;
                     }
                     await handleSaveRegistration();
-                    setShowBilling(true);
+                    await handlePayment();
                   }}
                   className="bg-slate-900 text-white hover:bg-slate-800 font-semibold h-12 px-8 rounded-xl shadow-lg transition-colors text-sm"
                 >
@@ -2380,7 +2493,7 @@ export default function MemberClientPage() {
                   onClick={goNext}
                   className="bg-slate-900 text-white text-sm font-semibold px-8 h-12 rounded-xl hover:bg-slate-800 transition-colors shadow-lg"
                 >
-                  <span>Next Step</span>
+                  <span>{currentSlide.type === 'sponsorships' && !wizardIntents.includes('Souvenir Advertisement') && !wizardIntents.includes('Donation Patron') ? 'Skip' : 'Next Step'}</span>
                 </Button>
               ) : null}
             </div>
@@ -2414,50 +2527,189 @@ export default function MemberClientPage() {
 
       {/* Unauthenticated View: Sign In */}
       {!loading && !user && (
-        <div className="animate-fade-in-slow w-full flex justify-center items-center">
-          <div id="login-card" className="block cp-member-login-wrapper" style={{
-              position: 'fixed', left: 0, right: 0, bottom: 0, top: 0, zIndex: 9999,
-              fontFamily: "'Open Sans', sans-serif", overflow: 'hidden',
-              background: "url('/assets/images/EkJYDaGD-fond-decran-Bouddha-54.png') no-repeat center center",
-              backgroundSize: 'cover'
-          }}>
-              <style dangerouslySetInnerHTML={{__html: `
-                  .cp-mbtn { display: inline-block; padding: 4px 10px 4px; margin-bottom: 0; font-size: 13px; line-height: 18px; color: #333333; text-align: center; text-shadow: 0 1px 1px rgba(255,255,255,0.75); vertical-align: middle; background-color: #f5f5f5; background-image: linear-gradient(to bottom, #ffffff, #e6e6e6); border: 1px solid #e6e6e6; border-radius: 4px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.2), 0 1px 2px rgba(0,0,0,0.05); cursor: pointer; }
-                  .cp-mbtn:hover { background-color: #e6e6e6; }
-                  .cp-mbtn-large { padding: 9px 14px; font-size: 15px; line-height: normal; border-radius: 5px; }
-                  .cp-mbtn-primary { background-color: #2563eb; background-image: linear-gradient(to bottom, #3b82f6, #1d4ed8); border: 1px solid #1e40af; text-shadow: 1px 1px 1px rgba(0,0,0,0.4); color: #ffffff; }
-                  .cp-mbtn-primary:hover { background-color: #1d4ed8; background-image: none; }
-                  .cp-mbtn-block { width: 100%; display: block; }
-                  .cp-mbtn-google { display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%; padding: 12px 16px; background-color: #ffffff; border: 1px solid #cbd5e1; border-radius: 12px; color: #334155; font-size: 14px; font-weight: 700; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05); cursor: pointer; transition: all 0.2s ease-in-out; text-shadow: none; }
-                  .cp-mbtn-google:hover { background-color: #f8fafc; border-color: #94a3b8; }
-                  .cp-mbtn-google:active { transform: scale(0.98); }
-                  .cp-mlogin { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 340px; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); padding: 30px 20px; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.4); }
-                  .cp-mlogin-logo { display: block; width: 160px; height: 160px; margin: 0 auto 16px auto; object-fit: contain; }
-                  .cp-mlogin h1 { color: #0f172a; letter-spacing: 1px; text-align: center; padding-bottom: 20px; font-weight: bold; margin: 0; font-size: 22px; }
-                  .cp-mback { text-align: center; margin-top: 15px; }
-                  .cp-mback a { font-size: 11px; font-weight: bold; color: #64748b; text-decoration: none; text-transform: uppercase; letter-spacing: 1px; }
-                  .cp-mback a:hover { color: #2563eb; }
-              `}} />
-              <div className="cp-mlogin">
-                  <img src="/assets/images/vishwaleader-logo-hd.png" alt="Vishwa Leader" className="cp-mlogin-logo" />
-                  <h1>Member Login</h1>
-                  <button onClick={handleGoogleLogin} className="cp-mbtn-google">
-                      <svg style={{ width:18, height:18, flexShrink:0 }} viewBox="0 0 24 24">
-                          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
-                          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
-                      </svg>
-                      Continue with Google
-                  </button>
-                  <div className="cp-mback mt-3">
-                      <a href="/auth/admin"><i className="fa-solid fa-user-shield"></i> Login as Team</a>
-                  </div>
-                  <div className="cp-mback">
-                      <Link href="/"><i className="fa-solid fa-arrow-left"></i> Back to Home</Link>
-                  </div>
-              </div>
-          </div>
+        <div className="login-page-container-custom">
+            <style dangerouslySetInnerHTML={{ __html: `
+                @import 'https://fonts.googleapis.com/css?family=Open+Sans|Quicksand:400,700';
+                .login-page-container-custom {
+                    position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 99999;
+                    overflow: auto; font-family: 'Quicksand', sans-serif;
+                    -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+                    background: #020617;
+                    background: linear-gradient(135deg, #020617 0%, #1d4ed8 100%);
+                }
+                .login-page-container-custom *, .login-page-container-custom *::before, .login-page-container-custom *::after { box-sizing: border-box; }
+                .login-page-container-custom h2, .login-page-container-custom h3 { font-size: 16px; letter-spacing: -1px; line-height: 20px; margin: 0; }
+                .login-page-container-custom h2 { color: #3b82f6; font-weight: 700; line-height: 1; }
+                .login-page-container-custom h3 { color: #ffffff; text-align: right; }
+                .login-page-container-custom .i { width: 20px; height: 20px; }
+                .login-page-container-custom .i-login {
+                    cursor: pointer;
+                    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 416.229 416.229'><path d='M403.729,29.65H71.802c-6.903,0-12.5,5.597-12.5,12.5v86.363c0,9.903,5.597,12.5,12.5,12.5s12.5-5.597,12.5-12.5V54.65 h306.927v306.928H84.302v-73.861c0-6.903-5.597-12.5-12.5-12.5s-12.5,5.597-12.5,12.5v86.361c0,6.903,5.597,12.5,12.5,12.5 h331.927c6.902,0,12.5-5.597,12.5-12.5V42.15C416.229,35.247,410.631,29.65,403.729,29.65z' fill='%233b82f6'/><path d='M185.417,287.811c0,5.057,3.045,9.613,7.716,11.55c1.547,0.642,3.17,0.95,4.781,0.95c3.253,0,6.451-1.27,8.842-3.66 l79.697-79.697c2.344-2.344,3.66-5.523,3.66-8.839c0-3.316-1.316-6.495-3.66-8.839l-79.697-79.697 c-3.575-3.575-8.951-4.646-13.623-2.71c-4.671,1.936-7.716,6.493-7.716,11.549v67.197H12.5c-6.903,0-12.5,5.597-12.5,12.5 c0,9.903,5.597,12.5,12.5,12.5h172.917V287.811L185.417,287.811z M210.417,158.594l49.521,49.52l-49.521,49.521V158.594z' fill='%233b82f6'/></svg>");
+                    background-size: 18px 18px; background-repeat: no-repeat; background-position: center; transition: opacity 0.2s;
+                }
+                .login-page-container-custom .i-login:hover { opacity: 0.8; }
+                .login-page-container-custom .i-more {
+                    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 612 612'><path d='M76.5,229.5C34.3,229.5,0,263.8,0,306s34.3,76.5,76.5,76.5S153,348.2,153,306S118.7,229.5,76.5,229.5z M76.5,344.2 c-21.1,0-38.2-17.101-38.2-38.2c0-21.1,17.1-38.2,38.2-38.2s38.2,17.1,38.2,38.2C114.7,327.1,97.6,344.2,76.5,344.2z M535.5,229.5c-42.2,0-76.5,34.3-76.5,76.5s34.3,76.5,76.5,76.5S612,348.2,612,306S577.7,229.5,535.5,229.5z M535.5,344.2 c-21.1,0-38.2-17.101-38.2-38.2c0-21.1,17.101-38.2,38.2-38.2s38.2,17.1,38.2,38.2C573.7,327.1,556.6,344.2,535.5,344.2z M306,229.5c-42.2,0-76.5,34.3-76.5,76.5s34.3,76.5,76.5,76.5s76.5-34.3,76.5-76.5S348.2,229.5,306,229.5z M306,344.2 c-21.1,0-38.2-17.101-38.2-38.2c0-21.1,17.1-38.2,38.2-38.2c21.1,0,38.2,17.1,38.2,38.2C344.2,327.1,327.1,344.2,306,344.2z' fill='%233b82f6'/></svg>");
+                    background-size: 20px 20px; background-repeat: no-repeat; background-position: center;
+                }
+                .login-page-container-custom .i-save {
+                    background-image: url(data:image/svg+xml;utf8;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iaXNvLTg4NTktMSI/Pgo8IS0tIEdlbmVyYXRvcjogQWRvYmUgSWxsdXN0cmF0b3IgMTYuMC4wLCBTVkcgRXhwb3J0IFBsdWctSW4gLiBTVkcgVmVyc2lvbjogNi4wMCBCdWlsZCAwKSAgLS0+CjwhRE9DVFlQRSBzdmcgUFVCTElDICItLy9XM0MvL0RURCBTVkcgMS4xLy9FTiIgImh0dHA6Ly93d3cudzMub3JnL0dyYXBoaWNzL1NWRy8xLjEvRFREL3N2ZzExLmR0ZCI+CjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgdmVyc2lvbj0iMS4xIiBpZD0iQ2FwYV8xIiB4PSIwcHgiIHk9IjBweCIgd2lkdGg9IjY0cHgiIGhlaWdodD0iNjRweCIgdmlld0JveD0iMCAwIDYxMiA2MTIiIHN0eWxlPSJlbmFibGUtYmFja2dyb3VuZDpuZXcgMCAwIDYxMiA2MTI7IiB4bWw6c3BhY2U9InByZXNlcnZlIj4KPGc+Cgk8ZyBpZD0idGljayI+CgkJPGc+CgkJCTxwYXRoIGQ9Ik00MzYuNywxOTYuNzAxTDI1OC4xODgsMzc1LjIxM2wtODIuODY5LTgyLjg4N2MtNy4yODctNy4yODctMTkuMTI1LTcuMjg3LTI2LjQxMiwwcy03LjI4NywxOS4xMjUsMCwyNi40MTIgICAgIGw5My44MDgsOTMuODA8YzAuNjMxLDAuODk5LDEuMDE0LDEuOTMyLDEuODE3LDIuNzM1YzMuNzY4LDMuNzY4LDguNzIxLDUuNTA4LDEzLjY1NSw1LjM3NGM0LjkzNCwwLjExNSw5LjkwNy0xLjYwNiwxMy42NzQtNS4zNzQgICAgIGMwLjgwMy0wLjgwNCwxLjE4Ni0xLjgzNiwxLjgxNy0yLjczNWwxODkuNDM0LTE4OS40MzNjNy4yODYtNy4yODcsNy4yODYtMTkuMTI1LDAtMjYuNDEyICAgICBDNDU1LjgwNiwxODkuNDE0LDQ0My55ODcsMTg5LjQxNCw0MzYuNywxOTYuNzAxeiBNMzA2LDBDMTM2Ljk5MiwwLDAsMTM2Ljk5MiwwLDMwNnMxMzYuOTkyLDMwNiwzMDYsMzA2ICAgICBjMTY4Ljk4OCwwLDMwNi0xMzYuOTkyLDMwNi0zMDZTNDc1LjAwOCwwLDMwNiwweiBNMzA2LDU3My43NUMxNTguMTI1LDU3My43NSwzOC4yNSw0NTMuODc1LDM4LjI1LDMwNiAgICAgQzM4LjI1LDE1OC4xMjUsMTU4LjEyNSwzOC4yNSwzMDYsMzguMjVjMTQ3Ljg3NSwwLDI2Ny43NSwxMTkuODc1LDI2Ny43NSwyNjcuNzVDNTczLjc1LDQ1My44NzUsNDUzLjg3NSw1NzMuNzUsMzA2LDU3My43NXoiIGZpbGw9IiMyMGMxOTgiLz4KCQk8L2c+Cgk8L2c+CjwvZz4KPGc+CjwvZz4KPGc+CjwvZz4KPGc+CjwvZz4KPGc+CjwvZz4KPGc+CjwvZz4KPGc+CjwvZz4KPGc+CjwvZz4KPGc+CjwvZz4KPGc+CjwvZz4KPGc+CjwvZz4KPGc+CjwvZz4KPGc+CjwvZz4KPGc+CjwvZz4KPGc+CjwvZz4KPGc+CjwvZz4KPC9zdmc+Cg==);
+                    background-size: 20px 20px; background-repeat: no-repeat; background-position: center;
+                }
+                .login-page-container-custom .i-warning {
+                    background-image: url(data:image/svg+xml;utf8;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iaXNvLTg4NTktMSI/Pgo8IS0tIEdlbmVyYXRvcjogQWRvYmUgSWxsdXN0cmF0b3IgMTguMS4xLCBTVkcgRXhwb3J0IFBsdWctSW4gLiBTVkcgVmVyc2lvbjogNi4wMCBCdWlsZCAwKSAgLS0+CjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgdmVyc2lvbj0iMS4xIiBpZD0iQ2FwYV8xIiB4PSIwcHgiIHk9IjBweCIgdmlld0JveD0iMCAwIDYxMi44MTYgNjEyLjgxNiIgc3R5bGU9ImVuYWJsZS1iYWNrZ3JvdW5kOm5ldyAwIDAgNjEyLjgxNiA2MTIuODE2OyIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSIgd2lkdGg9IjY0cHgiIGhlaWdodD0iNjRweCI+CjxnPgoJPHBhdGggZD0iTTMwNi40MDgsOEMxMzcuMzY4LDAsMC4zNzEsMTM2Ljk5NywwLjM3MSwzMDYuMDM3czEzNi45OTcsMzA2Ljc3OSwzMDYuMDM3LDMwNi43NzlzMzA2LjAzNy0xMzcuODEzLDMwNi4wMzctMzA2LjAzNyAgIEM2MTIuNDQ1LDEzNy43MzksNDc1LjQ0OCwwLDMwNi40MDgsMHogTTMwNi40MDgsNTgzLjE0N2MtMTUyLjIwMywwLTI3Ni4zNjgtMTI0LjE2NS0yNzYuMzY4LTI3Ni4zNjggICBTMTU0LjIwNSwyOS41OTUsMzA2LjQwOCwyOS41OTVTNTgyLjc3NiwxNTMuNzYsNTgyLjc3NiwzMDYuNzc5UzQ1OC42MTEsNTgzLjE0NywzMDYuNDA4LDU4My4xNDd6IE0zMjEuNjEzLDQzMS43NiAgIGMwLDguODI3LTcuMTk1LDE2LjAyIE1lOS4wMjEsMTYuMDIxYy04LjgyNywwLTE2LjAyMS03LjE5NS0xNi4wMjEtMTYuMDIxYzAtOC44MjcsNy4xOTUtMTYuMDIxLDE2LjAyMS0xNi4wMjEgICBTMzIxLjYxMyw0MjIuOTM0LDMyMS42MTMsNDMxLjc2eiBNMjkwLjM4NywzNTMuMjExdi0xODAuMjRjMC04LjAxMSw2LjM3OS0xNC4zOSwxNC4zOS0xNC4zOWM4LjAxMSwwLDE0LjM5LDYuMzc5LDE0LjM5LDE0LjM5ICAgdjE4MC4yNGMwLDguMDExLTYuMzc5LDE0LjM5LTE0LjM5LDE0LjM5QzI5Ni43NjYsMzY4LjQ5MSwyOTAuMzg3LDM2MS4yMjIsMjkwLjM4NywzNTMuMjExeiIgZmlsbD0iI2Y1ZDg3OCIvPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+PC9zdmc+Cg==);
+                    background-size: 20px 20px; background-repeat: no-repeat; background-position: center;
+                }
+                .login-page-container-custom .i-close {
+                    background-image: url(data:image/svg+xml;utf8;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iaXNvLTg4NTktMSI/Pgo8IS0tIEdlbmVyYXRvcjogQWRvYmUgSWxsdXN0cmF0b3IgMTguMS4xLCBTVkcgRXhwb3J0IFBsdWctSW4gLiBTVkcgVmVyc2lvbjogNi4wMCBCdWlsZCAwKSAgLS0+CjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgdmVyc2lvbj0iMS4xIiBpZD0iQ2FwYV8xIiB4PSIwcHgiIHk9IjBweCIgdmlld0JveD0iMCAwIDYxMi40NDUgNjEyLjQ0NSIgc3R5bGU9ImVuYWJsZS1iYWNrZ3JvdW5kOm5ldyAwIDAgNjEyLjQ0NSA2MTIuNDQ1OyIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSIgd2lkdGg9IjY0cHgiIGhlaWdodD0iNjRweCI+CjxnPgoJPHBhdGggZD0iTTUyMi42NDIsODkuODA0QzQ2NC45LDMyLjA2MiwzODguMDExLDAsMzA2LjIyMywwUzE0Ny41NDUsMzIuMDYyLDg5LjgwNCw4OS44MDQgICBjLTExOS40MTYsMTE5LjQxNi0xMTkuNDE2LDMxMy40MjIsMCw0MzIuODM4YzU3Ljc0MSw1Ny43NDEsMTM0LjYzMSw4OS44MDQsMjE2LjQxOSw4OS44MDRzMTU4LjY3OC0zMi4wNjIsMjE2LjQxOS04OS44MDQgICBDNjQyLjA1OCw0MDMuMjI1LDY0Mi4wNTgsMjA5LjIyLDUyMi42NDIsODkuODA0eiBNNTAxLjc4Nyw1MDEuNzg3Yy01Mi4xMDEsNTIuMTAxLTEyMS45OTEsODAuOTcyLTE5NS41NjQsODAuOTcyICAgcy0xNDMuNDYzLTI4Ljg3MS0xOTUuNTY0LTgwLjk3MlMyOS42ODcsMzc5Ljk5NSwyOS42ODcsMzA2LjIyM3MyOC44NzEtMTQzLjQ2Myw4MC45NzItMTk1LjU2NHMxMjEuODY2LTgwLjk3MiwxOTUuNTY0LTgwLjk3MiAgIHMxNDMuNDYzLDI4Ljg3MSwxOTUuNTY0LDgwLjk3MnM4MC45NzIsMTIxLjg2Niw4MC45NzIsMTk1LjU2NFM1NTMuODg3LDQ0OS42ODYsNTAxLjc4Nyw1MDEuNzg3eiBNMzk5LjIxOCwyMzQuODk5bC03NC41MTUsNzQuNTE1ICAgbDc0LjUxNSw3NC41MTVjNS42NDEsNS42NDEsNS42NDEsMTUuMjE1LDAsMjAuODU1Yy0zLjE5MSwzLjE5MS02LjM4Myw0LjAwOC0xMC4zOTEsNC4wMDhjLTQuMDA4LDAtNy4xOTktMS42MzMtMTAuMzktNC4wMDggICBsLTc0LjU4OS03NC41MTVsLTc0LjU4OSw3NC41MTVjLTMuMTkxLDMuMTkxLTYuMzgzLDQuMDA4LTEwLjM5LDQuMDA4cy03LjE5OS0xLjYzMy0xMC4zOS00LjAwOCAgIGMtNS42NDEtNS42NDEtNS42NDEtMTUuMjE1LDAtMjAuODU1bDc0LjUxNS03NC41bTlsLTc0LjUxNS03NC41bTlsLTc0LjUxNS03NC41MTVjLTUuNjQxLTUuNjQxLTUuNjQxLTE1LjIxNSwwLTIwLjg1NSAgIGM1LjY0MS01LjY0MSwxNS4yMTUtNS42NDEsMjAuODU1LDBsNzQuNTE1LDc0LjUxNWw3NC41MTUtNzQuNTE1YzUuNjQxLTUuNjQxLDE1LjIxNS01LjY0MSwyMC44NTUsMCAgIEM0MDQuODU4LDIxOS42ODUsNDA0Ljg1OCwyMjguNDQyLDM5OS4yMTgsMjM0Ljg5OXoiIGZpbGw9IiNmNTVhNGUiLz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPgo8Zz4KPC9nPjwvc3ZnPgo=);
+                    background-size: 20px 20px; background-repeat: no-repeat; background-position: center;
+                }
+                .login-page-container-custom .i-left {
+                    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 414.298 414.299'><path d='M3.663,410.637c2.441,2.44,5.64,3.661,8.839,3.661c3.199,0,6.398-1.221,8.839-3.661l185.809-185.81l185.81,185.811 c2.44,2.44,5.641,3.661,8.84,3.661c3.198,0,6.397-1.221,8.839-3.661c4.881-4.881,4.881-12.796,0-17.679l-185.811-185.81 l185.811-185.81c4.881-4.882,4.881-12.796,0-17.678c-4.882-4.882-12.796-4.882-17.679,0l-185.81,185.81L21.34,3.663 c-4.882-4.882-12.796-4.882-17.678,0c-4.882,4.881-4.882,12.796,0,17.678l185.81,185.809L3.663,392.959 C-1.219,397.841-1.219,405.756,3.663,410.637z' fill='%233b82f6'/></svg>");
+                    background-size: 16px 16px; background-repeat: no-repeat; background-position: center;
+                }
+                .login-page-container-custom .box { width: 330px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10; }
+                .login-page-container-custom .box-form { width: 320px; position: relative; left: 0; z-index: 1; transition: all 0.3s; }
+                .login-page-container-custom .box.info-opened .box-form { left: -37%; }
+                .login-page-container-custom .box-login-tab {
+                    width: 50%; height: 40px; background: #0d0f14; position: relative; float: left; z-index: 1;
+                    border-radius: 6px 6px 0 0; border: 1px solid rgba(59,130,246,0.25); border-bottom: none;
+                    transform: perspective(5px) rotateX(0.93deg) translateZ(-1px); transform-origin: 0 0;
+                    backface-visibility: hidden; box-shadow: 15px -15px 30px rgba(0,0,0,0.4);
+                }
+                .login-page-container-custom .box-login-title {
+                    width: 50%; height: 40px; position: absolute; z-index: 2; display: flex; align-items: center; padding-left: 15px; gap: 8px;
+                }
+                .login-page-container-custom .box-login {
+                    position: relative; top: -4px; width: 320px; background: #0d0f14;
+                    border: 1px solid rgba(59,130,246,0.25); text-align: center; overflow: hidden; z-index: 2;
+                    border-top-right-radius: 6px; border-bottom-left-radius: 6px; border-bottom-right-radius: 6px;
+                    box-shadow: 15px 30px 30px rgba(0,0,0,0.4), 0 0 15px rgba(59,130,246,0.1);
+                }
+                .login-page-container-custom .box-info {
+                    width: 260px; top: 60px; position: absolute; right: -5px; opacity: 0; pointer-events: none;
+                    padding: 15px 15px 15px 30px; background-color: rgba(13,15,20,0.85); backdrop-filter: blur(12px);
+                    border: 1px solid rgba(59,130,246,0.2); z-index: 0; border-radius: 6px; box-shadow: 15px 30px 30px rgba(0,0,0,0.4); transition: all 0.3s;
+                }
+                .login-page-container-custom .box.info-opened .box-info { right: -37%; opacity: 1; pointer-events: auto; }
+                @media (max-width: 600px) {
+                    .login-page-container-custom .box { width: 90%; max-width: 340px; }
+                    .login-page-container-custom .box-form { width: 100%; }
+                    .login-page-container-custom .box-login { width: 100%; }
+                    .login-page-container-custom .box-login-tab { width: 50%; }
+                    .login-page-container-custom .box-login-title { width: 50%; }
+                    .login-page-container-custom .box.info-opened .box-form { left: 0; opacity: 0.15; transform: scale(0.95); pointer-events: none; }
+                    .login-page-container-custom .box-info { width: 100%; right: 0; top: 36px; padding: 20px; z-index: 10; transform: translateY(20px); opacity: 0; pointer-events: none; }
+                    .login-page-container-custom .box.info-opened .box-info { right: 0; transform: translateY(0); opacity: 1; pointer-events: auto; }
+                }
+                .login-page-container-custom .line-wh { width: 100%; height: 1px; top: 0px; margin: 12px auto; position: relative; border-top: 1px solid rgba(255,255,255,0.1); }
+                .login-page-container-custom a { text-decoration: none; }
+                .login-page-container-custom button:focus { outline:0; }
+                .login-page-container-custom .b { height: 24px; line-height: 24px; background-color: transparent; border: none; cursor: pointer; }
+                .login-page-container-custom .b-form { opacity: 0.6; margin: 10px 20px; float: right; }
+                .login-page-container-custom .b-info { opacity: 0.6; float: left; }
+                .login-page-container-custom .b-form:hover, .login-page-container-custom .b-info:hover { opacity: 1; }
+                .login-page-container-custom .b-support, .login-page-container-custom .b-cta {
+                    width: 100%; padding: 0px 15px; font-family: 'Quicksand', sans-serif; font-weight: 700; letter-spacing: -1px; font-size: 16px;
+                    line-height: 32px; cursor: pointer; border-radius: 16px; display: block; text-align: center; transition: all 0.3s;
+                }
+                .login-page-container-custom .b-support { border: #3b82f6 1px solid; background-color: transparent; color: #3b82f6; margin: 6px 0; }
+                .login-page-container-custom .b-cta { border: #3b82f6 1px solid; background-color: #3b82f6; color: #000000; }
+                .login-page-container-custom .b-support:hover, .login-page-container-custom .b-cta:hover { color: #000000; background-color: #2563eb; border: #2563eb 1px solid; }
+                .login-page-container-custom .fieldset-body { display: table; width: 100%; }
+                .login-page-container-custom .fieldset-body p { width: 100%; display: inline-table; padding: 5px 20px; margin-bottom:2px; position: relative; }
+                .login-page-container-custom label { float: left; width: 100%; top: 0px; color: #8fa0b5; font-size: 13px; font-weight: 700; text-align: left; line-height: 1.5; }
+                .login-page-container-custom label.checkbox { float: left; padding: 5px 20px; line-height: 1.7; display: flex; align-items: center; gap: 6px; cursor: pointer; }
+                .login-page-container-custom label.checkbox input { margin: 0; width: auto; height: auto; cursor: pointer; }
+                .login-page-container-custom input[type=text], .login-page-container-custom input[type=password] {
+                    width: 100%; height: 32px; padding: 0px 10px; background-color: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.12);
+                    display: inline; color: #ffffff; font-size: 16px; font-weight: 400; float: left; box-shadow: inset 1px 1px 2px rgba(0,0,0,0.5);
+                }
+                .login-page-container-custom input[type=text]:focus, .login-page-container-custom input[type=password]:focus { background-color: rgba(0,0,0,0.5); border-color: #3b82f6; outline: none; }
+                .login-page-container-custom input[type=submit] {
+                    width: 100%; height: 48px; margin-top: 24px; padding: 0px 20px; font-family: 'Quicksand', sans-serif; font-weight: 700;
+                    font-size: 18px; color: #000000; line-height: 40px; text-align: center; background-color: #3b82f6; border: 1px #3b82f6 solid;
+                    opacity: 1; cursor: pointer; transition: all 0.3s;
+                }
+                .login-page-container-custom input[type=submit]:hover { background-color: #2563eb; border: 1px #2563eb solid; }
+                .login-page-container-custom input[type=submit]:focus { outline: none; }
+                .login-page-container-custom p.field span.i { width: 24px; height: 24px; float: right; position: absolute; right: 22px; bottom: 9px; z-index: 2; display: block; animation: bounceIn 0.6s linear; }
+                .login-page-container-custom .box-form, .login-page-container-custom .box-info, .login-page-container-custom .b, .login-page-container-custom .b-support, .login-page-container-custom .b-cta, .login-page-container-custom input[type=submit], .login-page-container-custom p.field span.i { transition: all 0.3s; }
+                .login-page-container-custom .icon-credits { width: 100%; position: absolute; bottom: 4px; font-family:'Open Sans', 'Helvetica Neue', Helvetica, sans-serif; font-size: 12px; color: rgba(255,255,255,0.2); text-align: center; z-index: -1; }
+                .login-page-container-custom .icon-credits a { text-decoration: none; color: rgba(255,255,255,0.4); }
+                @keyframes bounceIn { 0% { opacity: 0; transform: scale(0.3); } 50% { opacity: 1; transform: scale(1.05); } 70% { transform: scale(0.9); } 100% { transform: scale(1); } }
+                .login-page-container-custom .google-divider { display: flex; align-items: center; text-align: center; color: #8fa0b5; font-size: 12px; margin: 16px 20px 8px 20px; font-weight: 700; }
+                .login-page-container-custom .google-divider::before, .login-page-container-custom .google-divider::after { content: ''; flex: 1; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+                .login-page-container-custom .google-divider:not(:empty)::before { margin-right: .55em; }
+                .login-page-container-custom .google-divider:not(:empty)::after { margin-left: .55em; }
+                .login-page-container-custom .b-google-login { width: calc(100% - 40px); height: 44px; margin: 8px 20px 20px 20px; background-color: #1a202c; border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 4px; color: #ffffff; font-family: 'Quicksand', sans-serif; font-weight: 700; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; transition: all 0.3s; }
+                .login-page-container-custom .b-google-login:hover { background-color: #2d3748; border-color: rgba(255, 255, 255, 0.25); }
+                .login-page-container-custom .b-google-login .google-icon { width: 18px; height: 18px; }
+            ` }} />
+            <NetworkBackground />
+            <div className="absolute top-6 left-6 md:top-8 md:left-8 z-50 flex items-center gap-3 pointer-events-none">
+                <img src="/assets/images/vishwaleader-logo-hd.png" alt="Vishwa Leader" className="h-10 md:h-12 w-auto brightness-0 invert opacity-90" />
+                <span className="text-white font-extrabold text-[9px] md:text-[10px] uppercase tracking-widest opacity-90 leading-tight">Vishwa Leader Techmedia<br/>Private Limited</span>
+            </div>
+            <div className={`box ${isInfoOpen ? 'info-opened' : ''}`}>
+                <div className='box-form'>
+                    <div className='box-login-tab'></div>
+                    <div className='box-login-title'>
+                        <div className='i i-login' onClick={() => window.location.href='/'} title='Back'></div>
+                        <h2>{authMode === 'login' ? 'LOGIN' : 'SIGN UP'}</h2>
+                    </div>
+                    <div className='box-login'>
+                        <form onSubmit={handleDoLoginSubmit} className='fieldset-body'>
+                            <button type="button" onClick={() => setIsInfoOpen(true)} className='b b-form i i-more' title='More Info' style={{ opacity: isInfoOpen ? 0.01 : 1 }}></button>
+                            <p className='field'>
+                                <label htmlFor='member-user'>E-MAIL</label>
+                                <input type='text' id='member-user' name='member-user' autoComplete="off" placeholder="email" value={userVal} onChange={e => {setUserVal(e.target.value); setUserError(null);}} disabled={isProcessing} />
+                                {userError && <span className={`i i-${userError}`}></span>}
+                            </p>
+                            <p className='field'>
+                                <label htmlFor='member-pass'>PASSWORD</label>
+                                <input type='password' id='member-pass' name='member-pass' autoComplete="new-password" placeholder="password" value={passVal} onChange={e => {setPassVal(e.target.value); setPassError(null);}} disabled={isProcessing} />
+                                {passError && <span className={`i i-${passError}`}></span>}
+                            </p>
+                            <label className='checkbox'>
+                                <input type='checkbox' defaultChecked value='TRUE' title='Keep me Signed in' /> Keep me Signed in
+                            </label>
+                            {inlineError && <p style={{ color: '#f55a4e', fontSize: '13px', fontWeight: 700, margin: '12px 20px 0 20px', textAlign: 'left', fontFamily: 'Quicksand' }}>⚠️ {inlineError}</p>}
+                            <input type='submit' value={isProcessing ? 'PROCESSING...' : (authMode === 'login' ? 'GET STARTED' : 'REGISTER')} disabled={isProcessing} />
+                            
+                            {authMode === 'login' && (
+                                <>
+                                    <div className="google-divider"><span>OR</span></div>
+                                    <button type="button" onClick={handleGoogleLogin} className="b-google-login" disabled={isProcessing}>
+                                        <svg className="google-icon" viewBox="0 0 24 24">
+                                            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                                            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                                            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
+                                            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
+                                        </svg>
+                                        SIGN IN WITH GOOGLE
+                                    </button>
+                                </>
+                            )}
+                        </form>
+                    </div>
+                </div>
+                
+                <div className='box-info'>
+                    <div style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '5px 20px', marginBottom: '10px' }}>
+                        <button type="button" onClick={() => setIsInfoOpen(false)} className='b b-info i i-left' title='Back'></button>
+                        <h3>Need Help?</h3>
+                    </div>
+                    <div className='line-wh'></div>
+                    <button type="button" onClick={() => alert('Support can be reached at: support@vishwaleader.com')} className='b-support'>Contact Support</button>
+                    <button type="button" onClick={() => window.location.href = '/auth/admin'} className='b-support'>Login as Team</button>
+                    <div className='line-wh'></div>
+                    <button type="button" onClick={() => { setAuthMode(authMode === 'login' ? 'signup' : 'login'); setIsInfoOpen(false); }} className='b-cta'>
+                        {authMode === 'login' ? 'CREATE ACCOUNT' : 'BACK TO LOGIN'}
+                    </button>
+                </div>
+            </div>
+            <div className='icon-credits'>by opendev-labs</div>
         </div>
       )}
 
@@ -2598,6 +2850,15 @@ export default function MemberClientPage() {
                       )}
                       <SidebarMenuItem>
                         <MobileCloseSidebarMenuButton 
+                          isActive={activeTab === 'donations'} 
+                          onClick={() => setActiveTab('donations')}
+                        >
+                          <Heart className="size-4 text-rose-500 fill-current" />
+                          <span>Donation History</span>
+                        </MobileCloseSidebarMenuButton>
+                      </SidebarMenuItem>
+                      <SidebarMenuItem>
+                        <MobileCloseSidebarMenuButton 
                           isActive={activeTab === 'settings'} 
                           onClick={() => setActiveTab('settings')}
                         >
@@ -2723,6 +2984,35 @@ export default function MemberClientPage() {
                 {/* ═════════════════════ TAB: DASHBOARD OVERVIEW ═════════════════════ */}
                 {activeTab === 'dashboard' && (
                   <div className="space-y-6">
+                    {(() => {
+                      const rejectedItems = memberData?.verificationStatus ? Object.entries(memberData.verificationStatus).filter(([_, data]: any) => !data.approved) : [];
+                      if (rejectedItems.length > 0) {
+                        return (
+                          <div className="bg-rose-50 border border-rose-200 p-4 rounded-xl shadow-sm">
+                            <div className="flex items-start gap-3">
+                              <div className="mt-0.5">
+                                <AlertCircle className="w-5 h-5 text-rose-600" />
+                              </div>
+                              <div>
+                                <h3 className="text-sm font-bold text-rose-900 uppercase tracking-wider">Action Required: Document Verification</h3>
+                                <p className="text-xs text-rose-700 mt-1">Our team has reviewed your profile. The following items require your attention. Please re-upload them to complete your registration:</p>
+                                <ul className="mt-3 space-y-2">
+                                  {rejectedItems.map(([key, data]: any) => (
+                                    <li key={key} className="text-xs bg-white/50 p-2 rounded border border-rose-100">
+                                      <span className="font-semibold text-rose-900">{data.label}:</span> <span className="text-rose-700">{data.feedback || 'Please re-upload.'}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      }
+                      return null;
+                    })()}
+                    
+                    <AdPlaceholder />
+                    
                     <div className="flex items-center justify-between border-b border-slate-200 pb-4">
                       <div>
                         <h2 className="text-2xl font-black font-display text-slate-900 uppercase tracking-tight">Overview Dashboard</h2>
@@ -2848,7 +3138,7 @@ export default function MemberClientPage() {
 
                       {/* Left Column: Image Wallpaper */}
                       <div className="hidden lg:flex flex-col justify-between p-10 relative text-white h-full">
-                        <Image src="/assets/images/payment-bg.jpg" alt="Payment Background" fill sizes="(max-width: 1024px) 100vw, 50vw" priority className="object-cover object-left" />
+                        <Image src="/assets/images/newest-background-for-checkout.jpeg" alt="Payment Background" fill sizes="(max-width: 1024px) 100vw, 50vw" priority className="object-cover object-left" />
                         <div className="absolute inset-0 bg-gradient-to-br from-slate-900/90 via-slate-900/60 to-transparent"></div>
                         <div className="relative z-10">
                           <div className="flex items-center gap-4 mb-6">
@@ -3004,7 +3294,7 @@ export default function MemberClientPage() {
                                 return;
                               }
                               await handleSaveRegistration();
-                              setShowBilling(true);
+                              await handlePayment();
                             }}
                             className="bg-slate-900 text-white hover:bg-slate-800 font-semibold h-12 px-8 rounded-xl shadow-lg transition-colors text-sm"
                           >
@@ -3420,6 +3710,98 @@ export default function MemberClientPage() {
                     </Card>
                   </div>
                 )}
+                {/* ═════════════════════ TAB: DONATIONS ═════════════════════ */}
+                {activeTab === 'donations' && (
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between border-b border-slate-200 pb-4">
+                      <div>
+                        <h2 className="text-2xl font-black font-display text-slate-900 uppercase tracking-tight">Donation &amp; Patron History</h2>
+                        <p className="text-xs text-slate-550 mt-0.5 font-medium">Review your contributions and support history.</p>
+                      </div>
+                      <Link 
+                        href="/donate"
+                        className="bg-brandBlue text-white hover:bg-brandBlue/90 px-4 py-2 rounded-xl text-xs font-bold shadow-md shadow-brandBlue/15 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-1.5"
+                      >
+                        <Heart className="size-3.5 fill-current text-rose-400" /> New Donation
+                      </Link>
+                    </div>
+
+                    {donationsLoading ? (
+                      <div className="flex flex-col items-center justify-center py-16 bg-white border border-slate-200 rounded-3xl">
+                        <Loader2 className="size-8 text-brandBlue animate-spin mb-2" />
+                        <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">Loading your donation history...</p>
+                      </div>
+                    ) : donations.length === 0 ? (
+                      <Card className="border-slate-200 bg-white p-8 text-center rounded-3xl shadow-sm">
+                        <CardContent className="flex flex-col items-center gap-4 pt-6">
+                          <div className="size-16 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center shadow-inner">
+                            <Heart className="size-8 fill-current" />
+                          </div>
+                          <div className="space-y-1 max-w-md">
+                            <h3 className="text-base font-bold text-slate-800">No Donations Found</h3>
+                            <p className="text-xs text-slate-550 leading-relaxed font-medium">
+                              You haven't made any patron contributions under this email address ({user?.email}) yet. 
+                              Your support empowers leadership research and legacy award ceremonies.
+                            </p>
+                          </div>
+                          <Link
+                            href="/donate"
+                            className="mt-2 bg-brandBlue text-white font-bold px-6 py-2.5 rounded-xl text-xs hover:bg-brandBlue/90 shadow-md shadow-brandBlue/15 transition-all"
+                          >
+                            Become a Patron Today
+                          </Link>
+                        </CardContent>
+                      </Card>
+                    ) : (
+                      <Card className="border-slate-200 bg-white rounded-3xl shadow-sm overflow-hidden">
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-left text-sm border-collapse">
+                            <thead>
+                              <tr className="bg-slate-50 border-b border-slate-100">
+                                <th className="px-5 py-4 font-bold text-[10px] text-slate-500 uppercase tracking-wider">Date</th>
+                                <th className="px-5 py-4 font-bold text-[10px] text-slate-500 uppercase tracking-wider">Purpose</th>
+                                <th className="px-5 py-4 font-bold text-[10px] text-slate-500 uppercase tracking-wider">Amount</th>
+                                <th className="px-5 py-4 font-bold text-[10px] text-slate-500 uppercase tracking-wider">Receipt No.</th>
+                                <th className="px-5 py-4 font-bold text-[10px] text-slate-550 uppercase tracking-wider text-right">Actions</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100 text-slate-700">
+                              {donations.map((item) => (
+                                <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
+                                  <td className="px-5 py-4 text-xs font-semibold text-slate-600">
+                                    {new Date(item.createdAt).toLocaleDateString('en-IN', {
+                                      day: 'numeric',
+                                      month: 'short',
+                                      year: 'numeric'
+                                    })}
+                                  </td>
+                                  <td className="px-5 py-4 text-xs font-bold text-slate-800">
+                                    {item.purpose}
+                                  </td>
+                                  <td className="px-5 py-4 text-xs font-extrabold text-brandBlue">
+                                    ₹{item.amount.toLocaleString('en-IN')}.00
+                                  </td>
+                                  <td className="px-5 py-4 text-xs font-mono text-slate-500">
+                                    REC_{item.paymentId}
+                                  </td>
+                                  <td className="px-5 py-4 text-right">
+                                    <Link
+                                      href={`/donate/success?id=${item.id}`}
+                                      target="_blank"
+                                      className="inline-flex items-center gap-1 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-bold transition-all"
+                                    >
+                                      <Download className="size-3" /> Receipt
+                                    </Link>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </Card>
+                    )}
+                  </div>
+                )}
                 {/* ═════════════════════ TAB: SETTINGS ═════════════════════ */}
                 {activeTab === 'settings' && (
                   <div className="space-y-6">
@@ -3577,114 +3959,7 @@ export default function MemberClientPage() {
       )}
 
       {/* ── Billing / Receipt Modal ── */}
-      {showBilling && (
-        <div
-          onClick={() => setShowBilling(false)}
-          className="fixed inset-0 z-[9998] flex items-center justify-center"
-          style={{ background: "rgba(0,0,0,0.65)", backdropFilter: "blur(8px)" }}
-        >
-          <div
-            className="relative bg-white rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden animate-in fade-in zoom-in-95 duration-300 max-h-[90vh] flex flex-col"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Top accent bar */}
-            <div className="absolute top-0 left-0 w-full h-1 bg-brandBlue" />
 
-            {/* Header */}
-            <div className="bg-[#0a0a0a] px-8 pt-8 pb-7 relative shrink-0">
-              <button
-                onClick={() => setShowBilling(false)}
-                className="absolute top-4 right-4 text-slate-500 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-white/10"
-              >
-                <X className="w-4 h-4" />
-              </button>
-
-              <div className="flex items-center gap-4 mb-4">
-                <ShieldAlert className="w-10 h-10 text-brandBlue shrink-0 drop-shadow-md" />
-                <div>
-                  <h2 className="text-xl font-bold text-white tracking-tight">Secure Checkout</h2>
-                  <p className="text-slate-400 text-xs mt-0.5">Review your order before payment</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-5 text-xs font-medium text-slate-500 mt-4">
-                <span className="flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5 text-emerald-500" /> SSL Secured</span>
-                <span className="flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5 text-emerald-500" /> Authorized Gateway</span>
-                <div className="ml-auto opacity-80 grayscale invert brightness-200 mix-blend-screen">
-                  <img src="/assets/images/razorpay.svg" alt="Razorpay" className="h-4 object-contain" />
-                </div>
-              </div>
-            </div>
-
-            {/* Body — Receipt */}
-            <div className="px-8 py-7 space-y-5 overflow-y-auto">
-
-              {/* Delegate info */}
-              <div className="flex items-center gap-4 p-4 bg-slate-50 border border-slate-100 rounded-xl">
-                <img
-                  src={memberData?.headshotUrl || user?.photoURL || "https://placehold.co/100x100"}
-                  referrerPolicy="no-referrer"
-                  className="w-11 h-11 rounded-full border border-slate-200 object-cover shrink-0"
-                  alt="Profile"
-                />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-slate-900 truncate">{memberData?.name || profileName || user?.displayName || "Delegate"}</p>
-                  <p className="text-xs text-slate-500 truncate">{user?.email}</p>
-                  {(memberData?.designation || profileDesignation) && (
-                    <p className="text-[10px] text-slate-400 mt-0.5 truncate">{memberData?.designation || profileDesignation}{(memberData?.organization || profileOrganization) ? ` • ${memberData?.organization || profileOrganization}` : ""}</p>
-                  )}
-                </div>
-                <span className="text-[9px] font-mono font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded shrink-0">
-                  VL-2026-{(user?.uid?.substring(0, 4) || "XXXX").toUpperCase()}
-                </span>
-              </div>
-
-              {/* Total */}
-              <div className="bg-slate-900 p-4 rounded-xl flex items-center justify-between shadow-md mt-4">
-                <span className="text-sm font-bold uppercase tracking-wider text-slate-400">Total Due Today</span>
-                <span className="text-2xl font-semibold text-white">₹{calculateWizardTotal().toLocaleString('en-IN')}</span>
-              </div>
-
-              {/* Legal consent */}
-              <label className="flex items-start gap-3 p-4 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer hover:border-slate-300 transition-colors">
-                <input
-                  type="checkbox"
-                  checked={profileLegalConsent}
-                  onChange={(e) => setProfileLegalConsent(e.target.checked)}
-                  className="mt-0.5 w-4 h-4 rounded text-slate-900 focus:ring-slate-900 shrink-0"
-                />
-                <span className="text-sm text-slate-600 leading-tight">
-                  I confirm that all information provided is accurate and I agree to the{" "}
-                  <a href="/terms" target="_blank" className="font-semibold text-slate-900 hover:underline">
-                    Terms and Conditions
-                  </a>{" "}
-                  to finalize this transaction.
-                </span>
-              </label>
-            </div>
-
-            {/* Footer */}
-            <div className="px-8 py-5 border-t border-slate-100 flex items-center justify-end gap-3 shrink-0">
-              <button
-                onClick={() => setShowBilling(false)}
-                className="rounded-xl font-semibold h-12 px-6 border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all shadow-sm bg-white text-sm"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  setShowBilling(false);
-                  handlePayment();
-                }}
-                disabled={loading || !profileLegalConsent}
-                className="bg-slate-900 text-white hover:bg-slate-800 font-semibold h-12 px-8 rounded-xl shadow-lg transition-colors text-sm flex items-center gap-2 disabled:opacity-50"
-              >
-                {loading ? "Processing..." : "Pay & Finalize"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 }

@@ -196,7 +196,7 @@ export default function MissionPage() {
 
             <div className="text-center pt-8 border-t border-slate-200">
               <p className="text-2xl font-black text-brandBlue uppercase tracking-widest font-display">
-                Jai Bhim. Jai Hind.
+                Jai Bhim, Jai Hind, Jai Samvidhan
               </p>
               <p className="mt-4 text-xl font-bold text-slate-800">
                 - Shirish B. Ramteke
