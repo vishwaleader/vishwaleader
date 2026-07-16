@@ -398,7 +398,16 @@ export default function HomeClientPage() {
             
             {/* Scrolling Track */}
             <div className="overflow-hidden w-full flex">
-                <div id="ticker-track" className="animate-ticker-train flex w-max hover:[animation-play-state:paused] py-2">
+                <motion.div 
+                    initial={{ x: 0 }}
+                    animate={{ x: "-50%" }}
+                    transition={{ 
+                        repeat: Infinity, 
+                        ease: "linear", 
+                        duration: 75 
+                    }}
+                    className="flex w-max py-2"
+                >
                     <div className="flex gap-6 pr-6 w-max">
                         {magazineCoversList.map((cover, i) => (
                             <a key={`original-${i}`} href={`/archives/covers/MAGAZINE COVER-${cover.title}`} 
@@ -425,7 +434,7 @@ export default function HomeClientPage() {
                             </a>
                         ))}
                     </div>
-                </div>
+                </motion.div>
             </div>
         </div>
     </section>
