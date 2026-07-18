@@ -37,5 +37,6 @@ function getAdminApp() {
 }
 function getAdminDb() {
     var app = getAdminApp();
-    return (0, firestore_1.getFirestore)(app, "default");
+    var dbName = process.env.NEXT_PUBLIC_FIREBASE_DB_NAME || "default";
+    return (0, firestore_1.getFirestore)(app, dbName);
 }

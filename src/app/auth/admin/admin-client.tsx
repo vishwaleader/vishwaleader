@@ -1023,7 +1023,7 @@ export default function AdminClientPage() {
                                       });
                                       setVerificationData(initData);
                                     }
-                                  }} variant={editingUser?.id === u.id ? "default" : "outline"} size="sm" className="text-xs flex-shrink-0 ml-2">
+                                  }} variant={editingUser?.id === u.id ? "destructive" : "outline"} size="sm" className="text-xs flex-shrink-0 ml-2">
                                     {editingUser?.id === u.id ? "Close" : "Details"}
                                   </Button>
                                 </div>
@@ -1051,7 +1051,9 @@ export default function AdminClientPage() {
                               <p className="text-xs text-white/60">{editingUser.email}</p>
                             </div>
                           </div>
-                          <Button variant="ghost" size="icon" className="text-white/60 hover:text-white hover:bg-white/10 h-8 w-8" onClick={() => setEditingUser(null)}>✕</Button>
+                           <Button variant="outline" size="sm" className="text-xs bg-transparent border-white/20 text-white/80 hover:text-white hover:bg-white/10 h-8" onClick={() => setEditingUser(null)}>
+                             Close
+                           </Button>
                         </div>
                         <div className="flex gap-2 flex-wrap">
                           <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase ${editingUser.paymentStatus === 'Paid' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'}`}>{editingUser.paymentStatus || 'Unpaid'}</span>

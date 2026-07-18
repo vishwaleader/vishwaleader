@@ -1,6 +1,7 @@
 "use client";
 
 import React from 'react';
+import Link from 'next/link';
 import { Map, Plane, Check, X, CalendarDays, MapPin } from 'lucide-react';
 import EventRegistrationCTA from '@/components/EventRegistrationCTA';
 
@@ -77,15 +78,16 @@ export default function TourPackagePage() {
           <div className="space-y-6">
             <div className="bg-[#0a0a0a] border border-[#1f1f1f] rounded-xl p-8 shadow-2xl">
               <div className="mb-2"><span className="text-[10px] font-black tracking-widest text-amber-400 uppercase bg-amber-400/10 px-2 py-1 rounded">Online Booking</span></div>
-              <h3 className="font-bold text-lg text-white mt-3 mb-6">Package Pricing</h3>
-              <div className="space-y-3 mb-6">
-                <div className="flex justify-between items-center pb-3 border-b border-white/10"><span className="text-slate-400 text-sm">Tour Cost (Inc. GST/TCS)</span><span className="font-semibold text-white">₹ 2,86,400</span></div>
-                <div className="flex justify-between items-center pb-3 border-b border-white/10"><span className="text-slate-400 text-sm">Event Registration</span><span className="font-semibold text-white">₹ 23,600</span></div>
-                <div className="flex justify-between items-center bg-white/5 p-3 rounded-lg"><span className="font-bold text-white text-sm uppercase tracking-wider">Total Package</span><span className="font-bold text-white text-lg">₹ 3,10,000</span></div>
-              </div>
+              <h3 className="font-bold text-lg text-white mt-3 mb-6">London Tour Booking</h3>
               <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 text-xs text-amber-300 mb-6">₹ 25,000 booking amount is <strong className="text-amber-200">Non-Refundable</strong>.</div>
               <EventRegistrationCTA itemId="pkg_1" price="₹3,10,000" label="Book London Tour Package" paidLabel="✅ Tour Package Booked" dark />
-              <div className="mt-4 text-center">
+              <Link 
+                href="/pricing"
+                className="w-full py-3 px-4 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 bg-transparent text-white border border-white/20 hover:bg-white/10 hover:border-white/40 mt-3"
+              >
+                Check Pricing
+              </Link>
+              <div className="mt-6 text-center">
                 <p className="text-[10px] text-slate-600">Secured by</p>
                 <img src="/assets/images/razorpay.svg" alt="Razorpay" className="h-4 object-contain mx-auto mt-1 opacity-40 invert" />
               </div>

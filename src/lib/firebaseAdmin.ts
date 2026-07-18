@@ -41,5 +41,6 @@ function getAdminApp(): App {
 
 export function getAdminDb() {
   const app = getAdminApp();
-  return getFirestore(app, "default");
+  const dbName = process.env.NEXT_PUBLIC_FIREBASE_DB_NAME || "default";
+  return getFirestore(app, dbName);
 }

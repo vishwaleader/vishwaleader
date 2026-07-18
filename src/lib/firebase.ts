@@ -18,9 +18,10 @@ const firebaseConfig = {
 // Initialize Firebase only if it hasn't been initialized yet
 const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 const auth = getAuth(app);
+const dbName = process.env.NEXT_PUBLIC_FIREBASE_DB_NAME || "default";
 const db = initializeFirestore(app, {
   experimentalForceLongPolling: true,
-}, "default");
+}, dbName);
 const storage = getStorage(app);
 
 // Initialize Analytics only in the browser

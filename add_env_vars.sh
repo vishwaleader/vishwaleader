@@ -93,6 +93,22 @@ for key in "${!ENV_VARS[@]}"; do
 done
 
 echo "----------------------------------------"
+echo "Phase 3: Setting environment-specific database names..."
+echo "----------------------------------------"
+
+for env in "${ENVIRONMENTS[@]}"; do
+  if [ "$env" = "production" ]; then
+    db_name="default"
+  else
+    db_name="staging"
+  fi
+  echo -n "Setting NEXT_PUBLIC_FIREBASE_DB_NAME to '$db_name' on $env... "
+  npx vercel env rm "NEXT_PUBLIC_FIREBASE_DB_NAME" "$env" -y > /dev/null 2>&1 || true
+  printf "%s" "$db_name" | npx vercel env add "NEXT_PUBLIC_FIREBASE_DB_NAME" "$env" > /dev/null
+  echo "Done."
+done
+
+echo "----------------------------------------"
 echo "Success: All operations completed!"
 echo "To pull these changes down to your local workspace, run: npx vercel env pull"
 echo "----------------------------------------"
