@@ -76,7 +76,14 @@ export default function EventRegistrationCTA({
         // Profile incomplete — go finish wizard first
         router.push("/auth/member");
       }
-    } catch (e) {
+    } catch (e: any) {
+      if (
+        e?.code === 'auth/cancelled-popup-request' ||
+        e?.code === 'auth/popup-closed-by-user' ||
+        e?.code === 'auth/popup-blocked'
+      ) {
+        return;
+      }
       console.error(e);
     } finally {
       setBusy(false);

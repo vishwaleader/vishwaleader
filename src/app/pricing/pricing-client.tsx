@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from "react";
 import Preloader from "@/components/Preloader";
-import OceanBackground from "@/components/OceanBackground";
 import { Check, Image as ImageIcon, Send, Heart } from "lucide-react";
 
 const adRates = [
@@ -36,7 +35,6 @@ export default function PricingClientPage() {
     <>
 
       <main className="min-h-screen relative font-sans pb-32">
-        <OceanBackground />
         
         {/* Header Section */}
         <section className="pt-32 pb-16 md:pt-40 md:pb-20 text-center px-6">

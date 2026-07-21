@@ -147,7 +147,14 @@ export default function HomeClientPage() {
     try {
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
-    } catch (error) {
+    } catch (error: any) {
+      if (
+        error?.code === 'auth/cancelled-popup-request' ||
+        error?.code === 'auth/popup-closed-by-user' ||
+        error?.code === 'auth/popup-blocked'
+      ) {
+        return;
+      }
       console.error("Sign in failed", error);
     }
   };

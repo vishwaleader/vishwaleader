@@ -135,7 +135,17 @@ export default function GoogleTranslate() {
   const [searchQuery, setSearchQuery] = useState("");
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [isComingSoon, setIsComingSoon] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const pathname = usePathname();
+
+
+  useEffect(() => {
+    const handleSearchToggle = (e: any) => {
+      setIsSearchOpen(!!e?.detail?.open);
+    };
+    window.addEventListener("site-search-toggle", handleSearchToggle);
+    return () => window.removeEventListener("site-search-toggle", handleSearchToggle);
+  }, []);
 
   useEffect(() => {
     if (pathname === '/coming-soon') {
@@ -202,12 +212,21 @@ export default function GoogleTranslate() {
     lang.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  if (isComingSoon) {
+  if (isComingSoon || pathname?.startsWith("/support")) {
     return null;
   }
 
   const buttonContent = (
-    <div className={portalTarget ? "relative z-[9999] w-full" : "fixed bottom-4 md:bottom-8 right-4 z-[9999]"} ref={dropdownRef}>
+    <div
+      className={
+        portalTarget
+          ? "relative z-[9999] w-full"
+          : `fixed bottom-4 md:bottom-8 right-4 z-[9999] transition-all duration-500 ease-out ${
+              isSearchOpen ? "translate-x-36 opacity-0 pointer-events-none" : "translate-x-0 opacity-100"
+            }`
+      }
+      ref={dropdownRef}
+    >
       {/* Custom Button */}
       {portalTarget ? (
         <button

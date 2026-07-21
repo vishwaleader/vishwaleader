@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import GlobalPreloader from "@/components/GlobalPreloader";
 
 import GoogleTranslate from "@/components/GoogleTranslate";
+import AISupportChat from "@/components/AISupportChat";
 import SiteHeader from "@/components/SiteHeader";
 import UISoundProvider from "@/components/UISoundProvider";
 import "./globals.css";
@@ -94,6 +95,7 @@ export default function RootLayout({
                 {children}
               </div>
               <GoogleTranslate />
+              <AISupportChat />
           </TooltipProvider>
         </UISoundProvider>
       </body>

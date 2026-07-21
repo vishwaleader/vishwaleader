@@ -4,5 +4,6 @@
   "outputDirectory": ".next",
   "git": {
     "deploymentEnabled": false
-  }
+  },
+  "ignoreCommand": "if [ -n \"$VERCEL_GIT_PROVIDER\" ]; then exit 0; else exit 1; fi"
 }

@@ -30,7 +30,14 @@ export default function OrganizersPage() {
         setLoadingAuth(true);
         await signInWithPopup(auth, provider);
         router.push("/auth/member");
-      } catch (err) {
+      } catch (err: any) {
+        if (
+          err?.code === 'auth/cancelled-popup-request' ||
+          err?.code === 'auth/popup-closed-by-user' ||
+          err?.code === 'auth/popup-blocked'
+        ) {
+          return;
+        }
         console.error("Login failed:", err);
       } finally {
         setLoadingAuth(false);
@@ -126,7 +133,7 @@ export default function OrganizersPage() {
         </div>
 
         {/* Organizing Secretaries */}
-        <div className="bg-white rounded-2xl p-8 md:p-12 border border-slate-200 shadow-sm mb-16">
+        <div id="organizing-secretaries" className="bg-white rounded-2xl p-8 md:p-12 border border-slate-200 shadow-sm mb-16 scroll-mt-24">
           <div className="flex items-center gap-3 mb-8">
             <Users className="size-6 text-brandBlue" />
             <h2 className="text-2xl font-bold text-slate-900">Organizing Secretaries</h2>
@@ -144,7 +151,7 @@ export default function OrganizersPage() {
         </div>
 
         {/* Legal Advisors & Advisory Board */}
-        <div className="grid lg:grid-cols-3 gap-8 mb-16">
+        <div id="advisory-board" className="grid lg:grid-cols-3 gap-8 mb-16 scroll-mt-24">
           <div className="lg:col-span-1 bg-white rounded-2xl p-8 border border-slate-200 shadow-sm flex flex-col">
             <div className="flex items-center gap-3 mb-8">
               <Gavel className="size-6 text-brandBlue" />
@@ -181,7 +188,7 @@ export default function OrganizersPage() {
         {/* Committees Section */}
         <div className="space-y-8">
           
-          <div className="bg-white rounded-2xl p-8 md:p-12 border border-slate-200 shadow-sm">
+          <div id="conference-committee" className="bg-white rounded-2xl p-8 md:p-12 border border-slate-200 shadow-sm scroll-mt-24">
             <div className="flex items-center gap-3 mb-8">
               <Globe className="size-6 text-brandBlue" />
               <h2 className="text-2xl font-bold text-slate-900">International Conference Committee</h2>
@@ -216,7 +223,7 @@ export default function OrganizersPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl p-8 md:p-12 border border-slate-200 shadow-sm">
+          <div id="business-summit-committee" className="bg-white rounded-2xl p-8 md:p-12 border border-slate-200 shadow-sm scroll-mt-24">
             <div className="flex items-center gap-3 mb-8">
               <Briefcase className="size-6 text-brandBlue" />
               <h2 className="text-2xl font-bold text-slate-900">Business Summit Committee</h2>
@@ -224,14 +231,13 @@ export default function OrganizersPage() {
             
             <div className="mb-8">
               <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-2">Chief Convener</h3>
-              <p className="font-bold text-slate-900 text-lg">Mr. Sanju Bhalerao</p>
-              <p className="text-slate-500 text-sm">Independent Director</p>
+              <p className="font-bold text-slate-900 text-lg">Capt. Vinay Bambole</p>
             </div>
 
             <div className="mb-8">
               <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">Co-Convenors</h3>
               <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
-                {['Capt. Vinay Bambole', 'Dr. Sushant Meshram', 'Mr. Rajesh Kamble', 'Mr. Mahesh Khaire'].map((name, i) => (
+                {['Mr. Sharan Meti', 'Dr. Sushant Meshram', 'Mr. Rajesh Kamble', 'Mr. Mahesh Khaire'].map((name, i) => (
                   <div key={i} className="flex items-start gap-2"><div className="w-1.5 h-1.5 rounded-full bg-slate-300 mt-2 shrink-0" /><p className="text-slate-700">{name}</p></div>
                 ))}
               </div>
@@ -247,7 +253,7 @@ export default function OrganizersPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl p-8 md:p-12 border border-slate-200 shadow-sm">
+          <div id="awards-committee" className="bg-white rounded-2xl p-8 md:p-12 border border-slate-200 shadow-sm scroll-mt-24">
             <div className="flex items-center gap-3 mb-8">
               <Trophy className="size-6 text-brandBlue" />
               <h2 className="text-2xl font-bold text-slate-900">Awards Committee</h2>

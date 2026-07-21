@@ -1,484 +1,370 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { onAuthStateChanged, User } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
-import { auth, db } from "@/lib/firebase";
+import { ArrowLeft, Heart, CreditCard, ShieldCheck, CheckCircle2, Sparkles, Loader2 } from "lucide-react";
 import { createDonationOrder, verifyDonationPayment } from "@/app/actions/donationActions";
-import {
-  Heart, ShieldCheck, Check, CreditCard, Loader2, ChevronRight, ChevronLeft,
-  User as UserIcon, Sparkles, Crown, Medal, Trophy, ArrowRight
-} from "lucide-react";
-import Link from "next/link";
-import Image from "next/image";
 
 declare global {
-  interface Window { Razorpay: any; }
-}
-
-const PRESET_AMOUNTS = [1000, 2500, 5000, 10000];
-const PURPOSES = ["General Support", "Event Sponsorship", "Patron Membership", "Other"];
-
-const PATRON_TIERS = [
-  { min: 1000, label: "Supporter", icon: Heart, color: "text-rose-400", bg: "bg-rose-400/10 border-rose-400/30", desc: "Friend of Vishwa Leader" },
-  { min: 2500, label: "Contributor", icon: Medal, color: "text-amber-400", bg: "bg-amber-400/10 border-amber-400/30", desc: "Academic Contributor" },
-  { min: 5000, label: "Patron", icon: Crown, color: "text-purple-400", bg: "bg-purple-400/10 border-purple-400/30", desc: "Named Patron" },
-  { min: 10000, label: "Grand Patron", icon: Trophy, color: "text-yellow-300", bg: "bg-yellow-300/10 border-yellow-300/30", desc: "Grand Patron of Vishwa Leader" },
-];
-
-function getTier(amount: number) {
-  let tier = PATRON_TIERS[0];
-  for (const t of PATRON_TIERS) {
-    if (amount >= t.min) tier = t;
+  interface Window {
+    Razorpay: any;
   }
-  return tier;
 }
 
-const loadRazorpay = (): Promise<boolean> =>
-  new Promise((resolve) => {
-    if (document.querySelector('script[src*="checkout.razorpay"]')) { resolve(true); return; }
-    const s = document.createElement("script");
-    s.src = "https://checkout.razorpay.com/v1/checkout.js";
-    s.onload = () => resolve(true);
-    s.onerror = () => resolve(false);
-    document.body.appendChild(s);
-  });
+const PRESET_AMOUNTS = [1000, 5000, 10000, 25000, 50000, 100000];
 
-export default function PatronClient() {
+export default function PatronClientPage() {
   const router = useRouter();
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
 
-  // Wizard step: 0 = Choose Amount, 1 = Personal Details, 2 = Review & Pay
-  const [step, setStep] = useState(0);
-
-  // Form fields
   const [selectedAmount, setSelectedAmount] = useState<number | "custom">(1000);
-  const [customAmount, setCustomAmount] = useState("");
-  const [purpose, setPurpose] = useState("General Support");
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [consent, setConsent] = useState(true);
+  const [customAmount, setCustomAmount] = useState<string>("");
+  const [name, setName] = useState<string>("");
+  const [email, setEmail] = useState<string>("");
+  const [phone, setPhone] = useState<string>("");
+  const [consent, setConsent] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [errorMsg, setErrorMsg] = useState<string>("");
 
-  // UI
-  const [loading, setLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState("");
-
-  useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        setCurrentUser(user);
-        setName(user.displayName || "");
-        setEmail(user.email || "");
-        try {
-          const snap = await getDoc(doc(db, "users", user.uid));
-          if (snap.exists()) {
-            const data = snap.data();
-            if (data.name) setName(data.name);
-            if (data.phone) setPhone(data.phone);
-          }
-        } catch (e) { /* silent */ }
-      }
-    });
-    return () => unsub();
-  }, []);
-
-  const getFinalAmount = (): number => {
-    if (selectedAmount === "custom") {
-      const parsed = parseFloat(customAmount);
-      return isNaN(parsed) ? 0 : parsed;
-    }
-    return selectedAmount;
-  };
-
-  const currentTier = getTier(getFinalAmount());
-  const TierIcon = currentTier.icon;
-
-  const validateStep = (): boolean => {
-    setErrorMsg("");
-    if (step === 0) {
-      if (getFinalAmount() < 1) { setErrorMsg("Please enter a valid donation amount."); return false; }
-    }
-    return true;
-  };
-
-  const nextStep = () => {
-    if (validateStep()) setStep((s) => Math.min(s + 1, 1));
-  };
-
-  const prevStep = () => {
-    setErrorMsg("");
-    setStep((s) => Math.max(s - 1, 0));
-  };
+  const finalAmt =
+    selectedAmount === "custom"
+      ? parseInt(customAmount || "0", 10)
+      : selectedAmount;
 
   const handlePay = async () => {
-    if (!validateStep()) return;
     setErrorMsg("");
+
+    if (!name.trim()) {
+      setErrorMsg("Please enter your name or organisation.");
+      return;
+    }
+    if (!email.trim() || !email.includes("@")) {
+      setErrorMsg("Please enter a valid email address.");
+      return;
+    }
+    if (!phone.trim()) {
+      setErrorMsg("Please enter your phone number.");
+      return;
+    }
+    if (!finalAmt || finalAmt < 1000) {
+      setErrorMsg("Minimum contribution amount is ₹1,000.");
+      return;
+    }
+
     setLoading(true);
-    const amount = getFinalAmount();
+
     try {
-      const loaded = await loadRazorpay();
-      if (!loaded) { setErrorMsg("Could not load payment gateway. Please check your connection."); setLoading(false); return; }
+      // 1. Create Razorpay order via Server Action
+      const orderRes = await createDonationOrder(finalAmt);
 
-      const res = await createDonationOrder(amount);
-      if (!res.success || !res.order) { setErrorMsg(res.error || "Failed to initiate payment."); setLoading(false); return; }
+      if (!orderRes.success || !orderRes.order) {
+        throw new Error(orderRes.error || "Failed to initialize payment gateway.");
+      }
 
-      const order = res.order;
+      const orderData = orderRes.order;
+
+      // 2. Load Razorpay SDK dynamically if needed
+      if (!window.Razorpay) {
+        await new Promise((resolve, reject) => {
+          const script = document.createElement("script");
+          script.src = "https://checkout.razorpay.com/v1/checkout.js";
+          script.onload = resolve;
+          script.onerror = reject;
+          document.body.appendChild(script);
+        });
+      }
+
+      // 3. Open Razorpay Modal
       const options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-        amount: order.amount,
-        currency: order.currency,
-        name: "Vishwa Leader Techmedia Pvt Ltd",
-        description: `Patron Contribution: ${purpose}`,
-        order_id: order.id,
-        prefill: { name, email, contact: phone },
-        theme: { color: "#1d4ed8" },
-        handler: async (response: any) => {
-          setLoading(true);
-          const verifyRes = await verifyDonationPayment({
-            paymentId: response.razorpay_payment_id,
-            orderId: response.razorpay_order_id,
-            signature: response.razorpay_signature,
-            userId: currentUser ? currentUser.uid : null,
-            name, email, phone, amount, purpose, consent,
-          });
-          if (verifyRes.success && verifyRes.donationId) {
-            router.push(`/patron/success?id=${verifyRes.donationId}`);
-          } else {
-            setErrorMsg(verifyRes.error || "Payment verification failed. Please contact support.");
+        amount: orderData.amount,
+        currency: orderData.currency,
+        name: "Vishwa Leader 2026",
+        description: "Patron Contribution & Recognition",
+        image: "/assets/images/favicon-32x32.png",
+        order_id: orderData.id,
+        prefill: {
+          name: name,
+          email: email,
+          contact: phone,
+        },
+        theme: {
+          color: "#1e3a8a",
+        },
+        handler: async function (response: any) {
+          try {
+            // Verify payment securely on server
+            const verifyRes = await verifyDonationPayment({
+              paymentId: response.razorpay_payment_id,
+              orderId: response.razorpay_order_id,
+              signature: response.razorpay_signature,
+              userId: null,
+              name: name,
+              email: email,
+              phone: phone,
+              amount: finalAmt,
+              purpose: "Patron Contribution — Vishwa Leader 2026",
+              consent: consent
+            });
+
+            if (verifyRes.success) {
+              router.push(
+                `/checkout/success?payment_id=${response.razorpay_payment_id}&amount=${finalAmt}&type=patron`
+              );
+            } else {
+              setErrorMsg(verifyRes.error || "Payment verification failed. Please contact support.");
+            }
+          } catch (err: any) {
+            console.error(err);
+            setErrorMsg(err.message || "Error verifying payment signature.");
+          } finally {
             setLoading(false);
           }
         },
-        modal: { ondismiss: () => setLoading(false) },
+        modal: {
+          ondismiss: function () {
+            setLoading(false);
+          },
+        },
       };
-      new window.Razorpay(options).open();
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
     } catch (err: any) {
-      setErrorMsg("An unexpected error occurred. Please try again.");
+      console.error(err);
+      setErrorMsg(err.message || "An unexpected error occurred.");
       setLoading(false);
     }
   };
 
-  const STEPS = ["Choose Amount", "Review & Pay"];
-
   return (
-    <div className="min-h-screen bg-white font-sans pb-32">
-      <main className="pb-16 md:pb-20">
+    <div className="min-h-screen bg-slate-50/50 font-sans pb-32">
+      {/* Header Section */}
+      <div className="bg-brandBlue relative overflow-hidden pt-28 pb-16 sm:pt-36 sm:pb-20 mb-8 sm:mb-12">
+        <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] mix-blend-overlay"></div>
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center relative z-10">
+          {/* Back Button */}
+          <div className="flex justify-start mb-4 sm:mb-6">
+            <button
+              onClick={() => router.back()}
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs sm:text-sm font-semibold transition-all backdrop-blur-sm border border-white/20 active:scale-95 cursor-pointer"
+              aria-label="Go back to previous page"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>Back</span>
+            </button>
+          </div>
 
-        {/* ── Hero Section (matching event pages) ── */}
-        <div className="relative overflow-hidden pt-32 pb-20 md:pt-40 md:pb-24 mb-16">
-          {/* Background image */}
-          <Image
-            src="/assets/images/patron-hero.avif"
-            alt="Become a Patron"
-            fill
-            priority
-            className="object-cover object-center"
-            sizes="100vw"
-          />
-          {/* Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-b from-slate-900/80 via-slate-900/70 to-slate-900/80" />
-          {/* Subtle texture */}
-          <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] mix-blend-overlay" />
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 text-amber-300 text-xs font-bold uppercase tracking-widest border border-white/20 mb-4 sm:mb-6 backdrop-blur-sm">
+            <Heart className="w-4 h-4 fill-amber-300 text-amber-300" />
+            Support Vishwa Leader 2026
+          </div>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold font-display text-white tracking-tight mb-3 sm:mb-4 leading-tight">
+            Patron Contribution & Recognition
+          </h1>
+          <p className="text-blue-100 text-xs sm:text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
+            We kindly invite individuals, organisations, institutions and well-wishers to support the <span translate="no" className="notranslate">Vishwa Leader</span> Dr. B. R. Ambedkar International Awards 2026, London, UK.
+          </p>
+        </div>
+      </div>
 
-          <div className="max-w-4xl mx-auto px-6 text-center relative z-10 hidden">
+      <main className="max-w-4xl mx-auto px-3.5 sm:px-6 space-y-6 sm:space-y-10">
+        {/* Information & Details Card */}
+        <div id="recognition-details" className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-8 md:p-10 shadow-sm space-y-6 scroll-mt-24">
+          <div className="space-y-3">
+            <h2 className="text-xl sm:text-2xl font-bold font-display tracking-tight text-slate-900 flex items-center gap-2.5">
+              <Sparkles className="w-5 h-5 text-amber-500" /> Patron Contribution & Recognition
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+              We kindly invite individuals, organisations, institutions and well-wishers to support the <strong className="text-slate-800"><span translate="no" className="notranslate">Vishwa Leader</span> Dr. B. R. Ambedkar International Awards 2026, London, UK</strong>.
+            </p>
+          </div>
+
+          <div className="space-y-4 pt-2 border-t border-slate-100">
+            <h3 className="text-sm sm:text-base font-bold text-slate-900">Recognition & Acknowledgement</h3>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 sm:gap-4">
+              <div className="p-3.5 sm:p-4 rounded-xl bg-amber-50/60 border border-amber-200/60 space-y-1.5 sm:space-y-2">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center font-bold text-xs sm:text-sm">
+                  📖
+                </div>
+                <h3 className="font-bold text-slate-900 text-xs sm:text-sm">Souvenir Recognition</h3>
+                <p className="text-[11px] sm:text-xs text-slate-600 leading-relaxed">
+                  All contributors will receive a special place of recognition in the official Vishwa Leader Souvenir Magazine, with the prominence and placement of the acknowledgement determined according to the level of contribution.
+                </p>
+              </div>
+
+              <div className="p-3.5 sm:p-4 rounded-xl bg-blue-50/60 border border-blue-200/60 space-y-1.5 sm:space-y-2">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-blue-100 text-brandBlue flex items-center justify-center font-bold text-xs sm:text-sm">
+                  🌐
+                </div>
+                <h3 className="font-bold text-slate-900 text-xs sm:text-sm">Website Listing</h3>
+                <p className="text-[11px] sm:text-xs text-slate-600 leading-relaxed">
+                  The names of patrons and contributors will also be listed on the official Vishwa Leader website.
+                </p>
+              </div>
+
+              <div className="p-3.5 sm:p-4 rounded-xl bg-purple-50/60 border border-purple-200/60 space-y-1.5 sm:space-y-2">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-purple-100 text-purple-800 flex items-center justify-center font-bold text-xs sm:text-sm">
+                  🏛️
+                </div>
+                <h3 className="font-bold text-slate-900 text-xs sm:text-sm">London 2026 Acknowledgement</h3>
+                <p className="text-[11px] sm:text-xs text-slate-600 leading-relaxed">
+                  Contributors making a significant contribution of ₹1,00,000 or more may receive additional special acknowledgement during the Vishwa Leader Dr. B. R. Ambedkar International Awards 2026, London, UK, subject to the contribution level and event arrangements.
+                </p>
+              </div>
+            </div>
+
+            <p className="pt-2 text-slate-700 font-medium text-[11px] sm:text-sm border-t border-slate-100 leading-relaxed">
+              Kindly contribute ₹1,000 or more and become a valued supporter of this prestigious international initiative inspired by the values and teachings of Bharat Ratna Dr. B. R. Ambedkar.
+            </p>
           </div>
         </div>
 
-        {/* ── Main Content Grid (matching event pages) ── */}
-        <div className="grid md:grid-cols-3 gap-8 items-start px-6 max-w-7xl mx-auto">
-
-          {/* Left: Info content */}
-          <div className="md:col-span-2 space-y-8">
-
-            {/* About Patron Programme */}
-            <div className="bg-white border border-slate-200 rounded-xl p-8">
-              <h2 className="text-xl font-semibold text-slate-900 mb-6 flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-amber-500" /> Why Become a Patron?
-              </h2>
-              <p className="text-slate-600 text-sm leading-relaxed mb-5">
-                The Vishwa Leader Patron Programme invites individuals and organizations worldwide to support our mission of celebrating academic excellence and social justice leadership. Inspired by the life and philosophy of Dr. B. R. Ambedkar, our work brings together scholars, activists, and leaders from across the globe.
-              </p>
-              <p className="text-slate-600 text-sm leading-relaxed">
-                Your generous contribution directly funds scholarships, research grants, award ceremonies, and community outreach programmes that create lasting change. As a named patron, you become an integral part of our global network and legacy.
-              </p>
+        {/* Premium Black Payment Card Theme */}
+        <div id="contribution-form" className="bg-slate-900 text-white rounded-2xl p-4 sm:p-8 md:p-10 shadow-xl space-y-6 sm:space-y-8 border border-slate-800 scroll-mt-24">
+          
+          <div className="space-y-3">
+            <h2 className="text-lg sm:text-xl font-bold font-display tracking-tight text-white">Select Contribution Amount</h2>
+            <p className="text-xs text-slate-400">Choose your contribution amount or specify a custom value.</p>
+            
+            {/* Amount Selection Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 sm:gap-2.5 pt-1 sm:pt-2">
+              {PRESET_AMOUNTS.map((amt) => (
+                <button
+                  key={amt}
+                  type="button"
+                  onClick={() => setSelectedAmount(amt)}
+                  className={`py-3 px-2 rounded-xl text-xs sm:text-sm font-bold border transition-all text-center min-h-[44px] flex items-center justify-center whitespace-nowrap cursor-pointer ${
+                    selectedAmount === amt
+                      ? "bg-brandBlue border-brandBlue text-white shadow-md shadow-brandBlue/30 scale-[1.02]"
+                      : "bg-slate-800/80 border-slate-700/80 text-slate-200 hover:border-slate-500 active:bg-slate-700"
+                  }`}
+                >
+                  ₹{amt.toLocaleString("en-IN")}
+                </button>
+              ))}
             </div>
 
-            {/* Patron Benefits */}
-            <div className="bg-white border border-slate-200 rounded-xl p-8">
-              <h2 className="text-xl font-semibold text-slate-900 mb-6 flex items-center gap-2">
-                <Crown className="w-5 h-5 text-slate-400" /> Patron Benefits
-              </h2>
-              <div className="space-y-4">
-                {[
-                  { tier: "Supporter (₹1,000+)", perks: ["Named acknowledgement in the conference programme", "Certificate of appreciation", "Listed on vishwaleader.com Patron Wall"] },
-                  { tier: "Contributor (₹2,500+)", perks: ["All Supporter benefits", "Souvenir journal mention", "Access to post-event research compilation"] },
-                  { tier: "Patron (₹5,000+)", perks: ["All Contributor benefits", "Priority access to future events", "Name on backdrop at the awards ceremony"] },
-                  { tier: "Grand Patron (₹10,000+)", perks: ["All Patron benefits", "VIP lounge access (London)", "Featured profile in Vishwa Leader Souvenir Magazine", "Special recognition award plaque"] },
-                ].map((item, i) => (
-                  <div key={i} className="bg-slate-50 p-4 rounded-lg border border-slate-100">
-                    <h3 className="font-bold text-slate-900 text-sm mb-2">{item.tier}</h3>
-                    <ul className="space-y-1">
-                      {item.perks.map((perk, j) => (
-                        <li key={j} className="flex items-start gap-2 text-sm text-slate-600">
-                          <Check className="w-4 h-4 text-brandBlue mt-0.5 shrink-0" />
-                          {perk}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
-              </div>
-            </div>
+            {/* Custom Amount Button */}
+            <div className="pt-1.5">
+              <button
+                type="button"
+                onClick={() => setSelectedAmount("custom")}
+                className={`w-full py-3 px-4 rounded-xl text-xs sm:text-sm font-bold border transition-all min-h-[44px] cursor-pointer ${
+                  selectedAmount === "custom"
+                    ? "bg-brandBlue border-brandBlue text-white shadow-md"
+                    : "bg-slate-800/80 border-slate-700/80 text-slate-300 hover:border-slate-500 active:bg-slate-700"
+                }`}
+              >
+                Custom Contribution Amount
+              </button>
 
-            {/* What your contribution funds */}
-            <div className="bg-white border border-slate-200 rounded-xl p-8">
-              <h2 className="text-xl font-semibold text-slate-900 mb-6 flex items-center gap-2">
-                <Trophy className="w-5 h-5 text-slate-400" /> What Your Contribution Funds
-              </h2>
-              <div className="grid sm:grid-cols-2 gap-4">
-                {[
-                  "Academic research scholarships for deserving scholars",
-                  "International Awards Ceremony at King's College London",
-                  "Publication of the official Vishwa Leader Souvenir Journal",
-                  "Translation & accessibility services for global participation",
-                  "Community outreach & social justice initiatives",
-                  "Conference AV production & live-streaming infrastructure",
-                ].map((item, i) => (
-                  <div key={i} className="flex items-start gap-3">
-                    <Check className="w-4 h-4 text-brandBlue mt-0.5 shrink-0" />
-                    <span className="text-sm text-slate-600">{item}</span>
-                  </div>
-                ))}
-              </div>
+              {selectedAmount === "custom" && (
+                <div className="mt-3 relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-base sm:text-sm">₹</span>
+                  <input
+                    type="number"
+                    min="1000"
+                    placeholder="Enter amount (min ₹1,000)"
+                    value={customAmount}
+                    onChange={(e) => setCustomAmount(e.target.value)}
+                    className="w-full pl-9 pr-4 py-3.5 bg-slate-800 border border-slate-700 text-white font-bold text-base sm:text-sm rounded-xl focus:ring-1 focus:ring-brandBlue focus:border-brandBlue outline-none min-h-[48px]"
+                  />
+                </div>
+              )}
             </div>
-
           </div>
 
-          {/* Right: Wizard Sidebar */}
-          <div className="space-y-6 md:sticky md:top-28">
-            <div className="bg-[#111111] border border-[#222222] rounded-xl shadow-xl overflow-hidden">
-
-              {/* Step Indicator */}
-              <div className="border-b border-[#222222] px-6 py-4">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-[10px] font-black tracking-widest text-amber-400 uppercase bg-amber-400/10 px-2 py-1 rounded">
-                    Patron Registration
-                  </span>
-                  <span className="text-[10px] text-slate-500 font-semibold">Step {step + 1} / {STEPS.length}</span>
-                </div>
-                {/* Step dots */}
-                <div className="flex items-center gap-2">
-                  {STEPS.map((s, i) => (
-                    <React.Fragment key={i}>
-                      <div className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${i <= step ? 'bg-brandBlue' : 'bg-slate-800'}`} />
-                    </React.Fragment>
-                  ))}
-                </div>
-                <p className="text-[11px] text-slate-400 font-semibold mt-2">{STEPS[step]}</p>
+          {/* Donor Information */}
+          <div className="space-y-4 pt-3 sm:pt-4 border-t border-slate-800">
+            <h3 className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-400">Contributor Information</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 sm:gap-4 text-xs">
+              <div className="space-y-1.5">
+                <label className="text-slate-400 font-medium text-xs">Full Name / Organisation</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Enter name or organisation"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full px-4 py-3.5 bg-slate-800 border border-slate-700 text-white rounded-xl focus:ring-1 focus:ring-brandBlue focus:border-brandBlue outline-none text-base sm:text-sm min-h-[48px]"
+                />
               </div>
 
-              <div className="p-6 space-y-4">
-
-                {/* ─── STEP 0: Choose Amount ─── */}
-                {step === 0 && (
-                  <div className="space-y-4">
-                    <h3 className="text-base font-bold text-white">Select Your Contribution</h3>
-
-                    <div className="grid grid-cols-2 gap-2">
-                      {PRESET_AMOUNTS.map((amt) => {
-                        const tier = getTier(amt);
-                        const TIcon = tier.icon;
-                        return (
-                          <button
-                            key={amt}
-                            type="button"
-                            onClick={() => setSelectedAmount(amt)}
-                            className={`p-3 rounded-xl border text-left transition-all ${
-                              selectedAmount === amt
-                                ? "bg-brandBlue border-brandBlue shadow-md shadow-brandBlue/20"
-                                : "bg-[#1a1a1a] border-[#333] hover:border-brandBlue/50"
-                            }`}
-                          >
-                            <p className={`text-sm font-bold ${selectedAmount === amt ? 'text-white' : 'text-slate-200'}`}>
-                              ₹{amt.toLocaleString("en-IN")}
-                            </p>
-                            <p className={`text-[10px] mt-0.5 font-semibold ${selectedAmount === amt ? 'text-blue-200' : 'text-slate-500'}`}>
-                              {tier.label}
-                            </p>
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => setSelectedAmount("custom")}
-                      className={`w-full p-3 rounded-xl border text-sm font-bold transition-all ${
-                        selectedAmount === "custom"
-                          ? "bg-brandBlue border-brandBlue text-white shadow-md"
-                          : "bg-[#1a1a1a] border-[#333] text-slate-300 hover:border-brandBlue/50"
-                      }`}
-                    >
-                      Custom Amount
-                    </button>
-
-                    {selectedAmount === "custom" && (
-                      <div className="relative">
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">₹</span>
-                        <input
-                          type="number"
-                          min="1"
-                          placeholder="Enter amount"
-                          value={customAmount}
-                          onChange={(e) => setCustomAmount(e.target.value)}
-                          className="w-full pl-8 pr-4 py-3 bg-[#1a1a1a] border border-[#333] text-white font-bold text-sm rounded-xl focus:ring-1 focus:ring-brandBlue focus:border-brandBlue outline-none"
-                        />
-                      </div>
-                    )}
-
-                    {/* Purpose */}
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Purpose</label>
-                      <select
-                        value={purpose}
-                        onChange={(e) => setPurpose(e.target.value)}
-                        className="w-full px-3 py-2.5 bg-[#1a1a1a] border border-[#333] text-slate-200 text-xs rounded-xl focus:ring-1 focus:ring-brandBlue focus:border-brandBlue outline-none font-semibold"
-                      >
-                        {PURPOSES.map((p) => <option key={p} value={p}>{p}</option>)}
-                      </select>
-                    </div>
-
-                    {/* Current tier indicator */}
-                    {getFinalAmount() >= 1 && (
-                      <div className={`flex items-center gap-2 p-3 rounded-xl border ${currentTier.bg}`}>
-                        <TierIcon className={`size-5 ${currentTier.color} shrink-0`} />
-                        <div>
-                          <p className={`text-xs font-bold ${currentTier.color}`}>{currentTier.label}</p>
-                          <p className="text-[10px] text-slate-400 font-medium">{currentTier.desc}</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* ─── STEP 1: Review & Pay ─── */}
-                {step === 1 && (
-                  <div className="space-y-4">
-                    <h3 className="text-base font-bold text-white">Review Your Contribution</h3>
-
-                    <div className="bg-[#1a1a1a] border border-[#333] rounded-xl p-4 space-y-3">
-                      <div className={`flex items-center gap-2 p-2.5 rounded-lg border ${currentTier.bg}`}>
-                        <TierIcon className={`size-5 ${currentTier.color} shrink-0`} />
-                        <div>
-                          <p className={`text-xs font-bold ${currentTier.color}`}>{currentTier.label}</p>
-                          <p className="text-[10px] text-slate-400">{currentTier.desc}</p>
-                        </div>
-                      </div>
-
-                      <div className="space-y-2 text-xs">
-                        <div className="flex justify-between text-slate-400">
-                          <span>Contribution Amount</span>
-                          <span className="font-bold text-white text-sm">₹{getFinalAmount().toLocaleString("en-IN")}</span>
-                        </div>
-                        <div className="flex justify-between text-slate-400">
-                          <span>Purpose</span>
-                          <span className="font-semibold text-slate-200">{purpose}</span>
-                        </div>
-                        <div className="h-px bg-[#333] my-2" />
-                        <div className="flex justify-between text-slate-400">
-                          <span>Name</span>
-                          <span className="font-semibold text-slate-200 text-right max-w-[60%] truncate">{name || "Google User"}</span>
-                        </div>
-                        <div className="flex justify-between text-slate-400">
-                          <span>Email</span>
-                          <span className="font-semibold text-slate-200 text-right max-w-[60%] truncate">{email || "Linked Account"}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Consent */}
-                    <div className="flex items-start gap-2.5 p-3 bg-[#1a1a1a] border border-[#333] rounded-xl mt-2">
-                      <input
-                        type="checkbox"
-                        id="consent-patron"
-                        checked={consent}
-                        onChange={(e) => setConsent(e.target.checked)}
-                        className="mt-0.5 size-4 text-brandBlue focus:ring-brandBlue border-slate-600 rounded cursor-pointer"
-                      />
-                      <label htmlFor="consent-patron" className="text-[11px] text-slate-400 font-medium cursor-pointer leading-snug">
-                        Display my name on the Patron Recognition Wall on vishwaleader.com as a valued supporter.
-                      </label>
-                    </div>
-                  </div>
-                )}
-
-                {/* Error */}
-                {errorMsg && (
-                  <div className="p-3 bg-rose-950/50 border border-rose-500/30 text-rose-400 rounded-xl text-xs font-semibold">
-                    ⚠️ {errorMsg}
-                  </div>
-                )}
-
-                {/* Navigation Buttons */}
-                <div className="flex gap-2 pt-2">
-                  {step > 0 && (
-                    <button
-                      type="button"
-                      onClick={prevStep}
-                      disabled={loading}
-                      className="flex items-center gap-1 px-4 py-2.5 bg-[#1a1a1a] text-slate-300 border border-[#333] rounded-xl text-xs font-bold hover:border-slate-500 transition-all disabled:opacity-40"
-                    >
-                      <ChevronLeft className="size-3.5" /> Back
-                    </button>
-                  )}
-                  {step < 1 ? (
-                    <button
-                      type="button"
-                      onClick={nextStep}
-                      className="flex-1 flex items-center justify-center gap-1.5 bg-brandBlue text-white font-bold py-2.5 rounded-xl text-xs hover:bg-brandBlue/90 hover:scale-[1.01] active:scale-[0.99] transition-all shadow-md shadow-brandBlue/20"
-                    >
-                      Continue <ChevronRight className="size-3.5" />
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={handlePay}
-                      disabled={loading}
-                      className="flex-1 flex items-center justify-center gap-1.5 bg-brandBlue text-white font-bold py-2.5 rounded-xl text-xs hover:bg-brandBlue/90 active:scale-[0.99] transition-all shadow-md shadow-brandBlue/20 disabled:opacity-50 disabled:pointer-events-none"
-                    >
-                      {loading ? (
-                        <><Loader2 className="size-3.5 animate-spin" /> Verifying...</>
-                      ) : (
-                        <><CreditCard className="size-3.5" /> Pay ₹{getFinalAmount().toLocaleString("en-IN")}</>
-                      )}
-                    </button>
-                  )}
-                </div>
-
-                {/* Security badge */}
-                <div className="pt-2 border-t border-[#222] flex items-center justify-between">
-                  <div className="flex items-center gap-1.5 text-[10px] text-slate-600 font-semibold">
-                    <ShieldCheck className="size-3.5 text-emerald-500" /> SSL Secured
-                  </div>
-                  <div className="flex items-center gap-1.5 text-[10px] text-slate-600 font-semibold">
-                    Secured by
-                    <img src="/assets/images/razorpay.svg" alt="Razorpay" className="h-3 object-contain opacity-40 invert" />
-                  </div>
-                </div>
+              <div className="space-y-1.5">
+                <label className="text-slate-400 font-medium text-xs">Email Address</label>
+                <input
+                  type="email"
+                  required
+                  placeholder="name@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full px-4 py-3.5 bg-slate-800 border border-slate-700 text-white rounded-xl focus:ring-1 focus:ring-brandBlue focus:border-brandBlue outline-none text-base sm:text-sm min-h-[48px]"
+                />
               </div>
 
-              {/* Footer CTA */}
-              <div className="border-t border-[#222222] px-6 py-4 text-center">
-                <p className="text-[10px] text-slate-600">Or email us at:</p>
-                <a href="mailto:info@vishwaleader.com" className="text-slate-300 hover:text-white font-medium text-xs flex items-center justify-center gap-1.5 mt-1">
-                  info@vishwaleader.com
-                </a>
+              <div className="space-y-1.5">
+                <label className="text-slate-400 font-medium text-xs">Phone Number</label>
+                <input
+                  type="tel"
+                  required
+                  placeholder="Enter phone number"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className="w-full px-4 py-3.5 bg-slate-800 border border-slate-700 text-white rounded-xl focus:ring-1 focus:ring-brandBlue focus:border-brandBlue outline-none text-base sm:text-sm min-h-[48px]"
+                />
               </div>
+            </div>
+
+            <div className="flex items-start gap-3 pt-2">
+              <input
+                type="checkbox"
+                id="consent-minimal"
+                checked={consent}
+                onChange={(e) => setConsent(e.target.checked)}
+                className="mt-0.5 size-5 text-brandBlue focus:ring-brandBlue border-slate-700 rounded cursor-pointer shrink-0"
+              />
+              <label htmlFor="consent-minimal" className="text-xs text-slate-400 cursor-pointer leading-relaxed select-none">
+                Display my name / organisation on the official Vishwa Leader website and souvenir recognition.
+              </label>
+            </div>
+          </div>
+
+          {/* Error Message */}
+          {errorMsg && (
+            <div className="p-3.5 bg-rose-950/60 border border-rose-500/40 text-rose-300 rounded-xl text-xs font-medium">
+              ⚠️ {errorMsg}
+            </div>
+          )}
+
+          {/* Payment CTA Button */}
+          <div className="space-y-3 pt-1">
+            <button
+              type="button"
+              onClick={handlePay}
+              disabled={loading}
+              className="w-full py-4 px-6 bg-brandBlue hover:bg-brandBlue/90 active:bg-brandBlue/80 text-white font-bold text-sm sm:text-base rounded-xl transition-all shadow-lg shadow-brandBlue/30 flex items-center justify-center gap-2 min-h-[52px] active:scale-[0.99] disabled:opacity-50 cursor-pointer"
+            >
+              {loading ? (
+                <><Loader2 className="w-5 h-5 animate-spin" /> Verifying Payment...</>
+              ) : (
+                <><CreditCard className="w-5 h-5" /> Contribute ₹{finalAmt > 0 ? finalAmt.toLocaleString("en-IN") : "1,000"}</>
+              )}
+            </button>
+
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-slate-400 pt-1 text-center sm:text-left">
+              <span className="flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> 256-bit Encrypted SSL</span>
+              <span className="flex items-center gap-1">Secured by <img src="/assets/images/razorpay.svg" alt="Razorpay" className="h-3.5 opacity-60 invert" /></span>
             </div>
           </div>
 
         </div>
+
+        {/* Closing Note */}
+        <p className="text-center text-[11px] sm:text-xs text-slate-500 leading-relaxed max-w-xl mx-auto px-4">
+          Kindly contribute ₹1,000 or more and become a valued supporter of this prestigious international initiative inspired by the values and teachings of Bharat Ratna Dr. B. R. Ambedkar.
+        </p>
+
       </main>
     </div>
   );

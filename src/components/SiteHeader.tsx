@@ -89,7 +89,7 @@ export default function SiteHeader() {
         }
     };
 
-    const hideNav = pathname?.startsWith("/auth") || pathname?.startsWith("/checkout");
+    const hideNav = pathname?.startsWith("/auth") || pathname?.startsWith("/checkout") || pathname?.startsWith("/support");
 
     return (
         <>

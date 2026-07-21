@@ -1040,8 +1040,15 @@ export default function MemberClientPage() {
     const provider = new GoogleAuthProvider();
     try {
       await signInWithPopup(auth, provider);
-    } catch (error) {
-      console.error(error);
+    } catch (error: any) {
+      if (
+        error?.code === 'auth/cancelled-popup-request' ||
+        error?.code === 'auth/popup-closed-by-user' ||
+        error?.code === 'auth/popup-blocked'
+      ) {
+        return;
+      }
+      console.error("Google login error:", error);
       showToast("Authentication failed.");
     }
   };
