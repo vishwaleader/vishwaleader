@@ -6,16 +6,28 @@ echo "======================================"
 echo "Starting Vishwa Leader Deployment Workflow"
 echo "======================================"
 
-# Check if force flag is provided
+# Initialize parameters
+COMMIT_MSG=""
 FORCE=false
-for arg in "$@"; do
-  if [ "$arg" = "--force" ] || [ "$arg" = "-f" ]; then
-    FORCE=true
-  fi
+
+# Parse arguments
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    -m|--message)
+      COMMIT_MSG="$2"
+      shift 2
+      ;;
+    -f|--force)
+      FORCE=true
+      shift
+      ;;
+    *)
+      shift
+      ;;
+  esac
 done
 
 # Check if there are uncommitted changes
-# We look at both tracked and untracked files
 UNCOMMITTED=$(git status --porcelain)
 
 # Check if local branch is ahead of origin/main
@@ -41,23 +53,41 @@ if [ -n "$UNCOMMITTED" ]; then
   git config --local user.email "iamyashcreator@gmail.com"
   git config --local user.name "Yash Ramteke"
 
-  echo "Committing changes..."
-  # Get files changed to create a meaningful commit message
-  CHANGED_FILES=$(git status --porcelain | awk '{print $2}' | paste -sd ", " -)
-  COMMIT_MSG="update: $CHANGED_FILES"
-  if [ -z "$CHANGED_FILES" ]; then
-    COMMIT_MSG="update: corporate info & support client styling"
+  # Prompt for commit message if empty and running interactively
+  if [ -z "$COMMIT_MSG" ]; then
+    if [ -t 0 ]; then
+      echo -n "Enter commit message: "
+      read -r COMMIT_MSG
+    fi
   fi
 
+  # Fallback automatic commit message if still empty
+  if [ -z "$COMMIT_MSG" ]; then
+    CHANGED_FILES=$(git status --porcelain | awk '{print $2}' | paste -sd ", " -)
+    COMMIT_MSG="update: $CHANGED_FILES"
+    if [ -z "$CHANGED_FILES" ]; then
+      COMMIT_MSG="update: corporate info & support client styling"
+    fi
+  fi
+
+  echo "Committing changes with message: '$COMMIT_MSG'..."
   git commit -m "$COMMIT_MSG"
 fi
 
 echo "Pushing to GitHub..."
 git push origin main || echo "Git push warning: Proceeding with Vercel deploy."
 
+# Capture Git metadata to forward to Vercel
+COMMIT_SHA=$(git rev-parse HEAD 2>/dev/null || echo "")
+COMMIT_AUTHOR=$(git log -1 --format="%an" 2>/dev/null || echo "")
+COMMIT_MSG_LATEST=$(git log -1 --format="%s" 2>/dev/null || echo "")
+
 # Step 2: Deploy to Vercel via CLI
 echo "Deploying to Vercel Production via CLI..."
-npx vercel --prod --yes
+npx vercel --prod --yes \
+  --meta githubCommitMessage="$COMMIT_MSG_LATEST" \
+  --meta githubCommitSha="$COMMIT_SHA" \
+  --meta githubCommitAuthorName="$COMMIT_AUTHOR"
 
 echo "======================================"
 echo "Deployment Completed Successfully!"
