@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useRouter, usePathname } from "next/navigation";
-import SaraAvatar from "./SaraAvatar";
+import { Headset } from "lucide-react";
 
 export default function AISupportChat() {
   const router = useRouter();
@@ -13,21 +13,17 @@ export default function AISupportChat() {
   if (isDashboard || pathname === "/support") return null;
 
   return (
-    <div className="fixed bottom-4 md:bottom-8 right-4 md:right-8 z-[9999]">
+    <div className="fixed bottom-4 md:bottom-8 left-4 z-[9999]">
       <button
         type="button"
         onClick={() => router.push("/support")}
-        className="group relative flex items-center gap-2.5 px-3 py-2 md:px-3.5 md:py-2.5 rounded-full bg-slate-900/95 hover:bg-brandBlue text-white shadow-2xl border border-slate-700/80 transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer drop-shadow-xl backdrop-blur-md"
-        title="Chat with SARA - Support Concierge"
-        aria-label="Chat with SARA - Support Concierge"
+        className="group relative flex items-center justify-center w-12 h-12 md:w-14 md:h-14 rounded-full bg-slate-900 hover:bg-brandBlue text-white shadow-2xl border border-slate-700/80 transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer drop-shadow-xl"
+        title="Contact SARA - 24/7 AI Customer Support"
+        aria-label="Contact SARA - 24/7 AI Customer Support"
       >
-        <SaraAvatar size="sm" className="w-8 h-8 md:w-9 md:h-9" />
-        <div className="flex flex-col items-start pr-1 text-left hidden sm:flex">
-          <span className="font-semibold text-xs text-slate-100 group-hover:text-white leading-tight">SARA</span>
-          <span className="text-[9px] text-emerald-400 font-medium leading-none flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping inline-block" />
-            Online
-          </span>
+        <div className="relative">
+          <Headset className="w-5 h-5 md:w-6 md:h-6 text-amber-300 group-hover:rotate-12 transition-transform" />
+          <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-400 border-2 border-slate-900 rounded-full"></span>
         </div>
       </button>
     </div>
