@@ -285,31 +285,33 @@ export default function SupportClientPage() {
       <main className="flex-1 flex flex-col justify-between bg-slate-950 relative min-w-0 h-full">
         
         {/* iOS iMessage Top Navigation Header */}
-        <div className="px-4 py-2.5 md:px-6 md:py-3.5 border-b border-slate-800/80 bg-slate-950/95 backdrop-blur-xl flex items-center justify-between gap-4 shrink-0 z-10">
-          <button
-            type="button"
-            onClick={() => {
-              if (window.history.length > 1) {
-                router.back();
-              } else {
-                router.push("/");
-              }
-            }}
-            className="flex items-center gap-1 text-brandBlue hover:text-blue-400 font-medium text-sm transition-all cursor-pointer shrink-0"
-          >
-            <ArrowLeft className="w-4 h-4 stroke-[2.5]" />
-            <span className="hidden xs:inline">Back</span>
-          </button>
+        <div className="px-4 py-2.5 md:px-6 md:py-3.5 border-b border-slate-800/80 bg-slate-950/95 backdrop-blur-xl flex items-center justify-between gap-3 shrink-0 z-10">
+          {/* Left Group: Back Button + SARA Contact Info */}
+          <div className="flex items-center gap-2.5 md:gap-3.5 min-w-0">
+            <button
+              type="button"
+              onClick={() => {
+                if (window.history.length > 1) {
+                  router.back();
+                } else {
+                  router.push("/");
+                }
+              }}
+              className="flex items-center gap-1 text-brandBlue hover:text-blue-400 font-medium text-sm transition-all cursor-pointer shrink-0"
+            >
+              <ArrowLeft className="w-4 h-4 stroke-[2.5]" />
+              <span className="hidden xs:inline">Back</span>
+            </button>
 
-          {/* iMessage Contact Info Center */}
-          <div className="flex items-center gap-2 md:gap-2.5 min-w-0">
-            <div className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-brandBlue shadow-inner relative shrink-0">
-              <Bot className="w-4.5 h-4.5 md:w-5 md:h-5 text-brandBlue" />
-              <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-400 border-2 border-slate-950 rounded-full"></span>
-            </div>
-            <div className="flex items-center gap-1.5 min-w-0">
-              <h1 className="font-semibold text-xs md:text-sm text-slate-100 tracking-tight whitespace-nowrap">SARA AI</h1>
-              <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-brandBlue/20 text-amber-300 border border-brandBlue/30 shrink-0">24/7</span>
+            <div className="flex items-center gap-2 md:gap-2.5 min-w-0">
+              <div className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-brandBlue shadow-inner relative shrink-0">
+                <Bot className="w-4.5 h-4.5 md:w-5 md:h-5 text-brandBlue" />
+                <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-400 border-2 border-slate-950 rounded-full"></span>
+              </div>
+              <div className="flex items-center gap-1.5 min-w-0">
+                <h1 className="font-semibold text-xs md:text-sm text-slate-100 tracking-tight whitespace-nowrap">SARA AI</h1>
+                <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-brandBlue/20 text-amber-300 border border-brandBlue/30 shrink-0">24/7</span>
+              </div>
             </div>
           </div>
 
