@@ -391,3 +391,125 @@ body {
   display: inline-block;
   will-change: transform;
 }
+
+/* ==========================================================================
+   iMessage Chat Theme UI
+   ========================================================================== */
+
+.imessage-container {
+  display: flex;
+  flex-direction: column;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SanFrancisco", "Segoe UI", Roboto, sans-serif;
+  font-size: 1rem;
+  margin: 0 auto;
+  width: 100%;
+  max-width: 680px;
+  padding: 0.5rem 1rem;
+}
+
+/* Base bubble style */
+.imessage-bubble {
+  border-radius: 1.15rem;
+  line-height: 1.35;
+  max-width: 80%;
+  padding: 0.55rem 0.95rem;
+  position: relative;
+  word-wrap: break-word;
+  font-size: 0.9375rem; /* 15px */
+}
+
+/* User Bubble (from-me) */
+.imessage-bubble.from-me {
+  align-self: flex-end;
+  background-color: #248bf5;
+  color: #ffffff;
+  margin: 0.35rem 0 0.35rem auto;
+}
+
+.imessage-bubble.from-me::before {
+  content: "";
+  position: absolute;
+  bottom: -0.1rem;
+  right: -0.35rem;
+  height: 1rem;
+  border-right: 1rem solid #248bf5;
+  border-bottom-left-radius: 0.8rem 0.7rem;
+  transform: translate(0, -0.1rem);
+}
+
+.imessage-bubble.from-me::after {
+  content: "";
+  position: absolute;
+  bottom: -0.1rem;
+  right: -40px;
+  width: 10px;
+  height: 1rem;
+  background-color: #020617; /* Matches chat container dark background */
+  border-bottom-left-radius: 0.5rem;
+  transform: translate(-30px, -2px);
+}
+
+/* Assistant / SARA Bubble (from-them) */
+.imessage-bubble.from-them {
+  align-self: flex-start;
+  background-color: #e5e5ea;
+  color: #000000;
+  margin: 0.35rem auto 0.35rem 0;
+}
+
+.imessage-bubble.from-them::before {
+  content: "";
+  position: absolute;
+  bottom: -0.1rem;
+  left: -0.35rem;
+  height: 1rem;
+  border-left: 1rem solid #e5e5ea;
+  border-bottom-right-radius: 0.8rem 0.7rem;
+  transform: translate(0, -0.1rem);
+}
+
+.imessage-bubble.from-them::after {
+  content: "";
+  position: absolute;
+  bottom: -0.1rem;
+  left: 20px;
+  width: 10px;
+  height: 1rem;
+  background-color: #020617; /* Matches chat container dark background */
+  border-bottom-right-radius: 0.5rem;
+  transform: translate(-30px, -2px);
+}
+
+/* Consecutive message margin stacking */
+.imessage-bubble.from-me + .imessage-bubble.from-me {
+  margin-top: 0.15rem;
+}
+
+.imessage-bubble.from-them + .imessage-bubble.from-them {
+  margin-top: 0.15rem;
+}
+
+/* No tail override for stacked bubbles */
+.imessage-bubble.no-tail::before,
+.imessage-bubble.no-tail::after {
+  display: none !important;
+}
+
+/* Emoji only bubbles */
+.imessage-bubble.emoji {
+  background: none !important;
+  font-size: 2.5rem !important;
+  padding: 0.25rem 0.5rem !important;
+}
+
+.imessage-bubble.emoji::before,
+.imessage-bubble.emoji::after {
+  content: none !important;
+  display: none !important;
+}
+
+/* Utility margins */
+.margin-b_none { margin-bottom: 0 !important; }
+.margin-b_one { margin-bottom: 1rem !important; }
+.margin-t_one { margin-top: 1rem !important; }
+

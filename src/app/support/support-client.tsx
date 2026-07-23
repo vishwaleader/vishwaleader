@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Headset, Send, Bot, User, ShieldCheck, ChevronRight, HelpCircle, ArrowLeft, MessageSquare, Plus, Clock, Sparkles, X, Menu, ChevronLeft } from "lucide-react";
+import { ArrowLeft, ArrowUp, RefreshCw, ChevronRight, Bot } from "lucide-react";
 
 interface ChatMessage {
   id: string;
@@ -11,21 +11,12 @@ interface ChatMessage {
   timestamp: string;
 }
 
-const DUMMY_SESSIONS = [
-  { id: "s1", title: "Dr. B. R. Ambedkar Awards 2026", date: "Just now" },
-  { id: "s2", title: "Academic Conference & SOAS", date: "1 hour ago" },
-  { id: "s3", title: "Business Summit Heathrow", date: "Yesterday" },
-  { id: "s4", title: "London Tour Package Details", date: "2 days ago" },
-];
-
-const QUICK_SUGGESTIONS = [
-  "How can I become a Patron?",
-  "Tell me about the London Tour Package",
-  "Academic Conference details",
-  "Business Summit details",
-  "How to book a Souvenir Ad?",
-  "When is the Awards Ceremony?",
-];
+// Helper to detect if a message is strictly emoji
+const isEmojiOnly = (str: string) => {
+  const clean = str.trim();
+  if (!clean || clean.length > 10) return false;
+  return /^(\p{Extended_Pictographic}|\p{Emoji_Presentation}|\s)+$/u.test(clean);
+};
 
 export default function SupportClientPage() {
   const router = useRouter();
@@ -33,30 +24,36 @@ export default function SupportClientPage() {
     {
       id: "welcome-1",
       role: "assistant",
-      content: "Hello! I am SARA (Smart Automated Response Agent), your 24/7 AI Customer Support Employee. How can I help you today? Ask me about tickets, registrations, awards nominations, organizing committees, or souvenir ads!",
+      content:
+        "Hello! I am SARA (Smart Automated Response Agent), your 24/7 AI Customer Support Employee. How can I help you today? Ask me about tickets, registrations, awards nominations, organizing committees, or souvenir ads!",
       timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     },
   ]);
 
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Initialize sidebar open state on desktop viewports
+  // Maintain dark background for html and body to eliminate overscroll white space
   useEffect(() => {
-    if (typeof window !== "undefined" && window.innerWidth >= 768) {
-      setIsSidebarOpen(true);
-    }
+    const origHtmlBg = document.documentElement.style.backgroundColor;
+    const origBodyBg = document.body.style.backgroundColor;
+    document.documentElement.style.backgroundColor = "#020617";
+    document.body.style.backgroundColor = "#020617";
+
+    return () => {
+      document.documentElement.style.backgroundColor = origHtmlBg;
+      document.body.style.backgroundColor = origBodyBg;
+    };
   }, []);
 
   // Auto scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages, loading]);
 
-  // Mobile virtual keyboard visual viewport height listener
+  // Visual viewport height adjustment for mobile soft keyboard
   useEffect(() => {
     if (typeof window === "undefined" || !window.visualViewport) return;
 
@@ -76,7 +73,6 @@ export default function SupportClientPage() {
   }, []);
 
   const handleFocusInput = () => {
-    // Scroll to bottom after mobile keyboard transitions
     setTimeout(() => {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, 150);
@@ -85,31 +81,34 @@ export default function SupportClientPage() {
     }, 350);
   };
 
-  const handleSendMessage = async (textToSend?: string) => {
-    const text = textToSend || query;
-    if (!text.trim() || loading) return;
+  const handleSendMessage = async () => {
+    const text = query.trim();
+    if (!text || loading) return;
 
     const userMsg: ChatMessage = {
       id: `user-${Date.now()}`,
       role: "user",
-      content: text.trim(),
+      content: text,
       timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     };
 
     const newMsgs = [...messages, userMsg];
     setMessages(newMsgs);
-    if (!textToSend) setQuery("");
+    setQuery("");
     setLoading(true);
 
     try {
       const res = await fetch("/api/support-chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: newMsgs.map((m) => ({ role: m.role, content: m.content })) }),
+        body: JSON.stringify({
+          messages: newMsgs.map((m) => ({ role: m.role, content: m.content })),
+        }),
       });
 
       const data = await res.json();
-      const replyText = data.reply || "Hello! I am SARA, your 24/7 support agent. How may I help you?";
+      const replyText =
+        data.reply || "Hello! I am SARA, your 24/7 support agent. How may I help you?";
 
       setMessages((prev) => [
         ...prev,
@@ -126,7 +125,8 @@ export default function SupportClientPage() {
         {
           id: `err-${Date.now()}`,
           role: "assistant",
-          content: "I am SARA, your 24/7 AI Support Assistant. Please ask me any questions about the Dr. B. R. Ambedkar International Awards 2026 in London!",
+          content:
+            "I am SARA, your 24/7 AI Support Assistant. Please ask me any questions about the Dr. B. R. Ambedkar International Awards 2026 in London!",
           timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         },
       ]);
@@ -140,26 +140,23 @@ export default function SupportClientPage() {
       {
         id: `welcome-${Date.now()}`,
         role: "assistant",
-        content: "Hello! I am SARA, your 24/7 support employee. Let's start a fresh chat. How can I help you?",
+        content:
+          "Hello! I am SARA, your 24/7 AI Support Employee. How can I help you today?",
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       },
     ]);
   };
 
-  const renderMessageContent = (content: string) => {
+  const renderMessageContent = (content: string, isUser: boolean) => {
     if (!content) return null;
-
     const lines = content.split("\n");
-    
+
     return lines.map((line, lineIdx) => {
-      // 1. Check if the line is a list item
-      // e.g. starting with " - ", " * ", "- ", "* ", "1. ", "2. ", etc.
       const listMatch = line.match(/^(\s*)(\*\*\*|\*\*|\*)?([-*•]|\d+\.)\s*(.*)$/);
-      
       let lineContent = line;
       let isList = false;
       let listMarker = "";
-      
+
       if (listMatch) {
         isList = true;
         listMarker = listMatch[3];
@@ -167,22 +164,20 @@ export default function SupportClientPage() {
         lineContent = asterisks + listMatch[4];
       }
 
-      // 2. Parse inline elements (links, bold, italic) within this line
       const inlineElements: React.ReactNode[] = [];
       const currentText = lineContent;
       let elemKey = 0;
-      
-      const combinedRegex = /(\[([^\]]+)\]\(([^)]+)\))|(\*\*\*([^*]+)\*\*\*)|(\*\*([^*]+)\*\*)|(\*([^*]+)\*)/g;
+
+      const combinedRegex =
+        /(\[([^\]]+)\]\(([^)]+)\))|(\*\*\*([^*]+)\*\*\*)|(\*\*([^*]+)\*\*)|(\*([^*]+)\*)/g;
       let lastIdx = 0;
       let match;
 
       while ((match = combinedRegex.exec(currentText)) !== null) {
-        // Add plain text before match
         if (match.index > lastIdx) {
           inlineElements.push(currentText.substring(lastIdx, match.index));
         }
 
-        // Check which group matched
         const isLink = match[1];
         const isBoldItalic = match[4];
         const isBold = match[6];
@@ -204,21 +199,21 @@ export default function SupportClientPage() {
         } else if (isBoldItalic) {
           const textVal = match[5];
           inlineElements.push(
-            <strong key={`bi-${lineIdx}-${elemKey++}`} className="font-extrabold text-white">
+            <strong key={`bi-${lineIdx}-${elemKey++}`} className={isUser ? "font-extrabold text-white" : "font-extrabold text-slate-900"}>
               <em>{textVal}</em>
             </strong>
           );
         } else if (isBold) {
-          const textVal = match[7];
+          const textVal = match[6] ? match[7] : match[5];
           inlineElements.push(
-            <strong key={`b-${lineIdx}-${elemKey++}`} className="font-bold text-white">
+            <strong key={`b-${lineIdx}-${elemKey++}`} className={isUser ? "font-bold text-white" : "font-bold text-slate-900"}>
               {textVal}
             </strong>
           );
         } else if (isItalic) {
           const textVal = match[9];
           inlineElements.push(
-            <em key={`i-${lineIdx}-${elemKey++}`} className="text-slate-300">
+            <em key={`i-${lineIdx}-${elemKey++}`} className={isUser ? "text-slate-100" : "text-slate-700"}>
               {textVal}
             </em>
           );
@@ -231,21 +226,23 @@ export default function SupportClientPage() {
         inlineElements.push(currentText.substring(lastIdx));
       }
 
-      // 3. Render line wrapper
       if (isList) {
         const isNumeric = /^\d+/.test(listMarker);
         return (
-          <div key={`line-${lineIdx}`} className="flex items-start gap-2 my-1 pl-4">
-            <span className="text-brandBlue font-semibold shrink-0 select-none">
+          <div key={`line-${lineIdx}`} className="flex items-start gap-2 my-0.5 pl-3">
+            <span className={isUser ? "text-white font-bold shrink-0 select-none" : "text-brandBlue font-bold shrink-0 select-none"}>
               {isNumeric ? listMarker : "•"}
             </span>
-            <span className="text-slate-200 flex-1">{inlineElements}</span>
+            <span className={isUser ? "text-white flex-1" : "text-slate-900 flex-1"}>{inlineElements}</span>
           </div>
         );
       }
 
       return (
-        <div key={`line-${lineIdx}`} className={line.trim() === "" ? "h-2" : "min-h-[1.25rem] text-slate-200"}>
+        <div
+          key={`line-${lineIdx}`}
+          className={line.trim() === "" ? "h-1.5" : "min-h-[1.25rem]"}
+        >
           {inlineElements}
         </div>
       );
@@ -253,121 +250,17 @@ export default function SupportClientPage() {
   };
 
   return (
-    <div 
-      className="fixed inset-0 flex bg-slate-950 font-sans text-slate-100 overflow-hidden"
+    <div
+      className="fixed inset-0 flex flex-col bg-slate-950 font-sans text-slate-100 overflow-hidden overscroll-none"
       style={{ height: "var(--visual-viewport-height, 100dvh)" }}
     >
-      
-      {/* Collapsible Sidebar Panel */}
-      <aside 
-        className={`bg-slate-950 p-4 flex flex-col justify-between shrink-0 transition-all duration-300 border-r border-slate-800 h-full ${
-          isSidebarOpen 
-            ? "w-full md:w-64 opacity-100" 
-            : "w-0 p-0 opacity-0 border-r-0 overflow-hidden"
-        } ${
-          /* On mobile, make it absolute or overlay when open so it doesn't squish the chat screen */
-          "absolute inset-0 md:relative md:inset-auto z-30 shadow-2xl md:shadow-none"
-        }`}
-      >
-        <div className="space-y-6 md:min-w-[224px] w-full">
-          {/* Header with close button (Mobile only) */}
-          <div className="flex md:hidden items-center justify-between pb-3 border-b border-slate-900 mb-4">
-            <span className="text-sm font-bold text-white uppercase tracking-wider">Chat Menu</span>
-            <button 
-              onClick={() => setIsSidebarOpen(false)}
-              className="p-1.5 hover:bg-slate-900 text-slate-400 hover:text-white rounded-lg transition-all"
-              aria-label="Close menu"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-
-          {/* New Chat Button */}
-          <button
-            onClick={() => {
-              handleResetChat();
-              if (window.innerWidth < 768) setIsSidebarOpen(false);
-            }}
-            className="w-full flex items-center justify-between px-4 py-3 bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-xl text-xs font-bold text-slate-200 transition-all cursor-pointer hover:bg-slate-900/60"
-          >
-            <span className="flex items-center gap-2">
-              <Plus className="w-4 h-4 text-brandBlue" />
-              <span>New Chat</span>
-            </span>
-            <kbd className="px-1.5 py-0.5 rounded bg-slate-800 text-[10px] font-mono text-slate-500 hidden md:inline-block">Ctrl K</kbd>
-          </button>
-
-          {/* Chat Sessions list */}
-          <div className="space-y-3">
-            <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-2">History</h4>
-            <div className="space-y-1.5">
-              {DUMMY_SESSIONS.map((sess) => (
-                <button
-                  key={sess.id}
-                  onClick={() => {
-                    handleSendMessage(sess.title);
-                    if (window.innerWidth < 768) setIsSidebarOpen(false);
-                  }}
-                  className="w-full text-left p-2.5 rounded-xl hover:bg-slate-900 text-xs text-slate-400 hover:text-white transition-all flex items-center gap-2 group cursor-pointer"
-                >
-                  <MessageSquare className="w-3.5 h-3.5 text-slate-600 group-hover:text-brandBlue shrink-0" />
-                  <span className="truncate flex-1">{sess.title}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Support disclaimer */}
-        <div className="p-3 bg-slate-900/50 border border-slate-800 rounded-xl space-y-1 md:min-w-[224px] w-full">
-          <div className="flex items-center gap-1.5 text-xs font-bold text-white">
-            <ShieldCheck className="w-4 h-4 text-emerald-400" />
-            <span>Secure Connection</span>
-          </div>
-          <p className="text-[10px] text-slate-500 leading-relaxed">
-            SARA Support Agent is powered by secure 256-bit encryption.
-          </p>
-        </div>
-      </aside>
-
-      {/* Mobile Sidebar Overlay (closes when clicked outside) */}
-      {isSidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-black/60 z-20 md:hidden"
-          onClick={() => setIsSidebarOpen(false)}
-        />
-      )}
-
       {/* Main Chat Area */}
-      <main className="flex-1 flex flex-col justify-between bg-slate-950 relative min-w-0">
-        {/* Chat Top Info Bar */}
-        <div className="px-4 py-3 md:px-6 md:py-4 border-b border-slate-800 bg-slate-950/80 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2 md:gap-3 min-w-0">
-            {/* Collapse toggle button */}
-            <button
-              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="p-1.5 bg-slate-900 hover:bg-slate-850 text-slate-300 hover:text-white border border-slate-800 rounded-lg transition-all cursor-pointer shrink-0 flex items-center justify-center"
-              aria-label="Toggle sidebar"
-            >
-              <Menu className="w-4 h-4" />
-            </button>
-
-            <div className="p-2 md:p-2.5 rounded-xl bg-brandBlue text-white shadow-md relative shrink-0 hidden xs:block">
-              <Headset className="w-4 h-4 md:w-5 md:h-5" />
-              <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-400 border-2 border-slate-950 rounded-full animate-pulse"></span>
-            </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-1.5 md:gap-2 flex-wrap">
-                <h1 className="font-bold text-xs md:text-sm tracking-tight text-white truncate">SARA Chatbot</h1>
-                <span className="text-[8px] md:text-[9px] font-extrabold uppercase px-1 py-0.5 md:px-1.5 md:py-0.5 rounded bg-brandBlue/20 text-amber-300 border border-brandBlue/35 shrink-0">
-                  24/7 Support
-                </span>
-              </div>
-              <p className="text-[10px] md:text-[11px] text-slate-500 truncate hidden sm:block">Ask questions, get ticket links, or browse committees.</p>
-            </div>
-          </div>
-
+      <main className="flex-1 flex flex-col justify-between bg-slate-950 relative min-w-0 h-full">
+        
+        {/* iOS iMessage Top Navigation Header */}
+        <div className="px-4 py-2.5 md:px-6 md:py-3.5 border-b border-slate-800/80 bg-slate-950/95 backdrop-blur-xl flex items-center justify-between gap-4 shrink-0 z-10">
           <button
+            type="button"
             onClick={() => {
               if (window.history.length > 1) {
                 router.back();
@@ -375,54 +268,70 @@ export default function SupportClientPage() {
                 router.push("/");
               }
             }}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white rounded-lg text-xs font-bold transition-all cursor-pointer shrink-0"
+            className="flex items-center gap-1 text-brandBlue hover:text-blue-400 font-medium text-sm transition-all cursor-pointer shrink-0"
           >
-            <ArrowLeft className="w-3.5 h-3.5 md:w-4 md:h-4" />
-            <span>Back</span>
+            <ArrowLeft className="w-4 h-4 stroke-[2.5]" />
+            <span className="hidden xs:inline">Back</span>
+          </button>
+
+          {/* iMessage Contact Info Center */}
+          <div className="flex flex-col items-center min-w-0">
+            <div className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-brandBlue shadow-inner relative mb-0.5">
+              <Bot className="w-5 h-5 text-brandBlue" />
+              <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-400 border-2 border-slate-950 rounded-full"></span>
+            </div>
+            <div className="flex items-center gap-1">
+              <h1 className="font-semibold text-xs md:text-sm text-slate-100 tracking-tight">SARA AI</h1>
+              <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-brandBlue/20 text-amber-300 border border-brandBlue/30">24/7</span>
+            </div>
+          </div>
+
+          {/* Reset Action */}
+          <button
+            type="button"
+            onClick={handleResetChat}
+            title="Reset Chat"
+            aria-label="Reset Chat"
+            className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-900 rounded-full transition-all cursor-pointer shrink-0"
+          >
+            <RefreshCw className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Chat Thread Messages */}
-        <div className="flex-1 overflow-y-auto px-4 py-4 md:py-6 md:px-8 space-y-3.5 md:space-y-4 max-w-4xl mx-auto w-full">
-          {messages.map((msg) => (
-            <div
-              key={msg.id}
-              className={`flex items-start gap-2.5 md:gap-3.5 ${
-                msg.role === "user" ? "flex-row-reverse" : "flex-row"
-              }`}
-            >
-              {msg.role === "assistant" ? (
-                <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg md:rounded-xl bg-brandBlue text-white flex items-center justify-center shrink-0 shadow-md">
-                  <Bot className="w-4 h-4 md:w-4.5 md:h-4.5" />
-                </div>
-              ) : (
-                <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg md:rounded-xl bg-slate-800 text-slate-300 flex items-center justify-center shrink-0 border border-slate-700">
-                  <User className="w-4 h-4 md:w-4.5 md:h-4.5" />
-                </div>
-              )}
+        {/* iMessage Chat Thread */}
+        <div className="flex-1 overflow-y-auto px-3 py-4 md:py-6 md:px-6 space-y-1.5 max-w-2xl mx-auto w-full select-text imessage-container">
+          {messages.map((msg, index) => {
+            const isUser = msg.role === "user";
+            const isEmoji = isEmojiOnly(msg.content);
+            const nextMsg = messages[index + 1];
+            // If the next message is from the same role, suppress tail for iMessage bubble stacking
+            const hasTail = !nextMsg || nextMsg.role !== msg.role;
 
-              <div className={`space-y-1 max-w-[85%] md:max-w-xl ${msg.role === "user" ? "text-right" : "text-left"}`}>
+            return (
+              <div
+                key={msg.id}
+                className={`flex flex-col ${isUser ? "items-end" : "items-start"} w-full`}
+              >
                 <div
-                  className={`inline-block px-3.5 py-2.5 md:px-4 md:py-3 rounded-2xl text-xs md:text-sm leading-relaxed break-words text-left ${
-                    msg.role === "user"
-                      ? "bg-brandBlue text-white rounded-tr-none shadow-md"
-                      : "bg-slate-900 border border-slate-800 text-slate-200 rounded-tl-none"
-                  }`}
+                  className={`imessage-bubble ${isUser ? "from-me" : "from-them"} ${
+                    hasTail ? "" : "no-tail"
+                  } ${isEmoji ? "emoji" : ""}`}
                 >
-                  {renderMessageContent(msg.content)}
+                  {renderMessageContent(msg.content, isUser)}
                 </div>
-                <span className="text-[9px] md:text-[10px] text-slate-600 block px-1">{msg.timestamp}</span>
+                {hasTail && (
+                  <span className="text-[9px] text-slate-500 px-2 mt-0.5 block select-none">
+                    {msg.timestamp}
+                  </span>
+                )}
               </div>
-            </div>
-          ))}
+            );
+          })}
 
           {loading && (
-            <div className="flex items-center gap-2.5 md:gap-3.5 text-slate-500 text-xs p-1 md:p-2 animate-pulse">
-              <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg md:rounded-xl bg-brandBlue text-white flex items-center justify-center shrink-0">
-                <Bot className="w-4 h-4 md:w-4.5 md:h-4.5" />
-              </div>
-              <div className="bg-slate-900 border border-slate-800 px-3.5 py-2.5 md:px-4 md:py-3 rounded-2xl flex items-center gap-1.5 text-slate-300">
-                <span>SARA is writing</span>
+            <div className="flex items-start w-full my-1">
+              <div className="imessage-bubble from-them flex items-center gap-1.5 text-slate-700">
+                <span className="text-xs font-medium">SARA typing</span>
                 <span className="animate-bounce">.</span>
                 <span className="animate-bounce delay-100">.</span>
                 <span className="animate-bounce delay-200">.</span>
@@ -432,31 +341,14 @@ export default function SupportClientPage() {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Fixed Bottom Input Bar */}
-        <div className="p-3 md:p-6 pb-4 md:pb-6 border-t border-slate-800 bg-slate-950 max-w-4xl mx-auto w-full">
-          {/* Quick Suggestion Pills */}
-          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-2.5 mb-1 text-xs -mx-3 px-3 md:-mx-6 md:px-6">
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider shrink-0 mr-1 flex items-center gap-1">
-              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-              <span className="hidden sm:inline">Suggestions:</span>
-            </span>
-            {QUICK_SUGGESTIONS.slice(0, 4).map((sug) => (
-              <button
-                key={sug}
-                onClick={() => handleSendMessage(sug)}
-                className="px-2.5 py-1.5 rounded-full bg-slate-900 hover:bg-brandBlue text-slate-300 hover:text-white border border-slate-800 transition-all shrink-0 cursor-pointer text-[11px]"
-              >
-                {sug}
-              </button>
-            ))}
-          </div>
-
+        {/* iOS iMessage Input Bar */}
+        <div className="p-2.5 md:p-4 border-t border-slate-800/80 bg-slate-950/95 backdrop-blur-xl max-w-2xl mx-auto w-full shrink-0">
           <form
             onSubmit={(e) => {
               e.preventDefault();
               handleSendMessage();
             }}
-            className="flex items-center bg-slate-900 border border-slate-850 rounded-2xl p-1.5 md:p-2.5 focus-within:border-brandBlue transition-all shadow-xl"
+            className="flex items-center gap-2 bg-slate-900/90 border border-slate-800 rounded-full px-3 py-1.5 focus-within:border-brandBlue/70 focus-within:ring-1 focus-within:ring-brandBlue/40 transition-all shadow-lg"
           >
             <input
               ref={inputRef}
@@ -464,33 +356,27 @@ export default function SupportClientPage() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onFocus={handleFocusInput}
-              placeholder="Ask SARA anything..."
+              placeholder="iMessage"
               autoComplete="off"
               autoCorrect="off"
               autoCapitalize="sentences"
               spellCheck="false"
               name="chat-message-input"
               id="chat-message-input"
-              className="flex-1 bg-transparent text-white placeholder-slate-500 text-base md:text-sm outline-none px-2.5 py-1.5 md:px-3 md:py-2 min-w-0"
+              className="flex-1 bg-transparent text-white placeholder-slate-500 text-base md:text-sm outline-none px-2 py-1 min-w-0 font-sans"
             />
             <button
               type="submit"
               disabled={!query.trim() || loading}
-              className="p-2 md:p-2.5 rounded-xl bg-brandBlue hover:bg-blue-600 disabled:opacity-40 text-white transition-all shrink-0 cursor-pointer flex items-center justify-center"
+              className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-[#248bf5] hover:bg-blue-600 disabled:opacity-30 text-white transition-all shrink-0 cursor-pointer flex items-center justify-center shadow-md active:scale-95"
+              aria-label="Send message"
             >
-              <Send className="w-4 h-4" />
+              <ArrowUp className="w-4 h-4 md:w-4.5 md:h-4.5 stroke-[2.5]" />
             </button>
           </form>
-          
-          <p className="text-center text-[10px] text-slate-600 mt-2.5 leading-relaxed">
-            SARA (Smart Automated Response Agent) • 24/7 AI Event Concierge •
-            <br />
-            All sessions are encrypted.
-          </p>
         </div>
 
       </main>
-
     </div>
   );
 }
