@@ -53,32 +53,56 @@ export default function SupportClientPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
 
-  // Visual viewport height adjustment for mobile soft keyboard
+  // Visual viewport height and top position adjustment for mobile soft keyboard
   useEffect(() => {
-    if (typeof window === "undefined" || !window.visualViewport) return;
+    if (typeof window === "undefined") return;
 
-    const handleResize = () => {
-      const height = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-      document.documentElement.style.setProperty("--visual-viewport-height", `${height}px`);
+    const updateViewport = () => {
+      if (window.visualViewport) {
+        const height = window.visualViewport.height;
+        const top = window.visualViewport.offsetTop;
+        document.documentElement.style.setProperty("--visual-viewport-height", `${height}px`);
+        document.documentElement.style.setProperty("--visual-viewport-top", `${top}px`);
+      } else {
+        document.documentElement.style.setProperty("--visual-viewport-height", `${window.innerHeight}px`);
+        document.documentElement.style.setProperty("--visual-viewport-top", "0px");
+      }
     };
 
-    window.visualViewport.addEventListener("resize", handleResize);
-    window.visualViewport.addEventListener("scroll", handleResize);
-    handleResize();
+    const handleVisualScroll = () => {
+      if (window.scrollY !== 0) {
+        window.scrollTo(0, 0);
+      }
+      updateViewport();
+    };
+
+    updateViewport();
+
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", updateViewport);
+      window.visualViewport.addEventListener("scroll", handleVisualScroll);
+    }
+    window.addEventListener("resize", updateViewport);
 
     return () => {
-      window.visualViewport?.removeEventListener("resize", handleResize);
-      window.visualViewport?.removeEventListener("scroll", handleResize);
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener("resize", updateViewport);
+        window.visualViewport.removeEventListener("scroll", handleVisualScroll);
+      }
+      window.removeEventListener("resize", updateViewport);
     };
   }, []);
 
   const handleFocusInput = () => {
+    window.scrollTo(0, 0);
     setTimeout(() => {
+      window.scrollTo(0, 0);
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, 150);
+    }, 100);
     setTimeout(() => {
+      window.scrollTo(0, 0);
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, 350);
+    }, 300);
   };
 
   const handleSendMessage = async () => {
@@ -251,8 +275,11 @@ export default function SupportClientPage() {
 
   return (
     <div
-      className="fixed inset-0 flex flex-col bg-slate-950 font-sans text-slate-100 overflow-hidden overscroll-none"
-      style={{ height: "var(--visual-viewport-height, 100dvh)" }}
+      className="fixed left-0 right-0 flex flex-col bg-slate-950 font-sans text-slate-100 overflow-hidden overscroll-none"
+      style={{
+        top: "var(--visual-viewport-top, 0px)",
+        height: "var(--visual-viewport-height, 100dvh)",
+      }}
     >
       {/* Main Chat Area */}
       <main className="flex-1 flex flex-col justify-between bg-slate-950 relative min-w-0 h-full">
@@ -342,8 +369,9 @@ export default function SupportClientPage() {
         </div>
 
         {/* iOS iMessage Input Bar */}
-        <div className="p-2.5 md:p-4 border-t border-slate-800/80 bg-slate-950/95 backdrop-blur-xl max-w-2xl mx-auto w-full shrink-0">
+        <div className="p-2.5 md:p-4 bg-slate-950/95 backdrop-blur-xl max-w-2xl mx-auto w-full shrink-0">
           <form
+            autoComplete="off"
             onSubmit={(e) => {
               e.preventDefault();
               handleSendMessage();
@@ -351,8 +379,17 @@ export default function SupportClientPage() {
             className="flex items-center gap-2 bg-slate-900/90 border border-slate-800 rounded-full px-3 py-1.5 focus-within:border-brandBlue/70 focus-within:ring-1 focus-within:ring-brandBlue/40 transition-all shadow-lg"
           >
             <input
+              type="text"
+              name="prevent_autofill"
+              id="prevent_autofill"
+              style={{ display: "none" }}
+              tabIndex={-1}
+              autoComplete="off"
+            />
+            <input
               ref={inputRef}
               type="text"
+              inputMode="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onFocus={handleFocusInput}
@@ -361,8 +398,12 @@ export default function SupportClientPage() {
               autoCorrect="off"
               autoCapitalize="sentences"
               spellCheck="false"
-              name="chat-message-input"
-              id="chat-message-input"
+              name="chat-user-message-input"
+              id="chat-user-message-input"
+              data-lpignore="true"
+              data-1p-ignore="true"
+              data-form-type="other"
+              aria-autocomplete="none"
               className="flex-1 bg-transparent text-white placeholder-slate-500 text-base md:text-sm outline-none px-2 py-1 min-w-0 font-sans"
             />
             <button
