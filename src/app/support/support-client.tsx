@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowUp, RefreshCw, ChevronRight, Bot } from "lucide-react";
+import { ArrowLeft, ArrowUp, RefreshCw, ChevronRight } from "lucide-react";
+import SaraAvatar from "@/components/SaraAvatar";
 
 interface ChatMessage {
   id: string;
@@ -25,7 +26,7 @@ export default function SupportClientPage() {
       id: "welcome-1",
       role: "assistant",
       content:
-        "Hello! I am SARA (Smart Automated Response Agent), your 24/7 AI Customer Support Employee. How can I help you today? Ask me about tickets, registrations, awards nominations, organizing committees, or souvenir ads!",
+        "Hello! I am SARA, your Vishwa Leader Support Specialist. How can I help you today? Ask me about tickets, registrations, awards nominations, organizing committees, or souvenir ads!",
       timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     },
   ]);
@@ -108,7 +109,7 @@ export default function SupportClientPage() {
 
       const data = await res.json();
       const replyText =
-        data.reply || "Hello! I am SARA, your 24/7 support agent. How may I help you?";
+        data.reply || "Hello! I am SARA, your support specialist. How may I help you?";
 
       setMessages((prev) => [
         ...prev,
@@ -126,7 +127,7 @@ export default function SupportClientPage() {
           id: `err-${Date.now()}`,
           role: "assistant",
           content:
-            "I am SARA, your 24/7 AI Support Assistant. Please ask me any questions about the Dr. B. R. Ambedkar International Awards 2026 in London!",
+            "I am SARA, your Support Specialist. Please ask me any questions about the Dr. B. R. Ambedkar International Awards 2026 in London!",
           timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         },
       ]);
@@ -141,7 +142,7 @@ export default function SupportClientPage() {
         id: `welcome-${Date.now()}`,
         role: "assistant",
         content:
-          "Hello! I am SARA, your 24/7 AI Support Employee. How can I help you today?",
+          "Hello! I am SARA, your Vishwa Leader Support Specialist. How can I help you today?",
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       },
     ]);
@@ -274,15 +275,15 @@ export default function SupportClientPage() {
             <span className="hidden xs:inline">Back</span>
           </button>
 
-          {/* iMessage Contact Info Center */}
+          {/* iMessage Human Contact Info Center */}
           <div className="flex flex-col items-center min-w-0">
-            <div className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-brandBlue shadow-inner relative mb-0.5">
-              <Bot className="w-5 h-5 text-brandBlue" />
-              <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-400 border-2 border-slate-950 rounded-full"></span>
-            </div>
-            <div className="flex items-center gap-1">
-              <h1 className="font-semibold text-xs md:text-sm text-slate-100 tracking-tight">SARA AI</h1>
-              <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-brandBlue/20 text-amber-300 border border-brandBlue/30">24/7</span>
+            <SaraAvatar size="md" className="w-8 h-8 md:w-9 md:h-9 mb-0.5" />
+            <div className="flex items-center gap-1.5">
+              <h1 className="font-semibold text-xs md:text-sm text-slate-100 tracking-tight">SARA</h1>
+              <span className="inline-flex items-center gap-1 text-[9px] font-medium px-1.5 py-0.2 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                Online
+              </span>
             </div>
           </div>
 
@@ -330,8 +331,9 @@ export default function SupportClientPage() {
 
           {loading && (
             <div className="flex items-start w-full my-1">
-              <div className="imessage-bubble from-them flex items-center gap-1.5 text-slate-700">
-                <span className="text-xs font-medium">SARA typing</span>
+              <div className="imessage-bubble from-them flex items-center gap-2 text-slate-700">
+                <SaraAvatar size="sm" className="w-5 h-5" showOnlineDot={false} />
+                <span className="text-xs font-medium text-slate-700">SARA is typing</span>
                 <span className="animate-bounce">.</span>
                 <span className="animate-bounce delay-100">.</span>
                 <span className="animate-bounce delay-200">.</span>
