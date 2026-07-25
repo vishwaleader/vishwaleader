@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Preloader from "@/components/Preloader";
 import NetworkBackground from "@/components/NetworkBackground";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -97,6 +98,7 @@ function StatCard({ title, value, sub, icon, color }: { title: string; value: st
 
 // ─── Main Component ─────────────────────────────────────────────────────────────
 export default function AdminClientPage() {
+  const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("Dashboard");
@@ -110,6 +112,7 @@ export default function AdminClientPage() {
   const [lastSync, setLastSync] = useState<string>("");
   const [dataLoading, setDataLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [userCategoryFilter, setUserCategoryFilter] = useState<'all' | 'skipped' | 'incomplete' | 'paid' | 'online'>('all');
 
   // GA4 Data
   const [ga4Data, setGa4Data] = useState<any>(null);
@@ -313,14 +316,37 @@ export default function AdminClientPage() {
     return false;
   }).length;
   const paidUsers = users.filter((u: any) => u.paymentStatus === 'Paid').length;
+  
+  const skippedUsersCount = users.filter((u: any) => u.skippedRegistration === true || (!u.legalConsent && u.joinedAt)).length;
+  const incompleteUsersCount = users.filter((u: any) => {
+    const hasPhoto = !!(u.photoURL || u.headshotUrl);
+    const hasDocs = !!(u.nationalIdUrl || u.passportScanUrl || u.passportFrontUrl || u.evidenceUrl || u.businessDeckUrl);
+    const hasInfo = !!(u.name && u.phone && u.country && u.organization);
+    return !hasPhoto || !hasDocs || !hasInfo || u.skippedRegistration === true;
+  }).length;
 
-  const filteredUsers = (searchQuery
-    ? users.filter(u => `${u.name} ${u.email} ${u.organization} ${u.country}`.toLowerCase().includes(searchQuery.toLowerCase()))
-    : [...users]).sort((a: any, b: any) => {
-      const tA = a.joinedAt ? new Date(a.joinedAt).getTime() : 0;
-      const tB = b.joinedAt ? new Date(b.joinedAt).getTime() : 0;
-      return tB - tA;
-    });
+  const filteredUsers = users.filter((u: any) => {
+    if (searchQuery) {
+      const match = `${u.name} ${u.email} ${u.organization} ${u.country}`.toLowerCase().includes(searchQuery.toLowerCase());
+      if (!match) return false;
+    }
+    const isOnline = u.isOnline === true || (u.lastSeen && (Date.now() - new Date(u.lastSeen).getTime()) < 10 * 60 * 1000);
+    const hasPhoto = !!(u.photoURL || u.headshotUrl);
+    const hasDocs = !!(u.nationalIdUrl || u.passportScanUrl || u.passportFrontUrl || u.evidenceUrl || u.businessDeckUrl);
+    const hasInfo = !!(u.name && u.phone && u.country && u.organization);
+    const isSkipped = u.skippedRegistration === true || (!u.legalConsent && u.joinedAt);
+    const isIncomplete = !hasPhoto || !hasDocs || !hasInfo || isSkipped;
+
+    if (userCategoryFilter === 'skipped') return isSkipped;
+    if (userCategoryFilter === 'incomplete') return isIncomplete;
+    if (userCategoryFilter === 'paid') return u.paymentStatus === 'Paid';
+    if (userCategoryFilter === 'online') return isOnline;
+    return true;
+  }).sort((a: any, b: any) => {
+    const tA = a.joinedAt ? new Date(a.joinedAt).getTime() : 0;
+    const tB = b.joinedAt ? new Date(b.joinedAt).getTime() : 0;
+    return tB - tA;
+  });
 
   // Build chart data from real registration dates
   const chartData = React.useMemo(() => {
@@ -957,17 +983,52 @@ export default function AdminClientPage() {
               {/* ── Users Tab ── */}
               {activeTab === "Users" && (
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                  <div className={editingUser ? "lg:col-span-7" : "lg:col-span-12"}>
+                  <div className="lg:col-span-12">
                     <Card>
-                      <CardHeader>
-                        <CardTitle className="flex items-center justify-between">
-                          <span>Member Directory</span>
-                          <span className="text-sm font-normal text-slate-500">{filteredUsers.length} of {totalUsers}</span>
-                        </CardTitle>
-                        <CardDescription>
-                          {onlineUsers > 0 && <span className="text-emerald-600 font-semibold">{onlineUsers} online now · </span>}
-                          {paidUsers} paid · {totalUsers - paidUsers} pending payment
-                        </CardDescription>
+                      <CardHeader className="pb-4">
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                          <div>
+                            <CardTitle className="text-lg font-bold">Member Directory</CardTitle>
+                            <CardDescription className="mt-1">
+                              {onlineUsers > 0 && <span className="text-emerald-600 font-semibold">{onlineUsers} online now · </span>}
+                              {paidUsers} paid · {skippedUsersCount} skipped registration · {incompleteUsersCount} incomplete profiles
+                            </CardDescription>
+                          </div>
+
+                          {/* Filter Tabs */}
+                          <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl flex-wrap">
+                            <button
+                              onClick={() => setUserCategoryFilter('all')}
+                              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${userCategoryFilter === 'all' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
+                            >
+                              All ({totalUsers})
+                            </button>
+                            <button
+                              onClick={() => setUserCategoryFilter('skipped')}
+                              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${userCategoryFilter === 'skipped' ? 'bg-amber-500 text-white shadow-sm' : 'text-amber-700 hover:bg-amber-100/50'}`}
+                            >
+                              Skipped Reg ({skippedUsersCount})
+                            </button>
+                            <button
+                              onClick={() => setUserCategoryFilter('incomplete')}
+                              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${userCategoryFilter === 'incomplete' ? 'bg-rose-600 text-white shadow-sm' : 'text-rose-700 hover:bg-rose-100/50'}`}
+                            >
+                              Incomplete ({incompleteUsersCount})
+                            </button>
+                            <button
+                              onClick={() => setUserCategoryFilter('paid')}
+                              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${userCategoryFilter === 'paid' ? 'bg-blue-600 text-white shadow-sm' : 'text-blue-700 hover:bg-blue-100/50'}`}
+                            >
+                              Paid ({paidUsers})
+                            </button>
+                            <button
+                              onClick={() => setUserCategoryFilter('online')}
+                              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${userCategoryFilter === 'online' ? 'bg-emerald-600 text-white shadow-sm' : 'text-emerald-700 hover:bg-emerald-100/50'}`}
+                            >
+                              Online ({onlineUsers})
+                            </button>
+                          </div>
+                        </div>
                       </CardHeader>
                       <CardContent>
                         {dataLoading && users.length === 0 ? (
@@ -978,54 +1039,77 @@ export default function AdminClientPage() {
                         ) : filteredUsers.length === 0 ? (
                           <div className="text-center py-12">
                             <Users className="w-10 h-10 text-slate-200 mx-auto mb-3" />
-                            <p className="text-sm text-slate-400">{searchQuery ? "No members match your search" : "No members registered yet"}</p>
+                            <p className="text-sm text-slate-400">{searchQuery ? "No members match your search" : "No members found for this filter"}</p>
                           </div>
                         ) : (
-                          <div className="space-y-2">
+                          <div className="space-y-2.5">
                             {filteredUsers.map((u: any, i) => {
                               const isOnline = u.isOnline === true || (u.lastSeen && (Date.now() - new Date(u.lastSeen).getTime()) < 10 * 60 * 1000);
+                              const hasPhoto = !!(u.photoURL || u.headshotUrl);
+                              const hasDocs = !!(u.nationalIdUrl || u.passportScanUrl || u.passportFrontUrl || u.evidenceUrl || u.businessDeckUrl);
+                              const hasInfo = !!(u.name && u.phone && u.country && u.organization);
+                              const isSkipped = u.skippedRegistration === true || (!u.legalConsent && u.joinedAt);
+
                               return (
-                                <div key={u.id || i} className={`flex items-center justify-between p-3 rounded-xl border transition-all hover:border-blue-200 hover:bg-blue-50/30 ${editingUser?.id === u.id ? 'border-blue-300 bg-blue-50' : 'border-slate-100'}`}>
-                                  <div className="flex items-center gap-3">
+                                <div key={u.id || i} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3.5 rounded-xl border border-slate-200/80 bg-white hover:border-blue-300 hover:shadow-md transition-all gap-3">
+                                  <div className="flex items-center gap-3 min-w-0">
                                     <div className="relative flex-shrink-0">
-                                      <Avatar className="h-10 w-10">
-                                        <AvatarImage src={u.photoURL || ""} />
+                                      <Avatar className="h-11 w-11 border border-slate-200 shadow-sm">
+                                        <AvatarImage src={u.photoURL || u.headshotUrl || ""} />
                                         <AvatarFallback className="bg-slate-100 text-slate-700 font-bold">{u.name?.charAt(0) || 'U'}</AvatarFallback>
                                       </Avatar>
                                       <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${isOnline ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300'}`} title={isOnline ? 'Online' : 'Offline'} />
                                     </div>
-                                    <div className="space-y-0.5 min-w-0">
+                                    <div className="space-y-1 min-w-0">
                                       <div className="flex items-center gap-2 flex-wrap">
-                                        <p className="text-sm font-semibold text-slate-800">{u.name || "Anonymous"}</p>
-                                        {isOnline && <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-full">Online</span>}
-                                        {u.paymentStatus === 'Paid' && <span className="text-[9px] font-bold text-blue-600 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded-full">Paid</span>}
+                                        <p className="text-sm font-bold text-slate-900">{u.name || "Anonymous Delegate"}</p>
+                                        
+                                        {/* Status Badges */}
+                                        {isSkipped && (
+                                          <span className="text-[9px] font-bold text-amber-700 bg-amber-50 border border-amber-300 px-2 py-0.5 rounded-full uppercase">
+                                            Skipped Reg
+                                          </span>
+                                        )}
+                                        {!hasPhoto && (
+                                          <span className="text-[9px] font-bold text-rose-700 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-full uppercase">
+                                            Missing Photo
+                                          </span>
+                                        )}
+                                        {!hasDocs && (
+                                          <span className="text-[9px] font-bold text-rose-700 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-full uppercase">
+                                            Missing Docs
+                                          </span>
+                                        )}
+                                        {!hasInfo && (
+                                          <span className="text-[9px] font-bold text-purple-700 bg-purple-50 border border-purple-200 px-2 py-0.5 rounded-full uppercase">
+                                            Missing Info
+                                          </span>
+                                        )}
+                                        {!isSkipped && hasPhoto && hasDocs && hasInfo && (
+                                          <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full uppercase">
+                                            Complete
+                                          </span>
+                                        )}
+                                        {u.paymentStatus === 'Paid' && (
+                                          <span className="text-[9px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full uppercase">
+                                            Paid
+                                          </span>
+                                        )}
                                       </div>
-                                      <p className="text-xs text-slate-500 truncate">{u.email}</p>
-                                      {u.organization && <p className="text-[10px] text-slate-400 truncate">{u.organization} · {u.country}</p>}
+                                      <p className="text-xs text-slate-500 truncate">{u.email} {u.phone ? `· ${u.phone}` : ''}</p>
+                                      <p className="text-[11px] text-slate-400 truncate">
+                                        {u.designation ? `${u.designation} at ` : ''}{u.organization || 'No Organization'} {u.country ? `· ${u.country}` : ''}
+                                      </p>
                                     </div>
                                   </div>
-                                  <Button onClick={() => {
-                                    const isClosing = editingUser?.id === u.id;
-                                    setEditingUser(isClosing ? null : u);
-                                    if (!isClosing) {
-                                      const initData: Record<string, { approved: boolean, feedback: string, label: string }> = {};
-                                      const items = [
-                                        { key: 'profile', label: 'Profile Details' },
-                                        { key: 'headshot', label: 'Headshot Image' },
-                                        { key: 'nationalId', label: 'National ID' },
-                                        { key: 'passport', label: 'Passport (Front & Back)' },
-                                        { key: 'evidence', label: 'Nomination Evidence' },
-                                        { key: 'businessDeck', label: 'Business Deck' },
-                                        { key: 'guests', label: 'Guest Details & Documents' },
-                                      ];
-                                      items.forEach(item => {
-                                        initData[item.key] = u.verificationStatus?.[item.key] || { approved: true, feedback: '', label: item.label };
-                                      });
-                                      setVerificationData(initData);
-                                    }
-                                  }} variant={editingUser?.id === u.id ? "destructive" : "outline"} size="sm" className="text-xs flex-shrink-0 ml-2">
-                                    {editingUser?.id === u.id ? "Close" : "Details"}
-                                  </Button>
+
+                                  <div className="flex items-center gap-2 self-end sm:self-center flex-shrink-0">
+                                    <Link href={`/auth/admin/users/${u.id}`}>
+                                      <Button variant="outline" size="sm" className="text-xs border-slate-300 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 font-semibold gap-1.5">
+                                        View Details
+                                      </Button>
+                                    </Link>
+                                  </div>
                                 </div>
                               );
                             })}
@@ -1034,105 +1118,6 @@ export default function AdminClientPage() {
                       </CardContent>
                     </Card>
                   </div>
-
-                  {/* User Detail Panel */}
-                  {editingUser && (
-                    <div className="lg:col-span-5 bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden flex flex-col">
-                      {/* Panel Header */}
-                      <div className="bg-gradient-to-r from-slate-800 to-slate-900 p-4 text-white">
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-3">
-                            <Avatar className="h-12 w-12 border-2 border-white/20">
-                              <AvatarImage src={editingUser.photoURL || ""} />
-                              <AvatarFallback className="bg-white/10 text-white font-bold text-lg">{editingUser.name?.charAt(0) || 'U'}</AvatarFallback>
-                            </Avatar>
-                            <div>
-                              <p className="font-bold text-sm">{editingUser.name || "Anonymous"}</p>
-                              <p className="text-xs text-white/60">{editingUser.email}</p>
-                            </div>
-                          </div>
-                           <Button variant="outline" size="sm" className="text-xs bg-transparent border-white/20 text-white/80 hover:text-white hover:bg-white/10 h-8" onClick={() => setEditingUser(null)}>
-                             Close
-                           </Button>
-                        </div>
-                        <div className="flex gap-2 flex-wrap">
-                          <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase ${editingUser.paymentStatus === 'Paid' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'}`}>{editingUser.paymentStatus || 'Unpaid'}</span>
-                          <span className="text-[9px] font-bold px-2 py-0.5 rounded-full uppercase bg-blue-500/20 text-blue-300 border border-blue-500/30">{editingUser.delegateType || 'conference'}</span>
-                          {editingUser.country && <span className="text-[9px] font-bold px-2 py-0.5 rounded-full uppercase bg-white/10 text-white/70 border border-white/20">{editingUser.country}</span>}
-                        </div>
-                      </div>
-
-                      {/* PDF Viewer */}
-                      <div className="flex-1 relative min-h-[600px] w-full border-b">
-                        <CustomPDFViewer doc={<ProfilePDF memberData={editingUser} guestProfiles={[]} />} />
-                      </div>
-
-                      {/* Verification Panel */}
-                      <div className="p-4 bg-slate-50">
-                        <div className="flex items-center justify-between mb-4">
-                          <div>
-                            <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Document Verification</h3>
-                            <p className="text-xs text-slate-500 mt-0.5">Verify uploads and trigger automatic re-upload requests</p>
-                          </div>
-                          <Button 
-                            disabled={verifying}
-                            onClick={async () => {
-                              setVerifying(true);
-                              showToast("Saving verification status...", "info");
-                              const res = await verifyUserDocuments(editingUser.id, editingUser.email, editingUser.name, verificationData);
-                              if (res.success) {
-                                showToast("Verification saved successfully. Notifications sent if required.", "success");
-                                // Update local users array so the UI reflects it
-                                setUsers(prev => prev.map(u => u.id === editingUser.id ? { ...u, verificationStatus: verificationData } : u));
-                                setEditingUser({ ...editingUser, verificationStatus: verificationData });
-                              } else {
-                                showToast(`Failed: ${res.error}`, "error");
-                              }
-                              setVerifying(false);
-                            }}
-                            className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs h-8"
-                          >
-                            {verifying ? "Saving..." : "Save & Notify"}
-                          </Button>
-                        </div>
-                        
-                        <div className="space-y-3">
-                          {Object.entries(verificationData).map(([key, data]) => (
-                            <div key={key} className={`p-3 rounded-lg border ${data.approved ? 'bg-white border-slate-200' : 'bg-rose-50 border-rose-200'}`}>
-                              <div className="flex items-center justify-between">
-                                <span className="text-sm font-semibold text-slate-700">{data.label}</span>
-                                <div className="flex items-center gap-2 bg-white rounded-md border p-0.5">
-                                  <button
-                                    onClick={() => setVerificationData(prev => ({ ...prev, [key]: { ...prev[key], approved: true } }))}
-                                    className={`px-3 py-1 text-[10px] font-bold rounded uppercase transition-colors ${data.approved ? 'bg-emerald-100 text-emerald-700' : 'text-slate-500 hover:bg-slate-50'}`}
-                                  >
-                                    Yes
-                                  </button>
-                                  <button
-                                    onClick={() => setVerificationData(prev => ({ ...prev, [key]: { ...prev[key], approved: false } }))}
-                                    className={`px-3 py-1 text-[10px] font-bold rounded uppercase transition-colors ${!data.approved ? 'bg-rose-100 text-rose-700' : 'text-slate-500 hover:bg-slate-50'}`}
-                                  >
-                                    No
-                                  </button>
-                                </div>
-                              </div>
-                              {!data.approved && (
-                                <div className="mt-3">
-                                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 block">Reason for Rejection / Feedback</label>
-                                  <Input 
-                                    value={data.feedback}
-                                    onChange={(e) => setVerificationData(prev => ({ ...prev, [key]: { ...prev[key], feedback: e.target.value } }))}
-                                    placeholder="e.g. Image is blurry, please re-upload."
-                                    className="h-8 text-xs bg-white"
-                                  />
-                                </div>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  )}
                 </div>
               )}
               {activeTab === "Broadcast" && (

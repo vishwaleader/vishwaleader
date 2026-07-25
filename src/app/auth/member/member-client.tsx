@@ -1162,11 +1162,30 @@ export default function MemberClientPage() {
   const gstConverted = (pricing.gst / currency.rate).toFixed(2);
   const totalConverted = (pricing.total / currency.rate).toFixed(2);
 
-  // An existing member who completed the wizard has legalConsent=true → show dashboard.
-  const isRegistrationComplete = memberData !== null && memberData?.legalConsent === true;
-  // Per user request: If a member logs out in the middle of the wizard, resume where they left off.
-  // We use !isRegistrationComplete so any unpaid/uncompleted user gets forced to finish the wizard.
+  // An existing member who completed the wizard or skipped registration → show dashboard.
+  const isRegistrationComplete = memberData !== null && (memberData?.legalConsent === true || memberData?.skippedRegistration === true);
   const showWizard = (!isRegistrationComplete) || reRegisterMode;
+
+  const handleSkipRegistration = async () => {
+    if (!user) return;
+    try {
+      const userRef = doc(db, "users", user.uid);
+      await setDoc(userRef, {
+        skippedRegistration: true,
+        skippedAt: new Date().toISOString()
+      }, { merge: true });
+
+      setMemberData((prev: any) => ({
+        ...(prev || {}),
+        skippedRegistration: true
+      }));
+      setReRegisterMode(false);
+      showToast("Skipped registration. You can complete your profile anytime from your dashboard!");
+    } catch (err) {
+      console.error("Error skipping registration:", err);
+      showToast("Error updating registration status.");
+    }
+  };
 
   // Generate dynamic slides array
   const showTourStep = (profileOrigin !== 'London (UK)' && profileOrigin !== '');
@@ -1297,10 +1316,18 @@ export default function MemberClientPage() {
 
   const goNext = () => {
     if (currentSlide.type === 'origin') {
+      if (!profileOrigin) {
+        showToast("Please select where you are traveling from.");
+        return;
+      }
       if (profileOrigin === 'Other international location' && !profileCountry.trim()) {
         showToast("Please select your country.");
         return;
       }
+    }
+    if (currentSlide.type === 'events_general' && showEvents && wizardEventCategories.length === 0) {
+      showToast("Please select at least one event category to proceed.");
+      return;
     }
     if (currentSlide.type === 'intent' && wizardIntents.length === 0) {
       showToast("Please select at least one intent to proceed.");
@@ -1330,9 +1357,20 @@ export default function MemberClientPage() {
         return;
       }
     }
-    if ((currentSlide as any).required && !(currentSlide as any).state) {
-      showToast("This field is required.");
-      return;
+    if (currentSlide.type === 'upload') {
+      const fieldKey = currentSlide.field;
+      const fileUrl = currentSlide.url || memberData?.[`${fieldKey}Url`] || (fieldKey === 'headshot' ? memberData?.photoURL : null);
+      if (!fileUrl) {
+        showToast(`Please upload your required document before proceeding.`);
+        return;
+      }
+    }
+    if ((currentSlide as any).required) {
+      const val = (currentSlide as any).state;
+      if (!val || (typeof val === 'string' && !val.trim())) {
+        showToast("This field is required. Please complete it or click 'Skip Registration'.");
+        return;
+      }
     }
     if (wizardStep < visibleSlides.length - 1) {
       // If transitioning to the final 'review' (payment) page, show overlay
@@ -2482,27 +2520,39 @@ export default function MemberClientPage() {
               </div>
             </div>
             
-            <div className={`flex items-center gap-3 shrink-0 ml-auto w-full sm:w-auto sm:justify-end ${wizardStep > 0 ? 'justify-between' : 'justify-end'}`}>
-              {wizardStep > 0 && (
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={goPrev}
-                  className="rounded-xl font-semibold h-12 px-6 border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all shadow-sm bg-white"
-                >
-                  Back
-                </Button>
-              )}
-              
-              {wizardStep < visibleSlides.length - 1 ? (
-                <Button 
-                  type="button" 
-                  onClick={goNext}
-                  className="bg-slate-900 text-white text-sm font-semibold px-8 h-12 rounded-xl hover:bg-slate-800 transition-colors shadow-lg"
-                >
-                  <span>{currentSlide.type === 'sponsorships' && !wizardIntents.includes('Souvenir Advertisement') && !wizardIntents.includes('Donation Patron') ? 'Skip' : 'Next Step'}</span>
-                </Button>
-              ) : null}
+            <div className="flex items-center gap-3 shrink-0 ml-auto w-full sm:w-auto justify-between sm:justify-end flex-wrap">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={handleSkipRegistration}
+                className="text-xs text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl px-3.5 h-11 flex items-center gap-1.5 font-semibold border border-slate-200"
+              >
+                <LayoutDashboard className="w-4 h-4 text-brandBlue" />
+                <span>Skip Registration / Go to Dashboard</span>
+              </Button>
+
+              <div className="flex items-center gap-2">
+                {wizardStep > 0 && (
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={goPrev}
+                    className="rounded-xl font-semibold h-11 px-5 border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all shadow-sm bg-white"
+                  >
+                    Back
+                  </Button>
+                )}
+                
+                {wizardStep < visibleSlides.length - 1 ? (
+                  <Button 
+                    type="button" 
+                    onClick={goNext}
+                    className="bg-slate-900 text-white text-sm font-semibold px-7 h-11 rounded-xl hover:bg-slate-800 transition-colors shadow-lg"
+                  >
+                    <span>{currentSlide.type === 'sponsorships' && !wizardIntents.includes('Souvenir Advertisement') && !wizardIntents.includes('Donation Patron') ? 'Skip' : 'Next Step'}</span>
+                  </Button>
+                ) : null}
+              </div>
             </div>
           </div>
         </div>
@@ -2991,6 +3041,25 @@ export default function MemberClientPage() {
                 {/* ═════════════════════ TAB: DASHBOARD OVERVIEW ═════════════════════ */}
                 {activeTab === 'dashboard' && (
                   <div className="space-y-6">
+                    {memberData?.skippedRegistration && !memberData?.legalConsent && (
+                      <div className="bg-amber-50 border border-amber-200 p-4 rounded-xl shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-amber-900">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 rounded-xl bg-amber-100 text-amber-700 flex-shrink-0">
+                            <ShieldAlert className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <h3 className="text-sm font-bold uppercase tracking-wider">Registration Incomplete</h3>
+                            <p className="text-xs text-amber-800/80 mt-0.5">You skipped the registration wizard. Your profile and documents are incomplete.</p>
+                          </div>
+                        </div>
+                        <Button
+                          onClick={() => setReRegisterMode(true)}
+                          className="bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs h-9 px-4 rounded-xl flex-shrink-0"
+                        >
+                          Complete Registration Wizard
+                        </Button>
+                      </div>
+                    )}
                     {(() => {
                       const rejectedItems = memberData?.verificationStatus ? Object.entries(memberData.verificationStatus).filter(([_, data]: any) => !data.approved) : [];
                       if (rejectedItems.length > 0) {

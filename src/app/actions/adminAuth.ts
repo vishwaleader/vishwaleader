@@ -58,6 +58,7 @@ export async function getAdminDashboardData() {
         age: data.age || "",
         nationality: data.nationality || "",
         city: data.city || "",
+        state: data.state || "",
         delegateType: data.delegateType || "",
         nominationCategory: data.nominationCategory || "",
         packageTour: data.packageTour || "",
@@ -75,9 +76,16 @@ export async function getAdminDashboardData() {
         headshotUrl: data.headshotUrl || "",
         passportScanUrl: data.passportScanUrl || "",
         evidenceUrl: data.evidenceUrl || "",
+        nationalIdUrl: data.nationalIdUrl || "",
+        passportFrontUrl: data.passportFrontUrl || "",
+        passportBackUrl: data.passportBackUrl || "",
+        businessDeckUrl: data.businessDeckUrl || "",
         passportNumber: data.passportNumber || "",
         bio: data.bio || "",
         legalConsent: data.legalConsent || false,
+        skippedRegistration: data.skippedRegistration || false,
+        verificationStatus: data.verificationStatus || null,
+        wizardIntents: data.wizardIntents || [],
       };
     });
 
@@ -239,3 +247,73 @@ export async function verifyUserDocuments(
     return { success: false, error: e.message };
   }
 }
+
+export async function getAdminUserData(userId: string) {
+  const isAdmin = await checkAdminSession();
+  if (!isAdmin) return { success: false, error: "Unauthorized" };
+
+  try {
+    const db = getAdminDb();
+    const docSnap = await db.collection("users").doc(userId).get();
+    if (!docSnap.exists) {
+      return { success: false, error: "User not found" };
+    }
+    const data = docSnap.data() || {};
+
+    let guests: any[] = [];
+    try {
+      const guestsSnap = await db.collection("users").doc(userId).collection("guests").get();
+      guests = guestsSnap.docs.map(g => ({ id: g.id, ...g.data() }));
+    } catch (_) {}
+
+    const user = {
+      id: docSnap.id,
+      name: data.name || "",
+      email: data.email || "",
+      phone: data.phone || "",
+      designation: data.designation || "",
+      organization: data.organization || "",
+      sector: data.sector || "",
+      country: data.country || "",
+      gender: data.gender || "",
+      age: data.age || "",
+      nationality: data.nationality || "",
+      city: data.city || "",
+      state: data.state || "",
+      delegateType: data.delegateType || "",
+      nominationCategory: data.nominationCategory || "",
+      packageTour: data.packageTour || "",
+      visaSupport: data.visaSupport || false,
+      accommodationSupport: data.accommodationSupport || false,
+      paymentStatus: data.paymentStatus || "Unpaid",
+      paymentId: data.paymentId || "",
+      role: data.role || "member",
+      joinedAt: data.joinedAt || "",
+      isOnline: data.isOnline || false,
+      lastSeen: data.lastSeen ? (data.lastSeen.toDate ? data.lastSeen.toDate().toISOString() : String(data.lastSeen)) : null,
+      photoURL: data.photoURL || "",
+      headshotUrl: data.headshotUrl || "",
+      passportScanUrl: data.passportScanUrl || "",
+      evidenceUrl: data.evidenceUrl || "",
+      nationalIdUrl: data.nationalIdUrl || "",
+      passportFrontUrl: data.passportFrontUrl || "",
+      passportBackUrl: data.passportBackUrl || "",
+      businessDeckUrl: data.businessDeckUrl || "",
+      passportNumber: data.passportNumber || "",
+      bio: data.bio || "",
+      legalConsent: data.legalConsent || false,
+      skippedRegistration: data.skippedRegistration || false,
+      verificationStatus: data.verificationStatus || null,
+      wizardIntents: data.wizardIntents || [],
+      groupType: data.groupType || "none",
+      numDelegates: data.numDelegates || 1,
+      guestProfiles: data.guestProfiles || guests,
+    };
+
+    return { success: true, user };
+  } catch (e: any) {
+    console.error("getAdminUserData error:", e);
+    return { success: false, error: e.message || "Failed to fetch user details" };
+  }
+}
+
