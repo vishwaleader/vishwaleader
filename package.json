@@ -25,7 +25,7 @@
     "fuse.js": "^7.5.0",
     "googleapis": "^173.0.0",
     "lucide-react": "^1.22.0",
-    "next": "16.2.9",
+    "next": "16.2.12",
     "postcss": "^8.5.16",
     "razorpay": "^2.9.6",
     "react": "19.2.4",
