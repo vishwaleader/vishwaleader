@@ -283,7 +283,12 @@ export default function UserDetailClientPage({ userId }: { userId: string }) {
                     )}
                     {user.businessDeckUrl && (
                       <a href={user.businessDeckUrl} target="_blank" rel="noreferrer" className="flex items-center justify-between p-2 rounded-lg bg-slate-800/60 hover:bg-slate-800 text-blue-400">
-                        <span>Business Deck</span> <ExternalLink className="w-3.5 h-3.5" />
+                        <span>Business Pitch Deck</span> <ExternalLink className="w-3.5 h-3.5" />
+                      </a>
+                    )}
+                    {user.paperUrl && (
+                      <a href={user.paperUrl} target="_blank" rel="noreferrer" className="flex items-center justify-between p-2 rounded-lg bg-slate-800/60 hover:bg-slate-800 text-blue-400 font-bold border border-blue-500/30 bg-blue-950/40">
+                        <span>Submitted Research Paper</span> <ExternalLink className="w-3.5 h-3.5" />
                       </a>
                     )}
                   </div>

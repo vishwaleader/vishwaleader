@@ -439,6 +439,11 @@ export default function MemberClientPage() {
   const [businessDeckUploading, setBusinessDeckUploading] = useState(false);
   const [businessDeckProgress, setBusinessDeckProgress] = useState(0);
 
+  const [paperUploading, setPaperUploading] = useState(false);
+  const [paperProgress, setPaperProgress] = useState(0);
+  const [subFileUrl, setSubFileUrl] = useState("");
+  const [subFileName, setSubFileName] = useState("");
+
   // Submissions states
   const [subTitle, setSubTitle] = useState("");
   const [subAuthors, setSubAuthors] = useState("");
@@ -940,7 +945,7 @@ export default function MemberClientPage() {
   };
 
   // Firebase Storage upload helper
-  const uploadFileToStorage = (file: File, type: 'headshot' | 'passportFront' | 'passportBack' | 'nationalId' | 'evidence' | 'businessDeck' | 'guestUpload', guestIndex?: number, guestField?: 'headshotUrl' | 'passportFrontUrl' | 'passportBackUrl' | 'nationalIdUrl') => {
+  const uploadFileToStorage = (file: File, type: 'headshot' | 'passportFront' | 'passportBack' | 'nationalId' | 'evidence' | 'businessDeck' | 'paper' | 'guestUpload', guestIndex?: number, guestField?: 'headshotUrl' | 'passportFrontUrl' | 'passportBackUrl' | 'nationalIdUrl') => {
     if (!user) return;
     
     // Set status
@@ -953,6 +958,7 @@ export default function MemberClientPage() {
     if (type === 'passportBack') { setPassportBackUploading(true); setPassportBackProgress(0); }
     if (type === 'evidence') { setEvidenceUploading(true); setEvidenceProgress(0); }
     if (type === 'businessDeck') { setBusinessDeckUploading(true); setBusinessDeckProgress(0); }
+    if (type === 'paper') { setPaperUploading(true); setPaperProgress(0); setSubFileName(file.name); }
 
     const storagePath = `users/${user.uid}/${type}_${Date.now()}_${file.name}`;
     const storageRef = ref(storage, storagePath);
@@ -970,6 +976,7 @@ export default function MemberClientPage() {
         if (type === 'passportBack') setPassportBackProgress(progress);
         if (type === 'evidence') setEvidenceProgress(progress);
         if (type === 'businessDeck') setBusinessDeckProgress(progress);
+        if (type === 'paper') setPaperProgress(progress);
       }, 
       (error) => {
         console.error("Storage upload error:", error);
@@ -983,6 +990,7 @@ export default function MemberClientPage() {
         if (type === 'passportBack') setPassportBackUploading(false);
         if (type === 'evidence') setEvidenceUploading(false);
         if (type === 'businessDeck') setBusinessDeckUploading(false);
+        if (type === 'paper') setPaperUploading(false);
       }, 
       async () => {
         try {
@@ -1004,6 +1012,7 @@ export default function MemberClientPage() {
                             type === 'passportFront' ? 'passportFrontUrl' : 
                             type === 'passportBack' ? 'passportBackUrl' : 
                             type === 'evidence' ? 'evidenceUrl' :
+                            type === 'paper' ? 'paperUrl' :
                             'businessDeckUrl';
             
             const updates: any = { [updateField]: downloadURL };
@@ -1018,6 +1027,9 @@ export default function MemberClientPage() {
             
             await updateDoc(userRef, updates);
             setMemberData((prev: any) => ({ ...prev, ...updates }));
+            if (type === 'paper') {
+              setSubFileUrl(downloadURL);
+            }
           }
           // Log file upload to admin activity feed
           try {
@@ -1043,6 +1055,7 @@ export default function MemberClientPage() {
           if (type === 'passportBack') setPassportBackUploading(false);
           if (type === 'evidence') setEvidenceUploading(false);
           if (type === 'businessDeck') setBusinessDeckUploading(false);
+          if (type === 'paper') setPaperUploading(false);
         }
       }
     );
@@ -1182,12 +1195,15 @@ export default function MemberClientPage() {
     e.preventDefault();
     if (!user) return;
     try {
+      const fileUrlToSave = subFileUrl || memberData?.paperUrl || "";
       const newSub = {
         title: subTitle,
         authors: subAuthors,
         theme: subTheme,
         abstract: subAbstract,
-        fileName: subFileName || "AbstractDraft.docx",
+        fileName: subFileName || "ResearchPaper.pdf",
+        fileUrl: fileUrlToSave,
+        paperUrl: fileUrlToSave,
         status: "pending",
         userId: user.uid,
         userEmail: user.email,
@@ -1202,9 +1218,10 @@ export default function MemberClientPage() {
       setSubTheme("equality");
       setSubAbstract("");
       setSubFileName("");
+      setSubFileUrl("");
       setShowSubForm(false);
       
-      showToast("Abstract draft registered successfully!");
+      showToast("Research paper draft registered successfully!");
     } catch (err) {
       console.error("Error creating submission:", err);
       showToast("Failed to save submission draft.");
@@ -1326,11 +1343,13 @@ export default function MemberClientPage() {
     { id: 'organization', type: 'text', title: 'Which organization or university are you affiliated with?', state: profileOrganization, setState: setProfileOrganization, required: true },
     { id: 'phone', type: 'autocomplete', title: 'What is your contact number? (WhatsApp enabled)', subtitle: "Include country code e.g., +91 9876543210", options: PHONE_CODES_LIST, state: profilePhone, setState: setProfilePhone, required: true },
 
-    
     // Documents
-    { id: 'headshot', type: 'upload', title: 'Please upload a professional headshot.', subtitle: "This will be used for your Delegate ID Card.", field: 'headshot', url: memberData?.headshotUrl, uploading: headshotUploading, progress: headshotProgress },
-    { id: 'nationalId', type: 'upload', title: 'Please upload your National ID (Aadhar/PAN).', field: 'nationalId', url: memberData?.nationalIdUrl, uploading: nationalIdUploading, progress: nationalIdProgress },
+    { id: 'headshot', type: 'upload', title: 'Please upload a professional headshot photograph.', subtitle: "Mandatory for all registrants. This will be printed on your official Delegate ID Card.", field: 'headshot', url: memberData?.headshotUrl, uploading: headshotUploading, progress: headshotProgress },
+    { id: 'nationalId', type: 'upload', title: 'Please upload your National ID (Aadhar/PAN/National ID).', field: 'nationalId', url: memberData?.nationalIdUrl, uploading: nationalIdUploading, progress: nationalIdProgress },
+    
+    // Passport ONLY required if Tour Package is selected
     ...(profilePackageTour !== 'None' ? [
+      { id: 'passport', type: 'text', title: 'What is your passport number?', subtitle: "Required for Visa invitation letters & London Tour arrangements.", state: profilePassport, setState: setProfilePassport, required: true },
       { id: 'passportFront', type: 'upload', title: 'Please upload the front page of your passport.', field: 'passportFront', url: memberData?.passportFrontUrl, uploading: passportFrontUploading, progress: passportFrontProgress },
       { id: 'passportBack', type: 'upload', title: 'Please upload the back page of your passport.', field: 'passportBack', url: memberData?.passportBackUrl, uploading: passportBackUploading, progress: passportBackProgress }
     ] : []),
@@ -1345,7 +1364,8 @@ export default function MemberClientPage() {
     ...(wizardIntents.includes('Conference Presenter') ? [
       { id: 'paper_title', type: 'text', title: 'What is the title of your research paper?', state: subTitle, setState: setSubTitle, required: true },
       { id: 'paper_authors', type: 'text', title: 'Who are the co-authors? (If any)', state: subAuthors, setState: setSubAuthors, required: true },
-      { id: 'paper_abstract', type: 'textarea', title: 'Please provide a short abstract.', subtitle: "Maximum 300 words.", state: subAbstract, setState: setSubAbstract, required: true }
+      { id: 'paper_abstract', type: 'textarea', title: 'Please provide a short abstract.', subtitle: "Maximum 300 words.", state: subAbstract, setState: setSubAbstract, required: true },
+      { id: 'paper_file', type: 'upload', title: 'Please upload your research paper or abstract document.', subtitle: "Accepted formats: .pdf, .doc, .docx", field: 'paper', url: memberData?.paperUrl || subFileUrl, uploading: paperUploading, progress: paperProgress, accept: ".pdf,.doc,.docx" }
     ] : []),
 
     // Conditional: Business
@@ -1469,9 +1489,9 @@ export default function MemberClientPage() {
     }
     if (currentSlide.type === 'upload') {
       const fieldKey = currentSlide.field;
-      const fileUrl = currentSlide.url || memberData?.[`${fieldKey}Url`] || (fieldKey === 'headshot' ? memberData?.photoURL : null);
+      const fileUrl = currentSlide.url || memberData?.[`${fieldKey}Url`];
       if (!fileUrl) {
-        showToast(`Please upload your required document before proceeding.`);
+        showToast(`Please upload your required ${currentSlide.title || 'document'} before proceeding.`);
         return;
       }
     }
@@ -4043,7 +4063,7 @@ export default function MemberClientPage() {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div className="space-y-1.5">
-                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">File Name reference (e.g. abstract_draft.pdf)</label>
+                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">File Reference Title</label>
                                 <Input 
                                   type="text" 
                                   value={subFileName}
@@ -4053,17 +4073,31 @@ export default function MemberClientPage() {
                                 />
                               </div>
                               <div className="space-y-1.5">
-                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Upload PDF / Paper</label>
+                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Upload PDF / Paper File</label>
                                 <Input 
                                   type="file" 
                                   accept=".pdf,.doc,.docx"
+                                  onChange={(e) => {
+                                    if (e.target.files?.[0]) {
+                                      uploadFileToStorage(e.target.files[0], 'paper');
+                                    }
+                                  }}
                                   className="bg-slate-55 border-slate-200 text-xs rounded-xl focus:border-brandBlue text-slate-800 focus:ring-1 focus:ring-brandBlue cursor-pointer file:text-brandBlue file:font-bold file:border-0 file:bg-brandBlue/10 file:px-3 file:py-1 file:rounded-lg file:mr-3 file:text-xs" 
                                 />
+                                {paperUploading && (
+                                  <div className="flex items-center gap-2 mt-1">
+                                    <Loader2 className="size-3 text-brandBlue animate-spin" />
+                                    <span className="text-[10px] font-bold text-brandBlue">Uploading paper {paperProgress}%...</span>
+                                  </div>
+                                )}
+                                {subFileUrl && (
+                                  <p className="text-[10px] font-bold text-emerald-600 mt-1">✅ Research paper file uploaded successfully!</p>
+                                )}
                               </div>
                             </div>
 
                             <div className="flex gap-2 pt-2">
-                              <Button type="submit" className="flex-grow bg-brandBlue hover:bg-brandBlue/90 text-white font-bold h-10 rounded-xl text-xs uppercase tracking-wider">
+                              <Button type="submit" disabled={paperUploading} className="flex-grow bg-brandBlue hover:bg-brandBlue/90 text-white font-bold h-10 rounded-xl text-xs uppercase tracking-wider disabled:opacity-50">
                                 Register Submission Document
                               </Button>
                             </div>
@@ -4081,7 +4115,7 @@ export default function MemberClientPage() {
                               <TableRow className="border-slate-200 hover:bg-transparent">
                                 <TableHead className="text-slate-500 font-bold uppercase tracking-wider text-[9px] py-4 pl-6">Abstract Title</TableHead>
                                 <TableHead className="text-slate-500 font-bold uppercase tracking-wider text-[9px] py-4">Theme</TableHead>
-                                <TableHead className="text-slate-500 font-bold uppercase tracking-wider text-[9px] py-4">Draft Reference</TableHead>
+                                <TableHead className="text-slate-500 font-bold uppercase tracking-wider text-[9px] py-4">Uploaded Paper</TableHead>
                                 <TableHead className="text-slate-500 font-bold uppercase tracking-wider text-[9px] py-4">Status</TableHead>
                                 <TableHead className="text-slate-500 font-bold uppercase tracking-wider text-[9px] py-4 text-right pr-6">Cancel</TableHead>
                               </TableRow>
@@ -4096,7 +4130,20 @@ export default function MemberClientPage() {
                                     </div>
                                   </TableCell>
                                   <TableCell className="capitalize text-slate-600 text-xs py-4">{sub.theme}</TableCell>
-                                  <TableCell className="text-slate-555 font-mono text-[10px] py-4">{sub.fileName || "AbstractDraft.docx"}</TableCell>
+                                  <TableCell className="py-4">
+                                    {sub.fileUrl || sub.paperUrl ? (
+                                      <a 
+                                        href={sub.fileUrl || sub.paperUrl} 
+                                        target="_blank" 
+                                        rel="noreferrer"
+                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 text-brandBlue hover:bg-blue-100 font-bold text-xs border border-blue-200 transition-all shadow-sm"
+                                      >
+                                        <FileText className="size-3.5 text-brandBlue" /> View Paper
+                                      </a>
+                                    ) : (
+                                      <span className="text-slate-400 text-xs italic">{sub.fileName || "No file uploaded"}</span>
+                                    )}
+                                  </TableCell>
                                   <TableCell className="py-4">
                                     {sub.status === 'pending' ? (
                                       <Badge variant="outline" className="text-amber-600 border-amber-500/20 bg-amber-500/5 text-[8px] font-bold tracking-widest uppercase">
