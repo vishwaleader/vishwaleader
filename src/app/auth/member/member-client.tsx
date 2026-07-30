@@ -2734,14 +2734,9 @@ export default function MemberClientPage() {
       {/* Fixed Bottom Bar */}
       {currentSlide.type !== 'review' && (
         <div className="fixed bottom-0 left-0 w-full bg-white/90 backdrop-blur-xl border-t border-slate-200 p-4 z-50">
-          <div className="w-full flex items-center justify-between gap-4 px-2 sm:px-8">
-            <div className="flex-grow hidden sm:block">
-              <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                <div className="h-full bg-slate-900 transition-all duration-500 ease-out" style={{ width: `${progressPercentage}%` }}></div>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-3 shrink-0 ml-auto w-full sm:w-auto justify-between sm:justify-end flex-wrap">
+          <div className="w-full flex items-center justify-between gap-4 px-2 sm:px-8 flex-wrap sm:flex-nowrap">
+            {/* Left side: Skip button */}
+            <div className="flex items-center">
               <Button
                 type="button"
                 variant="ghost"
@@ -2751,29 +2746,37 @@ export default function MemberClientPage() {
                 <LayoutDashboard className="w-4 h-4 text-brandBlue" />
                 <span>Skip Registration / Go to Dashboard</span>
               </Button>
+            </div>
 
-              <div className="flex items-center gap-2">
-                {wizardStep > 0 && (
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={goPrev}
-                    className="rounded-xl font-semibold h-11 px-5 border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all shadow-sm bg-white"
-                  >
-                    Back
-                  </Button>
-                )}
-                
-                {wizardStep < visibleSlides.length - 1 ? (
-                  <Button 
-                    type="button" 
-                    onClick={goNext}
-                    className="bg-slate-900 text-white text-sm font-semibold px-7 h-11 rounded-xl hover:bg-slate-800 transition-colors shadow-lg"
-                  >
-                    <span>{currentSlide.type === 'sponsorships' && !wizardIntents.includes('Souvenir Advertisement') && !wizardIntents.includes('Donation Patron') ? 'Skip' : 'Next Step'}</span>
-                  </Button>
-                ) : null}
+            {/* Center: Progress Bar */}
+            <div className="flex-grow hidden md:block max-w-md mx-auto">
+              <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                <div className="h-full bg-slate-900 transition-all duration-500 ease-out" style={{ width: `${progressPercentage}%` }}></div>
               </div>
+            </div>
+
+            {/* Right side: Back + Next Step buttons */}
+            <div className="flex items-center gap-2 shrink-0 ml-auto">
+              {wizardStep > 0 && (
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={goPrev}
+                  className="rounded-xl font-semibold h-11 px-5 border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all shadow-sm bg-white"
+                >
+                  Back
+                </Button>
+              )}
+              
+              {wizardStep < visibleSlides.length - 1 ? (
+                <Button 
+                  type="button" 
+                  onClick={goNext}
+                  className="bg-slate-900 text-white text-sm font-semibold px-7 h-11 rounded-xl hover:bg-slate-800 transition-colors shadow-lg"
+                >
+                  <span>{currentSlide.type === 'sponsorships' && !wizardIntents.includes('Souvenir Advertisement') && !wizardIntents.includes('Donation Patron') ? 'Skip' : 'Next Step'}</span>
+                </Button>
+              ) : null}
             </div>
           </div>
         </div>
