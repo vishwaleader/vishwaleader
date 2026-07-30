@@ -17,13 +17,14 @@ export async function getWebTrafficData() {
   }
 
   try {
+    const { safeParseJson } = await import("@/lib/firebaseAdmin");
     const credentialsJson = Buffer.from(credentialsBase64, "base64").toString("utf-8");
-    const credentials = JSON.parse(credentialsJson);
+    const credentials = safeParseJson(credentialsJson);
 
     const analyticsDataClient = new BetaAnalyticsDataClient({
       credentials: {
         client_email: credentials.client_email,
-        private_key: credentials.private_key,
+        private_key: credentials.private_key?.replace(/\\n/g, "\n"),
       },
       projectId: credentials.project_id,
     });

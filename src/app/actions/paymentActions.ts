@@ -3,7 +3,7 @@
 import Razorpay from 'razorpay';
 import crypto from 'crypto';
 import { db } from "@/lib/firebase";
-import { doc, updateDoc, addDoc, collection, arrayUnion } from "firebase/firestore";
+import { doc, getDoc, updateDoc, addDoc, collection, arrayUnion } from "firebase/firestore";
 
 // Price Dictionary mapping item IDs to their INR prices (including GST where applicable)
 const PRICE_DICTIONARY: Record<string, number> = {
@@ -29,18 +29,23 @@ const PRICE_DICTIONARY: Record<string, number> = {
     "ad_quarter_page": 15000,
 
     // Tour Packages (Prices are inclusive of Registration Fee 23600)
-    "pkg_india": 131000, // Replacing pkg_4 for clarity
-    "pkg_intl": 200501,  // Replacing pkg_3 for clarity
+    "pkg_india": 131000,
+    "pkg_intl": 200501,
     "pkg_1": 310000,
     "pkg_2": 235000,
     "pkg_3": 200501,
     "pkg_4": 131000,
 
     // High-Level Support & Patronage
-    "donation_patron": 118000, // 100000 + GST
+    "donation_patron": 118000,
 };
 
-export async function createDynamicOrder(selectedItems: string[], customDonationAmount?: number) {
+export async function createDynamicOrder(
+    selectedItems: string[], 
+    customDonationAmount?: number,
+    paymentMode: 'FULL' | 'PARTIAL' = 'FULL',
+    partialAmount?: number
+) {
     if (!selectedItems || selectedItems.length === 0) {
         return { success: false, error: 'No items selected.' };
     }
@@ -49,7 +54,6 @@ export async function createDynamicOrder(selectedItems: string[], customDonation
     let totalAmount = 0;
     for (const item of selectedItems) {
         if (item === 'donation_patron' && customDonationAmount !== undefined) {
-            // Apply custom donation amount directly (GST included)
             totalAmount += customDonationAmount;
             continue;
         }
@@ -64,17 +68,42 @@ export async function createDynamicOrder(selectedItems: string[], customDonation
         return { success: false, error: 'Total amount must be greater than zero.' };
     }
 
+    let payableAmount = totalAmount;
+
+    if (paymentMode === 'PARTIAL') {
+        if (totalAmount < 6000) {
+            return { success: false, error: 'Part payment is only available for orders of ₹6,000 or above.' };
+        }
+        if (partialAmount && partialAmount > 0) {
+            const MIN_DEPOSIT = 5000;
+            if (partialAmount < MIN_DEPOSIT) {
+                return { success: false, error: `Minimum partial payment is ₹${MIN_DEPOSIT.toLocaleString('en-IN')}` };
+            }
+            if (partialAmount > totalAmount) {
+                return { success: false, error: 'Partial amount cannot exceed the total price.' };
+            }
+            payableAmount = Math.round(partialAmount);
+        }
+    }
+
+    const keyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
+    const keySecret = process.env.RAZORPAY_KEY_SECRET;
+
+    if (!keyId || !keySecret) {
+        return { success: false, error: 'Razorpay API credentials are not configured in environment variables.' };
+    }
+
     const razorpay = new Razorpay({
-        key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
-        key_secret: process.env.RAZORPAY_KEY_SECRET!,
+        key_id: keyId,
+        key_secret: keySecret,
     });
 
-    // Cap amount at 5,00,000 INR for test mode Razorpay accounts to prevent amount exceeds limit error
-    const isTestMode = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID?.startsWith('rzp_test_');
-    const finalAmount = isTestMode ? Math.min(totalAmount, 500000) : totalAmount;
+    // Cap amount at 5,00,000 INR for test mode Razorpay accounts
+    const isTestMode = keyId.startsWith('rzp_test_');
+    const finalAmount = isTestMode ? Math.min(payableAmount, 500000) : payableAmount;
 
     const options = {
-        amount: finalAmount * 100, // amount in paise
+        amount: Math.round(finalAmount * 100), // amount in paise
         currency: 'INR',
         receipt: `receipt_order_${new Date().getTime()}`,
     };
@@ -84,7 +113,7 @@ export async function createDynamicOrder(selectedItems: string[], customDonation
         if (!order) {
             return { success: false, error: 'Failed to create order.' };
         }
-        return { success: true, order, totalAmount };
+        return { success: true, order, totalAmount, payableAmount };
     } catch (error: any) {
         console.error('Razorpay order creation error:', error);
         return { success: false, error: `Could not create Razorpay order: ${error.message || JSON.stringify(error)}` };
@@ -97,22 +126,41 @@ export async function verifyDynamicPayment(
     signature: string, 
     userId: string,
     selectedItems: string[],
-    totalAmount: number
+    totalAmount: number,
+    paidAmount?: number
 ) {
     if (!paymentId || !orderId || !signature || !userId || !selectedItems || selectedItems.length === 0) {
         return { success: false, error: 'Invalid verification arguments.' };
     }
 
+    const keySecret = process.env.RAZORPAY_KEY_SECRET;
+    if (!keySecret) {
+        return { success: false, error: 'Razorpay key secret is not configured.' };
+    }
+
     try {
         // Verify signature securely
         const generated_signature = crypto
-            .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET!)
+            .createHmac('sha256', keySecret)
             .update(orderId + "|" + paymentId)
             .digest('hex');
 
         if (generated_signature !== signature) {
             return { success: false, error: 'Payment signature verification failed.' };
         }
+
+        const userRef = doc(db, 'users', userId);
+        const userSnap = await getDoc(userRef);
+        const userData = userSnap.exists() ? userSnap.data() : {};
+
+        const currentPaid = paidAmount && paidAmount > 0 ? paidAmount : totalAmount;
+        const previousAmountPaid = Number(userData.amountPaid) || 0;
+        const newAmountPaid = previousAmountPaid + currentPaid;
+        
+        // Take larger of calculated total or existing stored totalAmount if previously set
+        const authoritativeTotal = Math.max(totalAmount, Number(userData.totalAmount) || 0);
+        const remainingBalance = Math.max(0, authoritativeTotal - newAmountPaid);
+        const newStatus = remainingBalance <= 0 ? "Paid" : "Partially Paid";
 
         // 1. Save detailed order to 'orders' collection (Source of truth)
         const orderDocRef = await addDoc(collection(db, 'orders'), {
@@ -121,23 +169,100 @@ export async function verifyDynamicPayment(
             orderId: orderId,
             status: "completed",
             createdAt: new Date().toISOString(),
-            amount: totalAmount,
+            amount: currentPaid,
+            totalOrderAmount: authoritativeTotal,
+            remainingBalance: remainingBalance,
+            paymentType: remainingBalance <= 0 ? "Full" : "Partial",
             items: selectedItems.map(id => ({ id }))
         });
 
-        // 2. Update user document with fast-access summary
-        const userRef = doc(db, 'users', userId);
+        // 2. Update user document
         await updateDoc(userRef, {
-            paymentStatus: "Paid", // Legacy field, keeping for compatibility
+            paymentStatus: newStatus,
             paymentId: paymentId,
             paymentOrderId: orderId,
             paidAt: new Date().toISOString(),
-            accessRights: arrayUnion(...selectedItems)
+            totalAmount: authoritativeTotal,
+            amountPaid: newAmountPaid,
+            remainingBalance: remainingBalance,
+            accessRights: arrayUnion(...selectedItems),
+            paymentHistory: arrayUnion({
+                paymentId: paymentId,
+                orderId: orderId,
+                amount: currentPaid,
+                paidAt: new Date().toISOString(),
+                paymentType: newStatus === "Paid" ? "Full / Final" : "Partial Deposit",
+                remainingBalance: remainingBalance
+            })
         });
 
-        return { success: true, orderDocId: orderDocRef.id };
+        return { success: true, orderDocId: orderDocRef.id, newStatus, remainingBalance, newAmountPaid };
     } catch (error: any) {
         console.error("Payment signature verification error:", error);
         return { success: false, error: error.message || 'Signature verification failed.' };
+    }
+}
+
+export async function createBalancePaymentOrder(userId: string, requestedAmount?: number) {
+    if (!userId) {
+        return { success: false, error: 'User ID is required.' };
+    }
+
+    const keyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
+    const keySecret = process.env.RAZORPAY_KEY_SECRET;
+
+    if (!keyId || !keySecret) {
+        return { success: false, error: 'Razorpay API credentials are not configured in environment variables.' };
+    }
+
+    try {
+        const userRef = doc(db, 'users', userId);
+        const userSnap = await getDoc(userRef);
+        if (!userSnap.exists()) {
+            return { success: false, error: 'User profile not found.' };
+        }
+
+        const userData = userSnap.data();
+        const remainingBalance = Number(userData.remainingBalance) || 0;
+
+        if (remainingBalance <= 0) {
+            return { success: false, error: 'No outstanding balance remaining.' };
+        }
+
+        let payableAmount = remainingBalance;
+        if (requestedAmount && requestedAmount > 0) {
+            payableAmount = Math.min(requestedAmount, remainingBalance);
+        }
+
+        const razorpay = new Razorpay({
+            key_id: keyId,
+            key_secret: keySecret,
+        });
+
+        const isTestMode = keyId.startsWith('rzp_test_');
+        const finalAmount = isTestMode ? Math.min(payableAmount, 500000) : payableAmount;
+
+        const options = {
+            amount: Math.round(finalAmount * 100),
+            currency: 'INR',
+            receipt: `receipt_bal_${new Date().getTime()}`,
+        };
+
+        const order = await razorpay.orders.create(options);
+        if (!order) {
+            return { success: false, error: 'Failed to create balance payment order.' };
+        }
+
+        return { 
+            success: true, 
+            order, 
+            remainingBalance, 
+            payableAmount, 
+            totalAmount: Number(userData.totalAmount) || remainingBalance,
+            accessRights: userData.accessRights || []
+        };
+    } catch (error: any) {
+        console.error('Balance payment order creation error:', error);
+        return { success: false, error: error.message || 'Could not create balance payment order.' };
     }
 }

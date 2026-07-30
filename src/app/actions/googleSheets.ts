@@ -21,7 +21,8 @@ export async function exportToGoogleSheets() {
 
     if (credentialsEnv) {
       try {
-        credentials = JSON.parse(credentialsEnv);
+        const { safeParseJson } = await import("@/lib/firebaseAdmin");
+        credentials = safeParseJson(credentialsEnv);
       } catch (err) {
         console.error("Failed to parse GOOGLE_CREDENTIALS_JSON env variable:", err);
       }

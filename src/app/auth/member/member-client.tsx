@@ -9,7 +9,7 @@ import { auth, db, storage } from "@/lib/firebase";
 import { onAuthStateChanged, signOut, type User, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs, addDoc, deleteDoc, serverTimestamp } from "firebase/firestore";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
-import { createDynamicOrder, verifyDynamicPayment } from "@/app/actions/paymentActions";
+import { createDynamicOrder, verifyDynamicPayment, createBalancePaymentOrder } from "@/app/actions/paymentActions";
 import Preloader from "@/components/Preloader";
 import NetworkBackground from "@/components/NetworkBackground";
 import AdPlaceholder from "@/components/AdPlaceholder";
@@ -365,6 +365,22 @@ export default function MemberClientPage() {
     const perPersonSubtotal = getPerPersonCost(wizardIntents, profilePackageTour);
     
     return (perPersonSubtotal * (numDelegates || 1)) + oneTimeSubtotal;
+  };
+
+  const [wizardPaymentMode, setWizardPaymentMode] = useState<'FULL' | 'PARTIAL'>('FULL');
+  const [wizardDepositPreset, setWizardDepositPreset] = useState<'25%' | '50%' | 'custom'>('25%');
+  const [wizardCustomDeposit, setWizardCustomDeposit] = useState<string>('10000');
+
+  const calculateWizardPayableToday = () => {
+    const total = calculateWizardTotal();
+    if (wizardPaymentMode === 'FULL' || total < 6000) return total;
+    if (wizardDepositPreset === '25%') return Math.round(total * 0.25);
+    if (wizardDepositPreset === '50%') return Math.round(total * 0.5);
+    if (wizardDepositPreset === 'custom') {
+      const val = Number(wizardCustomDeposit) || 5000;
+      return Math.min(Math.max(5000, val), total);
+    }
+    return total;
   };
 
   // Wizard Intents (What brings you here)
@@ -745,66 +761,160 @@ export default function MemberClientPage() {
       return;
     }
 
-    // 1. Create order on the secure Server Action
-    const result = await createDynamicOrder(selectedItems, Number(patronAmount) || 100000);
+    const payableToday = calculateWizardPayableToday();
+    const result = await createDynamicOrder(selectedItems, Number(patronAmount) || 100000, wizardPaymentMode, payableToday);
 
     if (!result.success || !result.order) {
       alert(result.error || "Could not generate order order-id from checkout gateway.");
       return;
     }
 
-    const { order, totalAmount } = result;
+    const { order, totalAmount, payableAmount } = result;
+    const amountToCharge = payableAmount || payableToday;
 
-    // 2. Configure payment options with transaction verification callback
-    const options = {
-      key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-      amount: order.amount,
-      currency: order.currency,
-      name: "Vishwa Leader Tech Media Pvt Ltd",
-      description: `Dynamic Order - Total: ₹${totalAmount.toLocaleString('en-IN')}`,
-      order_id: order.id,
-      handler: async function (response: any) {
-        setLoading(true);
-        try {
-          // 3. Verify Razorpay response signature securely on the server side
-          const verifyRes = await verifyDynamicPayment(
-            response.razorpay_payment_id,
-            response.razorpay_order_id,
-            response.razorpay_signature,
-            user.uid,
-            selectedItems,
-            totalAmount
-          );
-          if (verifyRes.success) {
-            setMemberData((prev: any) => ({ 
-              ...prev, 
-              paymentStatus: "Paid", 
-              paymentId: response.razorpay_payment_id,
-              paymentOrderId: response.razorpay_order_id 
-            }));
-            showToast("Payment completed and verified successfully!");
-            window.location.reload(); // Quick refresh to update state based on accessRights
-          } else {
-            alert(`Signature verification failed: ${verifyRes.error}`);
-          }
-        } catch (e: any) {
-          alert(`Verification error: ${e.message}`);
-        } finally {
-          setLoading(false);
-        }
-      },
-      prefill: {
-        name: profileName || user.displayName || "",
-        email: user.email || "",
-        contact: profilePhone || ""
-      },
-      theme: {
-        color: "#2563eb"
+      const rzpKey = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
+      if (!rzpKey) {
+        alert("Payment gateway key is not configured in environment variables.");
+        return;
       }
-    };
 
-    const rzp = new window.Razorpay(options);
-    rzp.open();
+      // 2. Configure payment options with transaction verification callback
+      const options = {
+        key: rzpKey,
+        amount: order.amount,
+        currency: order.currency,
+        name: "Vishwa Leader Tech Media Pvt Ltd",
+        description: wizardPaymentMode === 'PARTIAL' 
+          ? `Part Deposit Payment - Total: INR ${totalAmount.toLocaleString('en-IN')}` 
+          : `Full Payment - Total: INR ${totalAmount.toLocaleString('en-IN')}`,
+        order_id: order.id,
+        handler: async function (response: any) {
+          setLoading(true);
+          try {
+            // 3. Verify Razorpay response signature securely on the server side
+            const verifyRes = await verifyDynamicPayment(
+              response.razorpay_payment_id,
+              response.razorpay_order_id,
+              response.razorpay_signature,
+              user.uid,
+              selectedItems,
+              totalAmount,
+              amountToCharge
+            );
+            if (verifyRes.success) {
+              setMemberData((prev: any) => ({ 
+                ...prev, 
+                paymentStatus: verifyRes.newStatus, 
+                paymentId: response.razorpay_payment_id,
+                paymentOrderId: response.razorpay_order_id 
+              }));
+              showToast("Payment completed and verified successfully!");
+              window.location.reload(); // Quick refresh to update state based on accessRights
+            } else {
+              alert(`Signature verification failed: ${verifyRes.error}`);
+            }
+          } catch (e: any) {
+            alert(`Verification error: ${e.message}`);
+          } finally {
+            setLoading(false);
+          }
+        },
+        prefill: {
+          name: profileName || user.displayName || "",
+          email: user.email || "",
+          contact: profilePhone || ""
+        },
+        theme: {
+          color: "#2563eb"
+        },
+        modal: {
+          ondismiss: () => setLoading(false)
+        }
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+  };
+
+  const [payingBalance, setPayingBalance] = useState(false);
+
+  const handleBalancePayment = async (customPayAmount?: number) => {
+    if (!user) return;
+    setPayingBalance(true);
+    try {
+      const scriptLoaded = await loadRazorpayScript();
+      if (!scriptLoaded) {
+        alert("Could not load payment gateway script. Please verify your internet connection.");
+        return;
+      }
+
+      const res = await createBalancePaymentOrder(user.uid, customPayAmount);
+      if (!res.success || !res.order) {
+        alert(res.error || "Could not generate order for balance payment.");
+        return;
+      }
+
+      const { order, payableAmount, totalAmount, accessRights } = res;
+
+      const rzpKey = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
+      if (!rzpKey) {
+        alert("Payment gateway key is not configured in environment variables.");
+        return;
+      }
+
+      const options = {
+        key: rzpKey,
+        amount: order.amount,
+        currency: order.currency,
+        name: "Vishwa Leader Tech Media Pvt Ltd",
+        description: `Remaining Balance Payment - INR ${payableAmount.toLocaleString('en-IN')}`,
+        order_id: order.id,
+        handler: async function (response: any) {
+          setLoading(true);
+          try {
+            const verifyRes = await verifyDynamicPayment(
+              response.razorpay_payment_id,
+              response.razorpay_order_id,
+              response.razorpay_signature,
+              user.uid,
+              accessRights && accessRights.length > 0 ? accessRights : ['reg_conference'],
+              totalAmount,
+              payableAmount
+            );
+            if (verifyRes.success) {
+              setMemberData((prev: any) => ({
+                ...prev,
+                paymentStatus: verifyRes.newStatus,
+                amountPaid: verifyRes.newAmountPaid,
+                remainingBalance: verifyRes.remainingBalance
+              }));
+              showToast("Balance payment completed successfully!");
+              window.location.reload();
+            } else {
+              alert(`Signature verification failed: ${verifyRes.error}`);
+            }
+          } catch (e: any) {
+            alert(`Verification error: ${e.message}`);
+          } finally {
+            setLoading(false);
+          }
+        },
+        prefill: {
+          name: profileName || user.displayName || "",
+          email: user.email || "",
+          contact: profilePhone || ""
+        },
+        theme: { color: "#d97706" },
+        modal: { ondismiss: () => setPayingBalance(false) }
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch (err: any) {
+      alert(`Error initiating balance payment: ${err.message}`);
+    } finally {
+      setPayingBalance(false);
+    }
   };
 
   const removeDocument = async (field: string, guestIndex?: number) => {
@@ -2446,9 +2556,85 @@ export default function MemberClientPage() {
                     </span>
                   </div>
                 ) : null}
-              </div>
-              
 
+                {/* Payment Plan Selector (only for orders ₹6,000 or above) */}
+                {calculateWizardTotal() >= 6000 && (
+                  <div className="mt-4 p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs font-bold uppercase tracking-wider text-slate-700">Choose Payment Plan</span>
+                      <span className="text-[10px] font-semibold text-brandBlue bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                        Part Payment Available
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setWizardPaymentMode('FULL')}
+                        className={`py-2 px-3 text-xs font-bold rounded-lg border transition-all ${
+                          wizardPaymentMode === 'FULL'
+                            ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
+                            : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300'
+                        }`}
+                      >
+                        Pay Full Amount
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setWizardPaymentMode('PARTIAL')}
+                        className={`py-2 px-3 text-xs font-bold rounded-lg border transition-all ${
+                          wizardPaymentMode === 'PARTIAL'
+                            ? 'bg-amber-600 text-white border-amber-600 shadow-sm'
+                            : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300'
+                        }`}
+                      >
+                        Pay Part / Token Deposit
+                      </button>
+                    </div>
+
+                    {wizardPaymentMode === 'PARTIAL' && (
+                      <div className="mt-3 pt-3 border-t border-slate-200 space-y-2">
+                        <span className="text-[11px] font-medium text-slate-600 block">Select Token Amount Today:</span>
+                        <div className="grid grid-cols-3 gap-2">
+                          {[
+                            { key: '25%', label: '25%' },
+                            { key: '50%', label: '50%' },
+                            { key: 'custom', label: 'Custom' }
+                          ].map(opt => (
+                            <button
+                              key={opt.key}
+                              type="button"
+                              onClick={() => setWizardDepositPreset(opt.key as any)}
+                              className={`py-1.5 text-[11px] font-semibold rounded border ${
+                                wizardDepositPreset === opt.key
+                                  ? 'bg-amber-100 text-amber-900 border-amber-400 font-bold'
+                                  : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
+                              }`}
+                            >
+                              {opt.label}
+                            </button>
+                          ))}
+                        </div>
+
+                        {wizardDepositPreset === 'custom' && (
+                          <div className="mt-2 flex items-center gap-2">
+                            <span className="text-xs text-slate-500 font-semibold">₹</span>
+                            <input
+                              type="number"
+                              min={5000}
+                              max={calculateWizardTotal()}
+                              step={1000}
+                              value={wizardCustomDeposit}
+                              onChange={e => setWizardCustomDeposit(e.target.value)}
+                              placeholder="Min ₹5,000"
+                              className="w-full text-xs p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-amber-500 focus:outline-none"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
               
               <div className="pt-3 pb-3 border-t border-b border-slate-100 mb-4 flex flex-col gap-2 transition-all">
                 <div className="flex justify-between items-center">
@@ -2461,14 +2647,31 @@ export default function MemberClientPage() {
                 </div>
               </div>
 
-              <div className="bg-slate-900 p-4 rounded-xl flex items-center justify-between mb-4 shadow-md">
-                <span className="text-sm font-bold uppercase tracking-wider text-slate-400">
-                  Total Due Today
-                </span>
-                <span className="text-2xl font-semibold text-white">
-                  ₹{calculateWizardTotal().toLocaleString('en-IN')}
-                </span>
-              </div>
+              {(wizardPaymentMode === 'PARTIAL' && calculateWizardTotal() >= 6000) ? (
+                <div className="bg-amber-950 p-4 rounded-xl space-y-2 mb-4 shadow-md text-white border border-amber-800">
+                  <div className="flex items-center justify-between text-xs text-amber-200">
+                    <span>Total Package Cost:</span>
+                    <span className="font-semibold">₹{calculateWizardTotal().toLocaleString('en-IN')}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm font-bold border-t border-amber-800/80 pt-2">
+                    <span className="uppercase tracking-wider text-amber-400">Due Today (Token):</span>
+                    <span className="text-2xl font-bold text-amber-300">₹{calculateWizardPayableToday().toLocaleString('en-IN')}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs text-amber-300/80 border-t border-amber-900 pt-2">
+                    <span>Remaining Balance (Due Later):</span>
+                    <span className="font-semibold text-amber-200">₹{Math.max(0, calculateWizardTotal() - calculateWizardPayableToday()).toLocaleString('en-IN')}</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-slate-900 p-4 rounded-xl flex items-center justify-between mb-4 shadow-md">
+                  <span className="text-sm font-bold uppercase tracking-wider text-slate-400">
+                    Total Due Today
+                  </span>
+                  <span className="text-2xl font-semibold text-white">
+                    ₹{calculateWizardTotal().toLocaleString('en-IN')}
+                  </span>
+                </div>
+              )}
 
               <div>
                 <label className="flex items-start space-x-3 p-4 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer hover:border-slate-300 transition-colors">
@@ -3088,6 +3291,50 @@ export default function MemberClientPage() {
                     })()}
                     
                     <AdPlaceholder />
+
+                    {/* Outstanding Balance Banner for Part-Payment */}
+                    {memberData?.paymentStatus === 'Partially Paid' && (
+                      <div className="bg-gradient-to-r from-amber-950 via-slate-900 to-amber-900 border border-amber-500/40 p-6 rounded-2xl shadow-xl text-white space-y-4 relative overflow-hidden">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <Badge className="bg-amber-500 text-slate-950 font-black uppercase text-[9px] tracking-wider px-2 py-0.5">
+                                Partially Paid
+                              </Badge>
+                              <span className="text-xs text-amber-200/80 font-mono">
+                                Seat Secured via Token Deposit
+                              </span>
+                            </div>
+                            <h3 className="text-lg font-bold mt-1.5 text-white">Outstanding Balance Remaining</h3>
+                            <p className="text-xs text-amber-100/70 mt-0.5">
+                              Your seat is locked! Please complete your remaining balance payment prior to the summit.
+                            </p>
+                          </div>
+                          <Button
+                            onClick={() => handleBalancePayment()}
+                            disabled={payingBalance}
+                            className="bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs h-11 px-6 rounded-xl shrink-0 shadow-lg transition-all"
+                          >
+                            {payingBalance ? "Processing..." : `Pay Remaining Balance (₹${(memberData?.remainingBalance || 0).toLocaleString('en-IN')})`}
+                          </Button>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3 border-t border-amber-500/20 text-xs">
+                          <div className="bg-white/5 p-3 rounded-xl border border-white/10">
+                            <span className="text-amber-200/60 text-[10px] uppercase font-bold">Total Package Price</span>
+                            <p className="text-base font-extrabold text-white mt-0.5">₹{(memberData?.totalAmount || 0).toLocaleString('en-IN')}</p>
+                          </div>
+                          <div className="bg-white/5 p-3 rounded-xl border border-white/10">
+                            <span className="text-emerald-400/80 text-[10px] uppercase font-bold">Amount Paid So Far</span>
+                            <p className="text-base font-extrabold text-emerald-400 mt-0.5">₹{(memberData?.amountPaid || 0).toLocaleString('en-IN')}</p>
+                          </div>
+                          <div className="bg-white/5 p-3 rounded-xl border border-white/10">
+                            <span className="text-amber-400 text-[10px] uppercase font-bold">Balance Remaining</span>
+                            <p className="text-base font-extrabold text-amber-300 mt-0.5">₹{(memberData?.remainingBalance || 0).toLocaleString('en-IN')}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                     
                     <div className="flex items-center justify-between border-b border-slate-200 pb-4">
                       <div>
@@ -3145,8 +3392,18 @@ export default function MemberClientPage() {
                             </div>
                             <div className="space-y-0.5 text-right">
                               <div className="text-[7px] font-bold text-slate-600 uppercase tracking-wider">Registration Status</div>
-                              <div className={`text-[10px] font-bold uppercase tracking-wider ${memberData?.paymentStatus === 'Paid' ? 'text-emerald-500' : 'text-rose-500'}`}>
-                                {memberData?.paymentStatus === 'Paid' ? 'Paid / Active' : 'Pending Payment'}
+                              <div className={`text-[10px] font-bold uppercase tracking-wider ${
+                                memberData?.paymentStatus === 'Paid' 
+                                  ? 'text-emerald-500' 
+                                  : memberData?.paymentStatus === 'Partially Paid' 
+                                  ? 'text-amber-400' 
+                                  : 'text-rose-500'
+                              }`}>
+                                {memberData?.paymentStatus === 'Paid' 
+                                  ? 'Paid / Active' 
+                                  : memberData?.paymentStatus === 'Partially Paid' 
+                                  ? 'Partially Paid' 
+                                  : 'Pending Payment'}
                               </div>
                             </div>
                           </div>
@@ -3312,8 +3569,85 @@ export default function MemberClientPage() {
                               </span>
                             </div>
                           ) : null}
-                        </div>
 
+                          {/* Payment Plan Selector (only for orders ₹6,000 or above) */}
+                          {calculateWizardTotal() >= 6000 && (
+                            <div className="mt-4 p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+                              <div className="flex justify-between items-center">
+                                <span className="text-xs font-bold uppercase tracking-wider text-slate-700">Choose Payment Plan</span>
+                                <span className="text-[10px] font-semibold text-brandBlue bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                                  Part Payment Available
+                                </span>
+                              </div>
+                              <div className="grid grid-cols-2 gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => setWizardPaymentMode('FULL')}
+                                  className={`py-2 px-3 text-xs font-bold rounded-lg border transition-all ${
+                                    wizardPaymentMode === 'FULL'
+                                      ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
+                                      : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300'
+                                  }`}
+                                >
+                                  Pay Full Amount
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setWizardPaymentMode('PARTIAL')}
+                                  className={`py-2 px-3 text-xs font-bold rounded-lg border transition-all ${
+                                    wizardPaymentMode === 'PARTIAL'
+                                      ? 'bg-amber-600 text-white border-amber-600 shadow-sm'
+                                      : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300'
+                                  }`}
+                                >
+                                  Pay Part / Token Deposit
+                                </button>
+                              </div>
+
+                              {wizardPaymentMode === 'PARTIAL' && (
+                                <div className="mt-3 pt-3 border-t border-slate-200 space-y-2">
+                                  <span className="text-[11px] font-medium text-slate-600 block">Select Token Amount Today:</span>
+                                  <div className="grid grid-cols-3 gap-2">
+                                    {[
+                                      { key: '25%', label: '25%' },
+                                      { key: '50%', label: '50%' },
+                                      { key: 'custom', label: 'Custom' }
+                                    ].map(opt => (
+                                      <button
+                                        key={opt.key}
+                                        type="button"
+                                        onClick={() => setWizardDepositPreset(opt.key as any)}
+                                        className={`py-1.5 text-[11px] font-semibold rounded border ${
+                                          wizardDepositPreset === opt.key
+                                            ? 'bg-amber-100 text-amber-900 border-amber-400 font-bold'
+                                            : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
+                                        }`}
+                                      >
+                                        {opt.label}
+                                      </button>
+                                    ))}
+                                  </div>
+
+                                  {wizardDepositPreset === 'custom' && (
+                                    <div className="mt-2 flex items-center gap-2">
+                                      <span className="text-xs text-slate-500 font-semibold">₹</span>
+                                      <input
+                                        type="number"
+                                        min={5000}
+                                        max={calculateWizardTotal()}
+                                        step={1000}
+                                        value={wizardCustomDeposit}
+                                        onChange={e => setWizardCustomDeposit(e.target.value)}
+                                        placeholder="Min ₹5,000"
+                                        className="w-full text-xs p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-amber-500 focus:outline-none"
+                                      />
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
 
                         {/* GST breakdown */}
                         <div className="pt-3 pb-3 border-t border-b border-slate-100 mb-4 flex flex-col gap-2">
@@ -3328,12 +3662,29 @@ export default function MemberClientPage() {
                         </div>
 
                         {/* Total */}
-                        <div className="bg-slate-900 p-4 rounded-xl flex items-center justify-between mb-4 shadow-md">
-                          <span className="text-sm font-bold uppercase tracking-wider text-slate-400">
-                            Total Due Today
-                          </span>
-                          <span className="text-3xl font-semibold text-white">₹{calculateWizardTotal().toLocaleString('en-IN')}</span>
-                        </div>
+                        {(wizardPaymentMode === 'PARTIAL' && calculateWizardTotal() >= 6000) ? (
+                          <div className="bg-amber-950 p-4 rounded-xl space-y-2 mb-4 shadow-md text-white border border-amber-800">
+                            <div className="flex items-center justify-between text-xs text-amber-200">
+                              <span>Total Package Cost:</span>
+                              <span className="font-semibold">₹{calculateWizardTotal().toLocaleString('en-IN')}</span>
+                            </div>
+                            <div className="flex items-center justify-between text-sm font-bold border-t border-amber-800/80 pt-2">
+                              <span className="uppercase tracking-wider text-amber-400">Due Today (Token):</span>
+                              <span className="text-2xl font-bold text-amber-300">₹{calculateWizardPayableToday().toLocaleString('en-IN')}</span>
+                            </div>
+                            <div className="flex items-center justify-between text-xs text-amber-300/80 border-t border-amber-900 pt-2">
+                              <span>Remaining Balance (Due Later):</span>
+                              <span className="font-semibold text-amber-200">₹{Math.max(0, calculateWizardTotal() - calculateWizardPayableToday()).toLocaleString('en-IN')}</span>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="bg-slate-900 p-4 rounded-xl flex items-center justify-between mb-4 shadow-md">
+                            <span className="text-sm font-bold uppercase tracking-wider text-slate-400">
+                              Total Due Today
+                            </span>
+                            <span className="text-3xl font-semibold text-white">₹{calculateWizardTotal().toLocaleString('en-IN')}</span>
+                          </div>
+                        )}
 
                         {/* Legal consent */}
                         <div>

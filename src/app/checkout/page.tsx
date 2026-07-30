@@ -62,9 +62,29 @@ function CheckoutContent() {
   const [legalConsent, setLegalConsent] = useState(false);
   const [alreadyPaid, setAlreadyPaid] = useState(false);
 
+  // Part Payment State
+  const [paymentMode, setPaymentMode] = useState<'FULL' | 'PARTIAL'>('FULL');
+  const [depositPreset, setDepositPreset] = useState<'25%' | '50%' | 'custom'>('25%');
+  const [customDeposit, setCustomDeposit] = useState<string>('10000');
+
   const itemInfo = ITEM_INFO[itemId];
-  const displayAmount = itemInfo ? `₹${itemInfo.amount.toLocaleString("en-IN")}` : "—";
+  const totalPrice = itemInfo?.amount || 0;
+  const displayAmount = itemInfo ? `₹${totalPrice.toLocaleString("en-IN")}` : "—";
   const displayLabel  = itemInfo?.label ?? itemId;
+
+  const effectivePaymentMode = totalPrice >= 6000 ? paymentMode : 'FULL';
+
+  // Calculate actual payable today & remaining balance
+  let payableToday = totalPrice;
+  if (effectivePaymentMode === 'PARTIAL' && totalPrice >= 6000) {
+    if (depositPreset === '25%') payableToday = Math.round(totalPrice * 0.25);
+    else if (depositPreset === '50%') payableToday = Math.round(totalPrice * 0.5);
+    else if (depositPreset === 'custom') {
+      const val = Number(customDeposit) || 5000;
+      payableToday = Math.min(Math.max(5000, val), totalPrice);
+    }
+  }
+  const remainingBalance = Math.max(0, totalPrice - payableToday);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (u) => {
@@ -87,28 +107,38 @@ function CheckoutContent() {
     try {
       const loaded = await loadRazorpay();
       if (!loaded) { alert("Could not load payment gateway. Check your connection."); return; }
-      const result = await createDynamicOrder([itemId]);
+      const result = await createDynamicOrder([itemId], undefined, effectivePaymentMode, payableToday);
       if (!result.success || !result.order) { alert(result.error || "Could not create order."); return; }
-      const { order, totalAmount } = result;
+      const { order, totalAmount, payableAmount } = result;
+      const amountToCharge = payableAmount || payableToday;
+      const rzpKey = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
+      if (!rzpKey) { alert("Payment gateway key is not configured in environment variables."); setPaying(false); return; }
+
       new window.Razorpay({
-        key:         process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        key:         rzpKey,
         amount:      order.amount,
         currency:    order.currency,
         name:        "Vishwa Leader Techmedia Pvt Ltd",
-        description: displayLabel,
+        description: effectivePaymentMode === 'PARTIAL' 
+          ? `Part Deposit Payment for ${displayLabel}`
+          : displayLabel,
         order_id:    order.id,
         handler: async (response: any) => {
           const verify = await verifyDynamicPayment(
             response.razorpay_payment_id, response.razorpay_order_id,
-            response.razorpay_signature, user.uid, [itemId], totalAmount!
+            response.razorpay_signature, user.uid, [itemId], totalAmount!, amountToCharge
           );
           if (verify.success) router.replace("/auth/member?tab=dashboard");
-          else alert("Payment verification failed. Please contact support.");
+          else { alert("Payment verification failed. Please contact support."); setPaying(false); }
         },
         prefill: { name: user.displayName || "", email: user.email || "" },
         theme:   { color: "#1d4ed8" },
+        modal:   { ondismiss: () => setPaying(false) },
       }).open();
-    } finally { setPaying(false); }
+    } catch (err: any) {
+      alert("Unexpected payment error: " + (err?.message || "Please try again."));
+      setPaying(false);
+    }
   };
 
   if (loading) return (
@@ -159,7 +189,7 @@ function CheckoutContent() {
         <div className="relative z-10 flex items-end justify-between w-full mt-auto">
           <div className="flex items-center gap-6 text-sm font-medium opacity-80">
             <span className="flex items-center gap-2"><CheckCircle className="size-5 text-emerald-400" /> SSL Secured</span>
-            <span className="flex items-center gap-2"><CheckCircle className="size-5 text-emerald-400" /> Authorized Gateway</span>
+            <span className="flex items-center gap-2"><CheckCircle className="size-5 text-emerald-400" /> Flexible Part Payment</span>
           </div>
           <div className="opacity-90 grayscale contrast-200 invert brightness-200 mix-blend-screen pb-1 pr-2">
             <img src="/assets/images/razorpay.svg" alt="Razorpay" className="h-6 object-contain" />
@@ -172,7 +202,7 @@ function CheckoutContent() {
 
         <div className="mb-6 pb-4 border-b border-slate-100">
           <h3 className="text-xl font-semibold text-slate-900 leading-tight">Registration Summary</h3>
-          <p className="text-sm text-slate-500 mt-1">Review your selected package before proceeding to payment.</p>
+          <p className="text-sm text-slate-500 mt-1">Review your package and select your preferred payment mode.</p>
         </div>
 
         {memberData && (
@@ -206,6 +236,85 @@ function CheckoutContent() {
             </span>
             <span className="font-semibold text-slate-900 shrink-0">{displayAmount}</span>
           </div>
+
+          {/* Payment Plan Selector (only for orders ₹6,000 or above) */}
+          {totalPrice >= 6000 && (
+            <div className="mt-4 p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-700">Choose Payment Plan</span>
+                <span className="text-[10px] font-semibold text-brandBlue bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                  Part Payment Available
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setPaymentMode('FULL')}
+                  className={`py-2 px-3 text-xs font-bold rounded-lg border transition-all ${
+                    paymentMode === 'FULL'
+                      ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
+                      : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300'
+                  }`}
+                >
+                  Pay Full Amount
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPaymentMode('PARTIAL')}
+                  className={`py-2 px-3 text-xs font-bold rounded-lg border transition-all ${
+                    paymentMode === 'PARTIAL'
+                      ? 'bg-amber-600 text-white border-amber-600 shadow-sm'
+                      : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300'
+                  }`}
+                >
+                  Pay Part / Token Deposit
+                </button>
+              </div>
+
+              {/* Partial Payment Options */}
+              {paymentMode === 'PARTIAL' && (
+                <div className="mt-3 pt-3 border-t border-slate-200 space-y-2">
+                  <span className="text-[11px] font-medium text-slate-600 block">Select Token Amount Today:</span>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { key: '25%', label: '25%' },
+                      { key: '50%', label: '50%' },
+                      { key: 'custom', label: 'Custom' }
+                    ].map(opt => (
+                      <button
+                        key={opt.key}
+                        type="button"
+                        onClick={() => setDepositPreset(opt.key as any)}
+                        className={`py-2 text-xs font-semibold rounded-lg border ${
+                          depositPreset === opt.key
+                            ? 'bg-amber-100 text-amber-900 border-amber-400 font-bold'
+                            : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {depositPreset === 'custom' && (
+                    <div className="mt-2 flex items-center gap-2">
+                      <span className="text-xs text-slate-500 font-semibold">₹</span>
+                      <input
+                        type="number"
+                        min={5000}
+                        max={totalPrice}
+                        step={1000}
+                        value={customDeposit}
+                        onChange={e => setCustomDeposit(e.target.value)}
+                        placeholder="Min ₹5,000"
+                        className="w-full text-xs p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-amber-500 focus:outline-none"
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="pt-3 pb-3 border-t border-b border-slate-100 mb-4 flex justify-between items-center">
@@ -215,10 +324,27 @@ function CheckoutContent() {
           </span>
         </div>
 
-        <div className="bg-slate-900 p-4 rounded-xl flex items-center justify-between mb-5 shadow-md">
-          <span className="text-sm font-bold uppercase tracking-wider text-slate-400">Total Due Today</span>
-          <span className="text-2xl font-semibold text-white">{displayAmount}</span>
-        </div>
+        {effectivePaymentMode === 'PARTIAL' ? (
+          <div className="bg-amber-950 p-4 rounded-xl space-y-2 mb-5 shadow-md text-white border border-amber-800">
+            <div className="flex items-center justify-between text-xs text-amber-200">
+              <span>Total Package Cost:</span>
+              <span className="font-semibold">{displayAmount}</span>
+            </div>
+            <div className="flex items-center justify-between text-sm font-bold border-t border-amber-800/80 pt-2">
+              <span className="uppercase tracking-wider text-amber-400">Due Today (Token):</span>
+              <span className="text-2xl font-bold text-amber-300">₹{payableToday.toLocaleString('en-IN')}</span>
+            </div>
+            <div className="flex items-center justify-between text-xs text-amber-300/80 border-t border-amber-900 pt-2">
+              <span>Remaining Balance (Due Later):</span>
+              <span className="font-semibold text-amber-200">₹{remainingBalance.toLocaleString('en-IN')}</span>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-slate-900 p-4 rounded-xl flex items-center justify-between mb-5 shadow-md">
+            <span className="text-sm font-bold uppercase tracking-wider text-slate-400">Total Due Today</span>
+            <span className="text-2xl font-semibold text-white">₹{payableToday.toLocaleString('en-IN')}</span>
+          </div>
+        )}
 
         <label className="flex items-start space-x-3 p-4 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer hover:border-slate-300 transition-colors mb-6">
           <input type="checkbox" checked={legalConsent} onChange={(e) => setLegalConsent(e.target.checked)}
@@ -237,7 +363,11 @@ function CheckoutContent() {
           </button>
           <button onClick={handlePay} disabled={paying || !legalConsent}
             className="bg-slate-900 text-white hover:bg-slate-800 font-semibold h-12 px-8 rounded-xl shadow-lg transition-colors text-sm flex items-center gap-2 disabled:opacity-50">
-            {paying ? <><Spinner /> Processing…</> : "Pay & Finalize"}
+            {paying ? <><Spinner /> Processing…</> : (
+              paymentMode === 'PARTIAL' 
+                ? `Pay Deposit (₹${payableToday.toLocaleString('en-IN')})` 
+                : "Pay & Finalize"
+            )}
           </button>
         </div>
       </div>

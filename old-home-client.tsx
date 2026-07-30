@@ -134,7 +134,7 @@ export default function HomeClientPage() {
         if (res.success && res.data) {
           setRecentDonors(res.data as any);
         } else {
-          console.error("Error fetching homepage recent donors via server action:", res.error);
+          console.error("Error fetching homepage recent donors via server action:", (res as any).error);
         }
       } catch (e) {
         console.error("Error fetching homepage recent donors:", e);

@@ -136,7 +136,11 @@ export default function UserDetailClientPage({ userId }: { userId: string }) {
             <h1 className="text-2xl font-black uppercase tracking-tight text-white flex items-center gap-3">
               <span>{user.name || "Anonymous Member"}</span>
               <span className={`text-xs px-2.5 py-0.5 rounded-full font-bold uppercase ${
-                user.paymentStatus === 'Paid' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                user.paymentStatus === 'Paid' 
+                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
+                  : user.paymentStatus === 'Partially Paid'
+                  ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                  : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
               }`}>{user.paymentStatus || 'Unpaid'}</span>
             </h1>
           </div>
@@ -226,6 +230,25 @@ export default function UserDetailClientPage({ userId }: { userId: string }) {
                   <div className="flex justify-between py-1 border-b border-slate-800/50">
                     <span className="text-slate-400">Passport No.</span>
                     <span className="font-semibold text-slate-200">{user.passportNumber || 'N/A'}</span>
+                  </div>
+                </div>
+
+                {/* Financial Ledger & Part Payment Details */}
+                <div className="border-t border-slate-800 pt-4 space-y-2">
+                  <p className="text-[10px] uppercase font-bold tracking-wider text-slate-400">Financial Ledger & Balance</p>
+                  <div className="flex justify-between py-1 border-b border-slate-800/50">
+                    <span className="text-slate-400">Total Package Price</span>
+                    <span className="font-semibold text-white">₹{(user.totalAmount || 0).toLocaleString('en-IN')}</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-slate-800/50">
+                    <span className="text-slate-400">Amount Paid</span>
+                    <span className="font-semibold text-emerald-400">₹{(user.amountPaid || 0).toLocaleString('en-IN')}</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-slate-800/50">
+                    <span className="text-slate-400">Remaining Balance</span>
+                    <span className={`font-semibold ${(user.remainingBalance || 0) > 0 ? 'text-amber-400 font-bold' : 'text-slate-400'}`}>
+                      ₹{(user.remainingBalance || 0).toLocaleString('en-IN')}
+                    </span>
                   </div>
                 </div>
 

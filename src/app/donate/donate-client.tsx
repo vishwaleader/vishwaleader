@@ -119,8 +119,15 @@ export default function DonateClient() {
 
       const order = res.order;
 
+      const rzpKey = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
+      if (!rzpKey) {
+        setErrorMsg("Payment gateway key is not configured in environment variables.");
+        setLoading(false);
+        return;
+      }
+
       const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        key: rzpKey,
         amount: order.amount,
         currency: order.currency,
         name: "Vishwa Leader Techmedia Pvt Ltd",

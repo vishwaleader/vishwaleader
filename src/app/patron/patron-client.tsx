@@ -73,9 +73,14 @@ export default function PatronClientPage() {
         });
       }
 
+      const rzpKey = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
+      if (!rzpKey) {
+        throw new Error("Payment gateway key is not configured in environment variables.");
+      }
+
       // 3. Open Razorpay Modal
       const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        key: rzpKey,
         amount: orderData.amount,
         currency: orderData.currency,
         name: "Vishwa Leader 2026",
