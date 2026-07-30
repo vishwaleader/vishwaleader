@@ -460,7 +460,6 @@ export default function MemberClientPage() {
   const [submissions, setSubmissions] = useState<any[]>([]);
   const [showSubForm, setShowSubForm] = useState(true);
 
-  const [subFileName, setSubFileName] = useState("");
 
   // Toast status alert
   const [toastMsg, setToastMsg] = useState("");
