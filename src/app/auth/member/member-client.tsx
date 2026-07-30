@@ -40,9 +40,49 @@ const PDFDownloadLink = dynamic(() => import('@react-pdf/renderer').then(mod => 
 const CustomPDFViewer = dynamic(() => import('@react-pdf/renderer').then(mod => {
   return function Viewer({ doc }: { doc: React.ReactElement }) {
     const [instance] = mod.usePDF({ document: doc as any });
-    if (instance.loading) return <div className="flex items-center justify-center h-full text-slate-400">Generating Profile Dossier...</div>;
-    if (instance.error) return <div className="flex items-center justify-center h-full text-rose-500">Error generating PDF</div>;
-    return <iframe src={`${instance.url}#pagemode=thumbs`} width="100%" height="100%" className="border-none absolute inset-0 bg-white" />;
+    if (instance.loading) return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] h-full gap-3 text-slate-400 p-6 bg-slate-900">
+        <Loader2 className="size-8 text-brandBlue animate-spin" />
+        <span className="text-sm font-semibold">Generating Profile Dossier...</span>
+      </div>
+    );
+    if (instance.error) return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] h-full gap-2 text-rose-400 p-6 text-center bg-slate-900">
+        <AlertCircle className="size-8 text-rose-500" />
+        <p className="font-bold text-base">Error generating PDF</p>
+        <p className="text-xs text-slate-400">Please try refreshing your browser.</p>
+      </div>
+    );
+    return (
+      <div className="flex flex-col w-full h-full min-h-[550px] bg-slate-900 relative">
+        <div className="bg-slate-800/90 backdrop-blur-md border-b border-slate-700 p-3 px-4 flex items-center justify-between z-20 text-white shrink-0">
+          <div className="flex items-center gap-2">
+            <FileText className="size-4 text-brandBlue" />
+            <span className="text-xs font-bold tracking-wide">Official Profile Dossier PDF</span>
+          </div>
+          {instance.url && (
+            <a
+              href={instance.url}
+              target="_blank"
+              rel="noreferrer"
+              download="Vishwa_Leader_Delegate_Profile.pdf"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-brandBlue hover:bg-brandBlue/90 text-white font-bold text-xs shadow-md transition-all shrink-0"
+            >
+              <Download className="size-3.5" /> Open / Download PDF
+            </a>
+          )}
+        </div>
+        <div className="flex-1 w-full relative bg-slate-900 min-h-[500px]">
+          <iframe 
+            src={`${instance.url}#pagemode=thumbs`} 
+            width="100%" 
+            height="100%" 
+            className="border-none w-full h-full min-h-[500px] bg-white" 
+            title="Delegate Profile Dossier"
+          />
+        </div>
+      </div>
+    );
   };
 }), { ssr: false });
 declare global {
@@ -3247,7 +3287,7 @@ export default function MemberClientPage() {
               </header>
 
               {/* Main Workspace Scroll View */}
-              <main className={`flex-grow w-full ${activeTab === 'registration' ? 'p-0 h-[calc(100vh-4rem)] overflow-hidden' : 'max-w-6xl mx-auto ' + (activeTab === 'checkout' ? 'p-4 md:p-6' : 'p-6 md:p-8 space-y-6')}`}>
+              <main className={`flex-grow w-full ${activeTab === 'registration' ? 'p-0 min-h-[calc(100vh-4rem)] overflow-y-auto' : 'max-w-6xl mx-auto ' + (activeTab === 'checkout' ? 'p-4 md:p-6' : 'p-6 md:p-8 space-y-6')}`}>
                 
                 {/* ═════════════════════ TAB: DASHBOARD OVERVIEW ═════════════════════ */}
                 {activeTab === 'dashboard' && (
