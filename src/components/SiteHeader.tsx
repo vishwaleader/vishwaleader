@@ -142,7 +142,7 @@ export default function SiteHeader() {
                             </button>
                             <div className="absolute top-full left-0 pt-2 w-56 hidden group-hover/nav:block z-50">
                                 <div className="bg-white border border-slate-200 rounded-xl shadow-xl p-2">
-                                    <Link href="/call-for-papers" className="block px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-brandBlue rounded-lg transition-colors">Call for Papers</Link>
+                                    <Link href="/call-for-papers" className="block px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-brandBlue rounded-lg transition-colors">International Conference</Link>
                                     <Link href="/business-summit" className="block px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-brandBlue rounded-lg transition-colors">Business Summit</Link>
                                     <Link href="/awards" className="block px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-brandBlue rounded-lg transition-colors">Awards Nominations</Link>
                                     <Link href="/souvenir-articles" className="block px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-brandBlue rounded-lg transition-colors">Souvenir Articles</Link>
@@ -245,7 +245,7 @@ export default function SiteHeader() {
                         <div className="flex flex-col gap-2">
                             <span className="font-bold text-slate-800 flex items-center gap-1">Events 2026 <i className="fa-solid fa-chevron-down text-[10px]"></i></span>
                             <div className="flex flex-col gap-3 pl-4 border-l-2 border-slate-100 mt-1">
-                                <Link href="/call-for-papers" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-brandBlue transition-colors">Call for Papers</Link>
+                                <Link href="/call-for-papers" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-brandBlue transition-colors">International Conference</Link>
                                 <Link href="/business-summit" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-brandBlue transition-colors">Business Summit</Link>
                                 <Link href="/awards" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-brandBlue transition-colors">Awards Nominations</Link>
                                 <Link href="/souvenir-articles" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-brandBlue transition-colors">Souvenir Articles</Link>

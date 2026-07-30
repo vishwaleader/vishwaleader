@@ -1,6 +1,6 @@
 "use client";
 
-import { Globe, Handshake, Users, Calendar, MapPin } from 'lucide-react';
+import { Globe, Handshake, Users, Calendar, MapPin, Download } from 'lucide-react';
 import Image from 'next/image';
 import EventRegistrationCTA from '@/components/EventRegistrationCTA';
 
@@ -16,15 +16,23 @@ export default function BusinessSummitPage() {
             <h1 className="text-4xl md:text-5xl font-semibold text-white tracking-tight mb-4">
               International Business Summit
             </h1>
-            <p className="text-blue-100 text-base md:text-lg mb-10 max-w-2xl mx-auto">
+            <p className="text-blue-100 text-base md:text-lg mb-8 max-w-2xl mx-auto">
               On the Eve of the <span translate="no" className="notranslate">Vishwa Leader</span> Dr. B. R. Ambedkar International Awards 2026
             </p>
-            <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-8 shadow-sm max-w-3xl mx-auto">
+            <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-8 shadow-sm max-w-3xl mx-auto mb-8">
               <p className="text-xs font-bold text-amber-400 uppercase tracking-widest mb-3">Summit Theme</p>
               <p className="text-lg md:text-xl font-serif text-white italic">
                 &quot;Business as a Driver of Social Change: Realizing Dr. Ambedkar&apos;s Vision in Today&apos;s Economy&quot;
               </p>
             </div>
+            <a 
+              href="/pdfs/business-prospectus-2026.pdf" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="inline-flex items-center gap-2 px-6 py-3 bg-amber-400 text-slate-900 font-bold rounded-xl shadow-lg hover:bg-amber-300 transition-all text-sm"
+            >
+              <Download className="w-4 h-4" /> Download Summit Prospectus / Brochure (PDF)
+            </a>
           </div>
         </div>
 
@@ -102,6 +110,19 @@ export default function BusinessSummitPage() {
 
           {/* Sidebar */}
           <div className="space-y-6">
+
+            <div className="bg-white border border-slate-200 rounded-xl p-8 shadow-sm">
+              <h3 className="text-lg font-semibold text-slate-900 mb-4">Official Prospectus</h3>
+              <p className="text-xs text-slate-500 mb-5 leading-relaxed">Download the complete International Business Summit 2026 Prospectus & detailed Minute-to-Minute program schedule.</p>
+              <a 
+                href="/pdfs/business-prospectus-2026.pdf" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-brandBlue text-white font-bold rounded-xl shadow hover:bg-blue-700 transition-all text-xs"
+              >
+                <Download className="w-4 h-4" /> Download Prospectus (PDF)
+              </a>
+            </div>
 
             {/* Summit Details */}
             <div className="bg-white border border-slate-200 rounded-xl p-8">

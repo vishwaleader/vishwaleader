@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { PenTool, FileText, Check, Image as ImageIcon, Send } from 'lucide-react';
+import { PenTool, FileText, Check, Image as ImageIcon, Send, Download } from 'lucide-react';
 import { auth, db } from '@/lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { collection, addDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
@@ -52,7 +52,15 @@ export default function SouvenirArticlesPage() {
               <PenTool className="w-4 h-4 text-amber-400" /> Official Souvenir 2026
             </div>
             <h1 className="text-4xl md:text-5xl font-semibold text-white tracking-tight mb-4 leading-tight">Souvenir Articles</h1>
-            <p className="text-blue-100 text-base md:text-lg max-w-2xl mx-auto">Contribute an original article inspired by Dr. B. R. Ambedkar&apos;s vision, to be published in the Official Souvenir.</p>
+            <p className="text-blue-100 text-base md:text-lg max-w-2xl mx-auto mb-8">Contribute an original article inspired by Dr. B. R. Ambedkar&apos;s vision, to be published in the Official Souvenir.</p>
+            <a 
+              href="/pdfs/souvenir-invitation.pdf" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="inline-flex items-center gap-2 px-6 py-3 bg-amber-400 text-slate-900 font-bold rounded-xl shadow-lg hover:bg-amber-300 transition-all text-sm"
+            >
+              <Download className="w-4 h-4" /> Download Souvenir Invitation Brochure (PDF)
+            </a>
           </div>
         </div>
 
@@ -143,6 +151,19 @@ export default function SouvenirArticlesPage() {
 
           {/* Sidebar */}
           <div className="space-y-6">
+            <div className="bg-white border border-slate-200 rounded-xl p-8 shadow-sm">
+              <h3 className="text-lg font-semibold text-slate-900 mb-4">Official Invitation</h3>
+              <p className="text-xs text-slate-500 mb-5 leading-relaxed">Download the official souvenir call for articles and publication guidelines brochure.</p>
+              <a 
+                href="/pdfs/souvenir-invitation.pdf" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-brandBlue text-white font-bold rounded-xl shadow hover:bg-blue-700 transition-all text-xs"
+              >
+                <Download className="w-4 h-4" /> Download Brochure (PDF)
+              </a>
+            </div>
+
             <div className="bg-[#0a0a0a] border border-[#1f1f1f] rounded-xl p-8 shadow-2xl">
               <div className="mb-2"><span className="text-[10px] font-black tracking-widest text-amber-400 uppercase bg-amber-400/10 px-2 py-1 rounded">Souvenir Publication</span></div>
               <h3 className="text-lg font-bold text-white mt-3 mb-1">Submit Your Article</h3>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { BookOpen, FileText, Check, Calendar, MapPin, Send } from 'lucide-react';
+import { BookOpen, FileText, Check, Calendar, MapPin, Send, Download } from 'lucide-react';
 import { auth, db } from '@/lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { collection, addDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
@@ -55,12 +55,20 @@ export default function CallForPapersPage() {
         <div className="bg-brandBlue relative overflow-hidden pt-32 pb-20 md:pt-40 md:pb-24 mb-16">
           <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] mix-blend-overlay" />
           <div className="max-w-4xl mx-auto px-6 text-center relative z-10">
-            <h1 className="text-4xl md:text-5xl font-semibold text-white tracking-tight mb-4">Call for Papers</h1>
-            <p className="text-blue-100 text-base md:text-lg mb-10 max-w-2xl mx-auto">Submit your research for the International Conference in London.</p>
-            <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-8 shadow-sm max-w-3xl mx-auto">
+            <h1 className="text-4xl md:text-5xl font-semibold text-white tracking-tight mb-4">International Conference</h1>
+            <p className="text-blue-100 text-base md:text-lg mb-8 max-w-2xl mx-auto">Call for Abstracts & Papers — London 2026</p>
+            <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-8 shadow-sm max-w-3xl mx-auto mb-8">
               <p className="text-xs font-bold text-amber-400 uppercase tracking-widest mb-3">Conference Theme</p>
               <p className="text-lg md:text-xl font-serif text-white italic">&quot;Reimagining Equality and Justice: Dr. B. R. Ambedkar&apos;s Vision in the 21st Century&quot;</p>
             </div>
+            <a 
+              href="/pdfs/soas-call-for-papers.pdf" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="inline-flex items-center gap-2 px-6 py-3 bg-amber-400 text-slate-900 font-bold rounded-xl shadow-lg hover:bg-amber-300 transition-all text-sm"
+            >
+              <Download className="w-4 h-4" /> Download Conference Brochure (PDF)
+            </a>
           </div>
         </div>
 
@@ -198,6 +206,19 @@ export default function CallForPapersPage() {
 
           {/* Sidebar */}
           <div className="space-y-6">
+            <div className="bg-white border border-slate-200 rounded-xl p-8 shadow-sm">
+              <h3 className="text-lg font-semibold text-slate-900 mb-4">Official Brochure</h3>
+              <p className="text-xs text-slate-500 mb-5 leading-relaxed">Download the complete International Conference brochure including sub-themes, guidelines, and submission details.</p>
+              <a 
+                href="/pdfs/soas-call-for-papers.pdf" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-brandBlue text-white font-bold rounded-xl shadow hover:bg-blue-700 transition-all text-xs"
+              >
+                <Download className="w-4 h-4" /> Download Brochure (PDF)
+              </a>
+            </div>
+
             <div className="bg-white border border-slate-200 rounded-xl p-8">
               <h3 className="text-lg font-semibold text-slate-900 mb-6">Conference Details</h3>
               <ul className="space-y-5 text-sm">

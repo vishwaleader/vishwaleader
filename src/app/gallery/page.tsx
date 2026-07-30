@@ -38,6 +38,10 @@ export default function GalleryPage() {
       if (lightboxIndex === null) return;
       if (e.key === "Escape") {
         setLightboxIndex(null);
+      } else if (e.key === "ArrowLeft") {
+        setLightboxIndex((prev) => (prev !== null ? (prev - 1 + galleryItems.length) % galleryItems.length : null));
+      } else if (e.key === "ArrowRight") {
+        setLightboxIndex((prev) => (prev !== null ? (prev + 1) % galleryItems.length : null));
       }
     };
     window.addEventListener("keydown", handleKeyDown);
@@ -114,10 +118,30 @@ export default function GalleryPage() {
             onClick={() => {
               setLightboxIndex(null);
             }}
-            className="absolute top-4 right-4 text-white hover:text-gray-300 text-3xl focus:outline-none p-2 bg-black/30 rounded-full" 
+            className="absolute top-4 right-4 text-white hover:text-gray-300 text-3xl focus:outline-none p-2 bg-black/30 hover:bg-black/50 rounded-full z-10 transition-colors" 
             aria-label="Close"
           >
             <X className="size-8" />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setLightboxIndex((prev) => (prev !== null ? (prev - 1 + galleryItems.length) % galleryItems.length : null));
+            }}
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-white hover:text-gray-300 focus:outline-none p-3 bg-black/40 hover:bg-black/60 rounded-full transition-colors z-10"
+            aria-label="Previous image"
+          >
+            <ChevronLeft className="size-8" />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setLightboxIndex((prev) => (prev !== null ? (prev + 1) % galleryItems.length : null));
+            }}
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-white hover:text-gray-300 focus:outline-none p-3 bg-black/40 hover:bg-black/60 rounded-full transition-colors z-10"
+            aria-label="Next image"
+          >
+            <ChevronRight className="size-8" />
           </button>
           <img 
             src={galleryItems[lightboxIndex].src} 

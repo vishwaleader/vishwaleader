@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import { Calendar, MapPin, Mail, Trophy, Info, Users, Check } from 'lucide-react';
+import { Calendar, MapPin, Mail, Trophy, Info, Users, Check, Download } from 'lucide-react';
 import EventRegistrationCTA from '@/components/EventRegistrationCTA';
 
 export default function AwardsPage() {
@@ -32,9 +32,27 @@ export default function AwardsPage() {
             <h1 className="text-4xl md:text-5xl font-semibold text-white tracking-tight mb-4 leading-tight">
               <span translate="no" className="notranslate">Vishwa Leader</span> Dr. B. R. Ambedkar International Awards 2026
             </h1>
-            <p className="text-blue-100 text-base md:text-lg max-w-2xl mx-auto">
+            <p className="text-blue-100 text-base md:text-lg max-w-2xl mx-auto mb-8">
               Honoring individuals and organizations making exceptional contributions to social justice, equality, and human rights.
             </p>
+            <div className="flex flex-wrap justify-center gap-4">
+              <a 
+                href="/pdfs/awards-circular-2026.pdf" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="inline-flex items-center gap-2 px-6 py-3 bg-amber-400 text-slate-900 font-bold rounded-xl shadow-lg hover:bg-amber-300 transition-all text-sm"
+              >
+                <Download className="w-4 h-4" /> Download Awards Circular Brochure (PDF)
+              </a>
+              <a 
+                href="/pdfs/nomination-form-2026.pdf" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="inline-flex items-center gap-2 px-6 py-3 bg-white/10 text-white font-bold rounded-xl border border-white/20 shadow hover:bg-white/20 transition-all text-sm"
+              >
+                <Download className="w-4 h-4" /> Nomination Form (PDF)
+              </a>
+            </div>
           </div>
         </div>
 
@@ -120,6 +138,29 @@ export default function AwardsPage() {
           {/* Sidebar (Right) */}
           <div className="space-y-8">
             
+            <div className="bg-white border border-slate-200 rounded-xl p-8 shadow-sm">
+              <h3 className="text-lg font-semibold text-slate-900 mb-4">Official Circular & Brochure</h3>
+              <p className="text-xs text-slate-500 mb-5 leading-relaxed">Download the official Awards Circular 2026 brochure and offline nomination form.</p>
+              <div className="space-y-3">
+                <a 
+                  href="/pdfs/awards-circular-2026.pdf" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-brandBlue text-white font-bold rounded-xl shadow hover:bg-blue-700 transition-all text-xs"
+                >
+                  <Download className="w-4 h-4" /> Download Awards Circular (PDF)
+                </a>
+                <a 
+                  href="/pdfs/nomination-form-2026.pdf" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-slate-100 text-slate-800 font-bold rounded-xl border border-slate-200 hover:bg-slate-200 transition-all text-xs"
+                >
+                  <Download className="w-4 h-4" /> Nomination Form (PDF)
+                </a>
+              </div>
+            </div>
+
             <div className="bg-white border border-slate-200 rounded-xl p-8">
               <h3 className="text-lg font-semibold text-slate-900 mb-6">Event Details</h3>
               <ul className="space-y-5 text-sm">

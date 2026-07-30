@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { BookOpen, Image as ImageIcon, Send, Check } from 'lucide-react';
+import { BookOpen, Image as ImageIcon, Send, Check, Download } from 'lucide-react';
 import { auth, db } from '@/lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { collection, addDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
@@ -60,9 +60,17 @@ export default function AdvertisePage() {
               <BookOpen className="w-4 h-4 text-amber-400" /> Official Souvenir 2026
             </div>
             <h1 className="text-4xl md:text-5xl font-semibold text-white tracking-tight mb-4 leading-tight">Advertise With Us</h1>
-            <p className="text-blue-100 text-base md:text-lg max-w-2xl mx-auto">
+            <p className="text-blue-100 text-base md:text-lg max-w-2xl mx-auto mb-8">
               Place your advertisement in the Official Souvenir of the <span translate="no" className="notranslate">Vishwa Leader</span> Dr. B. R. Ambedkar International Awards 2026. Book and pay entirely online.
             </p>
+            <a 
+              href="/pdfs/advertisement-booking-form.pdf" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="inline-flex items-center gap-2 px-6 py-3 bg-amber-400 text-slate-900 font-bold rounded-xl shadow-lg hover:bg-amber-300 transition-all text-sm"
+            >
+              <Download className="w-4 h-4" /> Download Tariff & Booking Form Brochure (PDF)
+            </a>
           </div>
         </div>
 
@@ -175,6 +183,19 @@ export default function AdvertisePage() {
 
           {/* Sidebar */}
           <div className="space-y-6">
+            <div className="bg-white border border-slate-200 rounded-xl p-8 shadow-sm">
+              <h3 className="text-lg font-semibold text-slate-900 mb-4">Advertisement Media Kit</h3>
+              <p className="text-xs text-slate-500 mb-5 leading-relaxed">Download the complete Souvenir Advertisement Tariff Card and Booking Form PDF.</p>
+              <a 
+                href="/pdfs/advertisement-booking-form.pdf" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-brandBlue text-white font-bold rounded-xl shadow hover:bg-blue-700 transition-all text-xs"
+              >
+                <Download className="w-4 h-4" /> Download Tariff Card (PDF)
+              </a>
+            </div>
+
             <div className="bg-[#0a0a0a] border border-[#1f1f1f] rounded-xl p-8 shadow-2xl">
               <div className="mb-2"><span className="text-[10px] font-black tracking-widest text-amber-400 uppercase bg-amber-400/10 px-2 py-1 rounded">100% Online</span></div>
               <h3 className="text-lg font-bold text-white mt-3 mb-3">How It Works</h3>

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Map, Plane, Check, X, CalendarDays, MapPin } from 'lucide-react';
+import { Map, Plane, Check, X, CalendarDays, MapPin, Download } from 'lucide-react';
 import EventRegistrationCTA from '@/components/EventRegistrationCTA';
 
 const itinerary = [
@@ -29,7 +29,15 @@ export default function TourPackagePage() {
               <Plane className="w-4 h-4 text-amber-400" /> 7 Nights / 8 Days
             </div>
             <h1 className="text-4xl md:text-5xl font-semibold text-white tracking-tight mb-4 leading-tight">London Tour Package 2026</h1>
-            <p className="text-blue-100 text-base md:text-lg max-w-2xl mx-auto">Join the ultimate delegation experience from 17th–24th Sept. 2026. Book your spot entirely online.</p>
+            <p className="text-blue-100 text-base md:text-lg max-w-2xl mx-auto mb-8">Join the ultimate delegation experience from 17th–24th Sept. 2026. Book your spot entirely online.</p>
+            <a 
+              href="/pdfs/london-itinerary.pdf" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="inline-flex items-center gap-2 px-6 py-3 bg-amber-400 text-slate-900 font-bold rounded-xl shadow-lg hover:bg-amber-300 transition-all text-sm"
+            >
+              <Download className="w-4 h-4" /> Download Tour Itinerary Brochure (PDF)
+            </a>
           </div>
         </div>
 
@@ -76,6 +84,19 @@ export default function TourPackagePage() {
 
           {/* Sidebar */}
           <div className="space-y-6">
+            <div className="bg-white border border-slate-200 rounded-xl p-8 shadow-sm">
+              <h3 className="text-lg font-semibold text-slate-900 mb-4">Tour Itinerary Brochure</h3>
+              <p className="text-xs text-slate-500 mb-5 leading-relaxed">Download the complete day-by-day 8-day London Tour Itinerary PDF document.</p>
+              <a 
+                href="/pdfs/london-itinerary.pdf" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-brandBlue text-white font-bold rounded-xl shadow hover:bg-blue-700 transition-all text-xs"
+              >
+                <Download className="w-4 h-4" /> Download Itinerary (PDF)
+              </a>
+            </div>
+
             <div className="bg-[#0a0a0a] border border-[#1f1f1f] rounded-xl p-8 shadow-2xl">
               <div className="mb-2"><span className="text-[10px] font-black tracking-widest text-amber-400 uppercase bg-amber-400/10 px-2 py-1 rounded">Online Booking</span></div>
               <h3 className="font-bold text-lg text-white mt-3 mb-6">London Tour Booking</h3>
