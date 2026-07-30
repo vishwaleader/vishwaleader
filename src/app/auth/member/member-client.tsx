@@ -2734,28 +2734,15 @@ export default function MemberClientPage() {
       {/* Fixed Bottom Bar */}
       {currentSlide.type !== 'review' && (
         <div className="fixed bottom-0 left-0 w-full bg-white/90 backdrop-blur-xl border-t border-slate-200 p-4 z-50">
-          <div className="w-full flex items-center justify-between gap-4 px-2 sm:px-8 flex-wrap sm:flex-nowrap">
-            {/* Left side: Skip button */}
-            <div className="flex items-center">
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={handleSkipRegistration}
-                className="text-xs text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl px-3.5 h-11 flex items-center gap-1.5 font-semibold border border-slate-200"
-              >
-                <LayoutDashboard className="w-4 h-4 text-brandBlue" />
-                <span>Skip Registration / Go to Dashboard</span>
-              </Button>
-            </div>
-
+          <div className="w-full flex items-center justify-between gap-4 px-2 sm:px-8">
             {/* Center: Progress Bar */}
-            <div className="flex-grow hidden md:block max-w-md mx-auto">
+            <div className="flex-grow hidden md:block max-w-xs">
               <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
                 <div className="h-full bg-slate-900 transition-all duration-500 ease-out" style={{ width: `${progressPercentage}%` }}></div>
               </div>
             </div>
 
-            {/* Right side: Back + Next Step buttons */}
+            {/* Action Buttons: Back + Next Step */}
             <div className="flex items-center gap-2 shrink-0 ml-auto">
               {wizardStep > 0 && (
                 <Button 
