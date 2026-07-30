@@ -1337,7 +1337,6 @@ export default function MemberClientPage() {
     { id: 'gender', type: 'select', title: 'What is your gender?', options: ['Male', 'Female', 'Prefer not to say'], state: profileGender, setState: setProfileGender, required: true },
     { id: 'age', type: 'number', title: 'How old are you?', state: profileAge, setState: setProfileAge, required: true },
     { id: 'nationality', type: 'autocomplete', title: 'What is your nationality?', options: COUNTRIES_LIST, state: profileNationality, setState: setProfileNationality, required: true },
-    { id: 'passport', type: 'text', title: 'What is your passport number?', subtitle: "Required for Visa invitation letters.", state: profilePassport, setState: setProfilePassport, required: true },
     { id: 'designation', type: 'text', title: 'What is your current designation or job title?', state: profileDesignation, setState: setProfileDesignation, required: true },
     { id: 'organization', type: 'text', title: 'Which organization or university are you affiliated with?', state: profileOrganization, setState: setProfileOrganization, required: true },
     { id: 'phone', type: 'autocomplete', title: 'What is your contact number? (WhatsApp enabled)', subtitle: "Include country code e.g., +91 9876543210", options: PHONE_CODES_LIST, state: profilePhone, setState: setProfilePhone, required: true },
