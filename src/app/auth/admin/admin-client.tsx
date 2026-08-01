@@ -1568,7 +1568,7 @@ export default function AdminClientPage() {
                                         return;
                                       }
                                       setReconcilingId(p.id);
-                                      const res = await reconcileRazorpayPayment(p.id, p.email, p.amount, "Paid");
+                                      const res = await reconcileRazorpayPayment(p.id, p.email, p.amount);
                                       if (res.success) {
                                         showToast(res.message || "Synced payment to member profile!", "success");
                                         fetchData(true);

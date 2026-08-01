@@ -461,7 +461,7 @@ export async function getAdminPaymentsData() {
   }
 }
 
-export async function reconcileRazorpayPayment(paymentId: string, targetEmail: string, amount: number, status: string = "Paid") {
+export async function reconcileRazorpayPayment(paymentId: string, targetEmail: string, amount: number, customStatus?: string) {
   const isAdmin = await checkAdminSession();
   if (!isAdmin) return { success: false, error: "Unauthorized" };
 
@@ -482,11 +482,19 @@ export async function reconcileRazorpayPayment(paymentId: string, targetEmail: s
     }
 
     const userData = matchedDoc.data();
+    const previousPaid = Number(userData.amountPaid) || 0;
+    const newAmountPaid = previousPaid + amount;
+    const authoritativeTotal = Math.max(Number(userData.totalAmount) || 0, newAmountPaid);
+    const remainingBalance = Math.max(0, authoritativeTotal - newAmountPaid);
+    
+    const determinedStatus = customStatus || (remainingBalance <= 0 ? "Paid" : "Partially Paid");
+
     await matchedDoc.ref.set({
-      paymentStatus: status,
+      paymentStatus: determinedStatus,
       paymentId: paymentId,
-      amountPaid: (userData.amountPaid || 0) + amount,
-      totalAmount: Math.max(userData.totalAmount || 0, amount),
+      amountPaid: newAmountPaid,
+      totalAmount: authoritativeTotal,
+      remainingBalance: remainingBalance,
       paidAt: new Date().toISOString(),
       paymentHistory: [
         ...(userData.paymentHistory || []),
@@ -494,7 +502,7 @@ export async function reconcileRazorpayPayment(paymentId: string, targetEmail: s
           paymentId: paymentId,
           amount: amount,
           paidAt: new Date().toISOString(),
-          paymentType: "Razorpay Live Payment (Reconciled)",
+          paymentType: determinedStatus === "Paid" ? "Full / Final" : "Partial Deposit",
           status: "captured"
         }
       ]
@@ -507,13 +515,45 @@ export async function reconcileRazorpayPayment(paymentId: string, targetEmail: s
       userName: userData.name || "User",
       paymentId: paymentId,
       amount: amount,
+      status: determinedStatus,
       timestamp: new Date()
     });
 
-    return { success: true, message: `Payment ${paymentId} (₹${amount}) successfully synced to user profile '${userData.name || targetEmail}'.` };
+    return { success: true, message: `Payment ${paymentId} (₹${amount.toLocaleString('en-IN')}) successfully synced to profile as '${determinedStatus}'.`, status: determinedStatus };
   } catch (e: any) {
     console.error("reconcileRazorpayPayment error:", e);
     return { success: false, error: e.message || "Failed to reconcile payment" };
+  }
+}
+
+export async function updateUserPaymentStatus(targetEmail: string, status: 'Paid' | 'Partially Paid' | 'Unpaid') {
+  const isAdmin = await checkAdminSession();
+  if (!isAdmin) return { success: false, error: "Unauthorized" };
+
+  try {
+    const db = getAdminDb();
+    const cleanEmail = targetEmail.trim().toLowerCase();
+    const usersSnap = await db.collection("users").where("email", "==", cleanEmail).get();
+    
+    let matchedDoc = !usersSnap.empty ? usersSnap.docs[0] : null;
+
+    if (!matchedDoc) {
+      const allUsersSnap = await db.collection("users").get();
+      matchedDoc = allUsersSnap.docs.find(d => (d.data().email || "").toLowerCase() === cleanEmail) || null;
+    }
+
+    if (!matchedDoc) {
+      return { success: false, error: `No registered user profile found with email '${targetEmail}'.` };
+    }
+
+    await matchedDoc.ref.set({
+      paymentStatus: status
+    }, { merge: true });
+
+    return { success: true, message: `Updated payment status for ${targetEmail} to '${status}'.` };
+  } catch (e: any) {
+    console.error("updateUserPaymentStatus error:", e);
+    return { success: false, error: e.message || "Failed to update payment status" };
   }
 }
 
