@@ -31,7 +31,8 @@ import {
 } from "@/components/ui/table";
 import { 
   LayoutDashboard, User as UserIcon, FileText, LogOut, 
-  MapPin, Plus, Trash2, CheckCircle, Clock, Upload, ShieldAlert, CreditCard, Camera, FileCheck, Settings, Wifi, Check, ChevronDown, X, Download, Lock, Bell, Heart, Loader2, AlertCircle
+  MapPin, Plus, Trash2, CheckCircle, Clock, Upload, ShieldAlert, CreditCard, Camera, FileCheck, Settings, Wifi, Check, ChevronDown, X, Download, Lock, Bell, Heart, Loader2, AlertCircle,
+  Bot, Sparkles, RefreshCw
 } from "lucide-react";
 import { ProfilePDF } from '@/components/ProfilePDF';
 
@@ -280,7 +281,7 @@ export default function MemberClientPage() {
   const params = useParams();
   const router = useRouter();
   const urlTab = (params?.tab as string) || searchParams.get('tab');
-  const defaultTab = urlTab as 'dashboard' | 'registration' | 'checkout' | 'uploads' | 'submissions' | 'settings' | 'donations' || 'dashboard';
+  const defaultTab = urlTab as 'dashboard' | 'registration' | 'checkout' | 'uploads' | 'submissions' | 'settings' | 'donations' | 'sara' || 'dashboard';
 
   const [user, setUser] = useState<User | null>(globalUser);
   const [loading, setLoading] = useState(!globalAuthChecked);
@@ -300,7 +301,7 @@ export default function MemberClientPage() {
   const [transitioning, setTransitioning] = useState(false);
   const [reRegisterMode, setReRegisterMode] = useState(false);
   const [showReRegisterModal, setShowReRegisterModal] = useState(false);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'registration' | 'checkout' | 'uploads' | 'submissions' | 'settings' | 'donations'>(defaultTab);
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'registration' | 'checkout' | 'uploads' | 'submissions' | 'settings' | 'donations' | 'sara'>(defaultTab);
 
   useEffect(() => {
     const tab = (params?.tab as string) || searchParams.get('tab');
@@ -499,6 +500,73 @@ export default function MemberClientPage() {
   const [profilePurpose, setProfilePurpose] = useState("");
   const [submissions, setSubmissions] = useState<any[]>([]);
   const [showSubForm, setShowSubForm] = useState(true);
+
+  // Sara AI Assistant states
+  const [saraMessages, setSaraMessages] = useState<any[]>([
+    {
+      id: "welcome-1",
+      role: "assistant",
+      content: "Hello! I am SARA (Smart Automated Response Agent), your 24/7 AI Support Assistant. Ask me anything about tickets, registrations, awards, paper submissions, or London 2026 details!",
+      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+    },
+  ]);
+  const [saraQuery, setSaraQuery] = useState("");
+  const [saraLoading, setSaraLoading] = useState(false);
+  const saraEndRef = useRef<HTMLDivElement>(null);
+
+  const handleSendSaraQuery = async (text: string) => {
+    const cleanText = text.trim();
+    if (!cleanText || saraLoading) return;
+
+    const userMsg = {
+      id: `user-${Date.now()}`,
+      role: "user",
+      content: cleanText,
+      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    };
+
+    setSaraMessages((prev) => [...prev, userMsg]);
+    setSaraQuery("");
+    setSaraLoading(true);
+
+    try {
+      const res = await fetch("/api/support-chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: cleanText }),
+      });
+
+      const data = await res.json();
+      const botResponse = data?.response || "I am sorry, I couldn't process your request right now. Please contact support@vishwaleader.com.";
+
+      const botMsg = {
+        id: `assistant-${Date.now()}`,
+        role: "assistant",
+        content: botResponse,
+        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+      };
+
+      setSaraMessages((prev) => [...prev, botMsg]);
+    } catch (e: any) {
+      setSaraMessages((prev) => [
+        ...prev,
+        {
+          id: `err-${Date.now()}`,
+          role: "assistant",
+          content: "Sorry, I am having trouble connecting right now. Please try again shortly.",
+          timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+        }
+      ]);
+    } finally {
+      setSaraLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'sara') {
+      saraEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [saraMessages, saraLoading, activeTab]);
 
 
   // Toast status alert
@@ -3141,6 +3209,17 @@ export default function MemberClientPage() {
                           <span>User Profile</span>
                         </MobileCloseSidebarMenuButton>
                       </SidebarMenuItem>
+                      <SidebarMenuItem>
+                        <MobileCloseSidebarMenuButton 
+                          isActive={activeTab === 'sara'} 
+                          onClick={() => setActiveTab('sara')}
+                          className="text-purple-700 hover:text-purple-800 hover:bg-purple-50 font-bold"
+                        >
+                          <Sparkles className="size-4 text-purple-600 animate-pulse" />
+                          <span>Sara AI Assistant</span>
+                          <span className="ml-auto text-[9px] font-extrabold bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded-full uppercase tracking-wider">AI</span>
+                        </MobileCloseSidebarMenuButton>
+                      </SidebarMenuItem>
                       {memberData?.paymentStatus !== 'Paid' && (
                         <SidebarMenuItem>
                           <MobileCloseSidebarMenuButton 
@@ -3217,8 +3296,10 @@ export default function MemberClientPage() {
                         <BreadcrumbPage>
                           {activeTab === 'dashboard' && 'Dashboard Overview'}
                           {activeTab === 'registration' && 'Delegate Registration'}
+                          {activeTab === 'sara' && 'Sara AI Assistant'}
                           {activeTab === 'uploads' && 'Document Upload Center'}
                           {activeTab === 'submissions' && 'Abstract Submissions'}
+                          {activeTab === 'donations' && 'Donation History'}
                         </BreadcrumbPage>
                       </BreadcrumbItem>
                     </BreadcrumbList>
@@ -3494,6 +3575,161 @@ export default function MemberClientPage() {
                         </Card>
                       </div>
                     </div>
+                  </div>
+                )}
+
+                {/* ═════════════════════ TAB: SARA AI ASSISTANT ═════════════════════ */}
+                {activeTab === 'sara' && (
+                  <div className="space-y-6">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                      <div>
+                        <h2 className="text-2xl font-black font-display text-slate-900 uppercase tracking-tight flex items-center gap-2">
+                          <Sparkles className="w-6 h-6 text-purple-600 animate-pulse" />
+                          Sara AI Assistant
+                        </h2>
+                        <p className="text-xs text-slate-500 mt-1 font-medium">
+                          Your 24/7 AI employee for Vishwa Leader 2026. Ask anything about tickets, registrations, awards, or London tour details!
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          onClick={() => setSaraMessages([
+                            {
+                              id: "welcome-1",
+                              role: "assistant",
+                              content: "Hello! I am SARA, your 24/7 AI Customer Support Employee. How can I assist you today in your Member Portal?",
+                              timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+                            }
+                          ])}
+                          variant="outline"
+                          className="text-xs font-bold border-slate-300 hover:bg-slate-50 text-slate-700 h-9"
+                        >
+                          <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
+                          Clear Chat
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Sara AI Workspace Card */}
+                    <Card className="border-purple-200/80 shadow-md bg-white overflow-hidden flex flex-col h-[calc(100vh-140px)] min-h-[500px]">
+                      {/* Sara Header Bar */}
+                      <div className="p-4 bg-gradient-to-r from-slate-900 via-purple-950 to-slate-900 border-b border-purple-800/40 text-white flex items-center justify-between shrink-0">
+                        <div className="flex items-center gap-3">
+                          <div className="relative">
+                            <div className="w-10 h-10 rounded-full bg-purple-600/30 border border-purple-400/40 flex items-center justify-center text-amber-300 shadow-md">
+                              <Bot className="w-6 h-6 text-amber-300" />
+                            </div>
+                            <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-400 border-2 border-slate-900 rounded-full animate-pulse"></span>
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <h3 className="font-bold text-sm text-white font-display">Sara AI Employee</h3>
+                              <span className="text-[9px] font-extrabold bg-purple-500/30 text-purple-200 border border-purple-400/30 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                                24/7 Active
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-purple-200/80">Vishwa Leader Dr. B. R. Ambedkar International Awards 2026</p>
+                          </div>
+                        </div>
+
+                        <div className="hidden sm:flex items-center gap-2 text-[11px] text-purple-200/60 font-mono">
+                          <span>Powered by Gemini AI</span>
+                        </div>
+                      </div>
+
+                      {/* Suggested Prompts Bar */}
+                      <div className="p-3 bg-slate-50 border-b border-slate-200/80 flex items-center gap-2 overflow-x-auto text-xs shrink-0 no-scrollbar">
+                        <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider shrink-0 mr-1">Suggestions:</span>
+                        {[
+                          "How do I submit my research paper?",
+                          "Tell me about London 2026 tour package",
+                          "What are the award nomination guidelines?",
+                          "How to get a souvenir advertisement?",
+                          "What is included in the delegate registration fee?"
+                        ].map((promptText) => (
+                          <button
+                            key={promptText}
+                            type="button"
+                            onClick={() => handleSendSaraQuery(promptText)}
+                            className="px-3 py-1.5 rounded-full bg-white hover:bg-purple-50 hover:border-purple-300 text-slate-700 hover:text-purple-900 border border-slate-200 text-xs font-medium whitespace-nowrap transition-all shadow-sm shrink-0 cursor-pointer"
+                          >
+                            {promptText}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Messages Scroll Feed */}
+                      <div className="flex-1 p-4 sm:p-6 overflow-y-auto space-y-4 bg-slate-50/50">
+                        {saraMessages.map((msg) => (
+                          <div
+                            key={msg.id}
+                            className={`flex items-start gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                          >
+                            {msg.role === 'assistant' && (
+                              <div className="w-8 h-8 rounded-full bg-purple-900 text-amber-300 flex items-center justify-center shrink-0 shadow-sm border border-purple-700">
+                                <Bot className="w-4 h-4" />
+                              </div>
+                            )}
+
+                            <div className={`max-w-[85%] sm:max-w-[75%] rounded-2xl p-4 text-xs sm:text-sm leading-relaxed ${
+                              msg.role === 'user'
+                                ? 'bg-brandBlue text-white rounded-tr-none shadow-md'
+                                : 'bg-white border border-slate-200 text-slate-800 rounded-tl-none shadow-sm'
+                            }`}>
+                              <p className="whitespace-pre-wrap">{msg.content}</p>
+                              <div className={`text-[10px] mt-1.5 font-mono text-right ${msg.role === 'user' ? 'text-blue-200' : 'text-slate-400'}`}>
+                                {msg.timestamp}
+                              </div>
+                            </div>
+
+                            {msg.role === 'user' && (
+                              <img
+                                src={memberData?.headshotUrl || user.photoURL || "https://placehold.co/100x100"}
+                                alt="You"
+                                className="w-8 h-8 rounded-full border border-slate-200 object-cover shrink-0 shadow-sm"
+                              />
+                            )}
+                          </div>
+                        ))}
+
+                        {saraLoading && (
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-purple-900 text-amber-300 flex items-center justify-center shrink-0 shadow-sm border border-purple-700">
+                              <Bot className="w-4 h-4" />
+                            </div>
+                            <div className="bg-white border border-slate-200 p-3.5 rounded-2xl rounded-tl-none text-xs text-slate-500 flex items-center gap-2 shadow-sm">
+                              <Loader2 className="w-4 h-4 text-purple-600 animate-spin" />
+                              Sara is thinking and generating response...
+                            </div>
+                          </div>
+                        )}
+                        <div ref={saraEndRef} />
+                      </div>
+
+                      {/* Input Footer Form */}
+                      <form
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          handleSendSaraQuery(saraQuery);
+                        }}
+                        className="p-3.5 bg-white border-t border-slate-200 flex items-center gap-2 shrink-0"
+                      >
+                        <Input
+                          placeholder="Ask Sara AI anything about your membership, papers, or London 2026..."
+                          value={saraQuery}
+                          onChange={(e) => setSaraQuery(e.target.value)}
+                          disabled={saraLoading}
+                          className="flex-1 text-xs sm:text-sm bg-slate-50 border-slate-200 h-11 focus-visible:ring-purple-600"
+                        />
+                        <Button
+                          type="submit"
+                          disabled={saraLoading || !saraQuery.trim()}
+                          className="bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs h-11 px-5 rounded-xl shadow-md shrink-0 cursor-pointer"
+                        >
+                          {saraLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Send"}
+                        </Button>
+                      </form>
+                    </Card>
                   </div>
                 )}
 
