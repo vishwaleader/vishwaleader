@@ -376,7 +376,11 @@ export async function getAdminUserData(userId: string) {
   }
 }
 
-export async function updateSubmissionStatus(submissionId: string, status: 'pending' | 'approved' | 'rejected') {
+export function updateSubmissionStatus(submissionId: string, status: 'pending' | 'approved' | 'rejected') {
+  return updateSubmissionStatusAction(submissionId, status);
+}
+
+export async function updateSubmissionStatusAction(submissionId: string, status: 'pending' | 'approved' | 'rejected') {
   const isAdmin = await checkAdminSession();
   if (!isAdmin) return { success: false, error: "Unauthorized" };
 
@@ -389,6 +393,131 @@ export async function updateSubmissionStatus(submissionId: string, status: 'pend
     return { success: true };
   } catch (e: any) {
     return { success: false, error: e.message };
+  }
+}
+
+export async function getAdminPaymentsData() {
+  const isAdmin = await checkAdminSession();
+  if (!isAdmin) return { success: false, error: "Unauthorized" };
+
+  try {
+    const keyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
+    const keySecret = process.env.RAZORPAY_KEY_SECRET;
+
+    let razorpayPayments: any[] = [];
+    if (keyId && keySecret) {
+      try {
+        const Razorpay = (await import("razorpay")).default;
+        const razorpay = new Razorpay({
+          key_id: keyId,
+          key_secret: keySecret,
+        });
+        const res: any = await razorpay.payments.all({ count: 100 });
+        if (res && res.items) {
+          razorpayPayments = res.items.map((p: any) => ({
+            id: p.id,
+            orderId: p.order_id || "",
+            amount: p.amount ? p.amount / 100 : 0,
+            currency: p.currency || "INR",
+            status: p.status, // captured, failed, authorized, refunded
+            method: p.method,
+            email: p.email || "",
+            contact: p.contact || "",
+            createdAt: new Date(p.created_at * 1000).toISOString(),
+            errorDescription: p.error_description || "",
+            bank: p.bank || "",
+            wallet: p.wallet || "",
+            vpa: p.vpa || "",
+            fee: p.fee ? p.fee / 100 : 0,
+            tax: p.tax ? p.tax / 100 : 0,
+            notes: p.notes || {}
+          }));
+        }
+      } catch (rzpErr: any) {
+        console.error("Razorpay API fetch error:", rzpErr.message);
+      }
+    }
+
+    const db = getAdminDb();
+    let firestoreOrders: any[] = [];
+    try {
+      const ordersSnap = await db.collection("orders").get();
+      firestoreOrders = ordersSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    } catch (_) {}
+
+    let firestoreDonations: any[] = [];
+    try {
+      const donSnap = await db.collection("donations").get();
+      firestoreDonations = donSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    } catch (_) {}
+
+    return {
+      success: true,
+      data: {
+        razorpayPayments,
+        firestoreOrders,
+        firestoreDonations
+      }
+    };
+  } catch (e: any) {
+    console.error("getAdminPaymentsData error:", e);
+    return { success: false, error: e.message || "Failed to fetch payments data" };
+  }
+}
+
+export async function reconcileRazorpayPayment(paymentId: string, targetEmail: string, amount: number, status: string = "Paid") {
+  const isAdmin = await checkAdminSession();
+  if (!isAdmin) return { success: false, error: "Unauthorized" };
+
+  try {
+    const db = getAdminDb();
+    const cleanEmail = targetEmail.trim().toLowerCase();
+    const usersSnap = await db.collection("users").where("email", "==", cleanEmail).get();
+    
+    let matchedDoc = !usersSnap.empty ? usersSnap.docs[0] : null;
+
+    if (!matchedDoc) {
+      const allUsersSnap = await db.collection("users").get();
+      matchedDoc = allUsersSnap.docs.find(d => (d.data().email || "").toLowerCase() === cleanEmail) || null;
+    }
+
+    if (!matchedDoc) {
+      return { success: false, error: `No registered user profile found with email '${targetEmail}'.` };
+    }
+
+    const userData = matchedDoc.data();
+    await matchedDoc.ref.set({
+      paymentStatus: status,
+      paymentId: paymentId,
+      amountPaid: (userData.amountPaid || 0) + amount,
+      totalAmount: Math.max(userData.totalAmount || 0, amount),
+      paidAt: new Date().toISOString(),
+      paymentHistory: [
+        ...(userData.paymentHistory || []),
+        {
+          paymentId: paymentId,
+          amount: amount,
+          paidAt: new Date().toISOString(),
+          paymentType: "Razorpay Live Payment (Reconciled)",
+          status: "captured"
+        }
+      ]
+    }, { merge: true });
+
+    await db.collection("adminActivity").add({
+      type: "payment_reconciled",
+      userId: matchedDoc.id,
+      userEmail: targetEmail,
+      userName: userData.name || "User",
+      paymentId: paymentId,
+      amount: amount,
+      timestamp: new Date()
+    });
+
+    return { success: true, message: `Payment ${paymentId} (₹${amount}) successfully synced to user profile '${userData.name || targetEmail}'.` };
+  } catch (e: any) {
+    console.error("reconcileRazorpayPayment error:", e);
+    return { success: false, error: e.message || "Failed to reconcile payment" };
   }
 }
 

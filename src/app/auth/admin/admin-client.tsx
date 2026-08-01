@@ -19,14 +19,15 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Gauge, FileSpreadsheet, Database, RefreshCw, CheckCircle2, Clock,
   TrendingUp, MessageCircle, UserCheck, Wifi, Mail, Send,
-  LayoutDashboard, ChartBar, Users, Search, LogOut, Megaphone, FileText, Download, BookOpen
+  LayoutDashboard, ChartBar, Users, Search, LogOut, Megaphone, FileText, Download, BookOpen,
+  CreditCard, ShieldCheck, AlertTriangle
 } from "lucide-react";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import * as XLSX from "@e965/xlsx";
 import dynamic from "next/dynamic";
 import { ProfilePDF } from '@/components/ProfilePDF';
-import { verifyUserDocuments } from "@/app/actions/adminAuth";
+import { verifyUserDocuments, getAdminPaymentsData, reconcileRazorpayPayment } from "@/app/actions/adminAuth";
 
 const CustomPDFViewer = dynamic(() => import('@react-pdf/renderer').then(mod => {
   return function Viewer({ doc }: { doc: React.ReactElement }) {
@@ -117,6 +118,12 @@ export default function AdminClientPage() {
   const [paperFilter, setPaperFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
   const [updatingSubId, setUpdatingSubId] = useState<string | null>(null);
 
+  // Payments State
+  const [paymentsData, setPaymentsData] = useState<{ razorpayPayments: any[], firestoreOrders: any[], firestoreDonations: any[] } | null>(null);
+  const [paymentsLoading, setPaymentsLoading] = useState(false);
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState<'all' | 'captured' | 'failed' | 'refunded'>('all');
+  const [paymentSearchQuery, setPaymentSearchQuery] = useState("");
+  const [reconcilingId, setReconcilingId] = useState<string | null>(null);
   // GA4 Data
   const [ga4Data, setGa4Data] = useState<any>(null);
   const [ga4Loading, setGa4Loading] = useState(false);
@@ -149,6 +156,22 @@ export default function AdminClientPage() {
     setAdminToasts(prev => [...prev, { id, message, type }]);
     setTimeout(() => setAdminToasts(prev => prev.filter(t => t.id !== id)), 5000);
   }, []);
+
+  const fetchPayments = useCallback(async () => {
+    setPaymentsLoading(true);
+    try {
+      const res = await getAdminPaymentsData();
+      if (res.success && res.data) {
+        setPaymentsData(res.data);
+      } else {
+        showToast(`Payments fetch failed: ${res.error}`, 'error');
+      }
+    } catch (e: any) {
+      showToast(`Error fetching payments: ${e.message}`, 'error');
+    } finally {
+      setPaymentsLoading(false);
+    }
+  }, [showToast]);
 
   // ── Session check on mount ────────────────────────────────────────────────────
   useEffect(() => {
@@ -245,6 +268,12 @@ export default function AdminClientPage() {
 
     return () => clearInterval(interval);
   }, [user, fetchData]);
+
+  useEffect(() => {
+    if (user && activeTab === "Payments" && !paymentsData && !paymentsLoading) {
+      fetchPayments();
+    }
+  }, [user, activeTab, paymentsData, paymentsLoading, fetchPayments]);
 
   // ── Export to Excel ───────────────────────────────────────────────────────────
   const handleExportExcel = () => {
@@ -587,6 +616,7 @@ export default function AdminClientPage() {
                       { label: "Analytics", icon: <Gauge /> },
                       { label: "Users", icon: <Users /> },
                       { label: "Paper Submissions", icon: <FileText /> },
+                      { label: "Payments", icon: <CreditCard /> },
                       { label: "Broadcast", icon: <Mail /> },
                       { label: "Announcements", icon: <Megaphone /> },
                       { label: "Advertisements", icon: <TrendingUp /> },
@@ -594,7 +624,7 @@ export default function AdminClientPage() {
                       <SidebarMenuItem key={item.label}>
                         <MobileCloseSidebarMenuButton isActive={activeTab === item.label} onClick={() => setActiveTab(item.label)}>
                           {item.icon}
-                          <span>{item.label === "CRM" ? "CRM & Inquiries" : item.label === "Users" ? "User Management" : item.label === "Analytics" ? "Firebase Analytics" : item.label === "Paper Submissions" ? "Paper Submissions" : item.label === "Broadcast" ? "Email Broadcast" : item.label === "Announcements" ? "Announcement Banner" : item.label === "Advertisements" ? "Ads Manager" : "Default Dashboard"}</span>
+                          <span>{item.label === "CRM" ? "CRM & Inquiries" : item.label === "Users" ? "User Management" : item.label === "Analytics" ? "Firebase Analytics" : item.label === "Paper Submissions" ? "Paper Submissions" : item.label === "Payments" ? "Payments & Razorpay" : item.label === "Broadcast" ? "Email Broadcast" : item.label === "Announcements" ? "Announcement Banner" : item.label === "Advertisements" ? "Ads Manager" : "Default Dashboard"}</span>
                           {item.label === "Users" && totalUsers > 0 && (
                             <span className="ml-auto text-[9px] font-bold bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full">{totalUsers}</span>
                           )}
@@ -603,6 +633,9 @@ export default function AdminClientPage() {
                           )}
                           {item.label === "Paper Submissions" && submissions.length > 0 && (
                             <span className="ml-auto text-[9px] font-bold bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded-full">{submissions.length}</span>
+                          )}
+                          {item.label === "Payments" && (paymentsData?.razorpayPayments || []).length > 0 && (
+                            <span className="ml-auto text-[9px] font-bold bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full">{(paymentsData?.razorpayPayments || []).length}</span>
                           )}
                         </MobileCloseSidebarMenuButton>
                       </SidebarMenuItem>
@@ -1328,6 +1361,246 @@ export default function AdminClientPage() {
                       </CardContent>
                     </Card>
                   </div>
+                </div>
+              )}
+              {activeTab === "Payments" && (
+                <div className="space-y-6">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                      <h2 className="text-2xl font-black font-display text-slate-900 uppercase tracking-tight flex items-center gap-2">
+                        <CreditCard className="w-6 h-6 text-emerald-600" />
+                        Payments & Razorpay Transactions
+                      </h2>
+                      <p className="text-sm text-slate-500 mt-1">
+                        Real-time live Razorpay transactions, gateway logs, and member profile reconciliation.
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        onClick={fetchPayments}
+                        disabled={paymentsLoading}
+                        variant="outline"
+                        className="text-xs font-bold border-slate-300 hover:bg-slate-50"
+                      >
+                        <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${paymentsLoading ? 'animate-spin' : ''}`} />
+                        Refresh Live Gateway Data
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Summary Stat Cards */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <StatCard
+                      title="Total Revenue (Razorpay)"
+                      value={`₹${(paymentsData?.razorpayPayments || []).filter((p: any) => p.status === 'captured').reduce((acc: number, p: any) => acc + (p.amount || 0), 0).toLocaleString('en-IN')}`}
+                      sub="From captured live transactions"
+                      icon={<CreditCard className="w-5 h-5 text-emerald-600" />}
+                      color="bg-emerald-50"
+                    />
+                    <StatCard
+                      title="Total Gateway Logs"
+                      value={(paymentsData?.razorpayPayments || []).length}
+                      sub="All Razorpay API transactions"
+                      icon={<ChartBar className="w-5 h-5 text-blue-600" />}
+                      color="bg-blue-50"
+                    />
+                    <StatCard
+                      title="Successful Payments"
+                      value={(paymentsData?.razorpayPayments || []).filter((p: any) => p.status === 'captured').length}
+                      sub="Captured via UPI / Card / Banking"
+                      icon={<CheckCircle2 className="w-5 h-5 text-emerald-600" />}
+                      color="bg-emerald-50"
+                    />
+                    <StatCard
+                      title="Failed / Abandoned"
+                      value={(paymentsData?.razorpayPayments || []).filter((p: any) => p.status === 'failed').length}
+                      sub="Incomplete payment attempts"
+                      icon={<AlertTriangle className="w-5 h-5 text-rose-600" />}
+                      color="bg-rose-50"
+                    />
+                  </div>
+
+                  {/* Transactions Table & Controls */}
+                  <Card className="border-slate-200 shadow-sm overflow-hidden">
+                    <CardHeader className="bg-slate-50 border-b pb-4">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                          <CardTitle className="text-base font-bold text-slate-800">Razorpay Live Transaction Log</CardTitle>
+                          <CardDescription className="text-xs text-slate-500">
+                            View live payment details and reconcile directly to user accounts in 1 click.
+                          </CardDescription>
+                        </div>
+
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <div className="flex items-center bg-slate-200/80 p-0.5 rounded-lg text-xs font-semibold">
+                            {(['all', 'captured', 'failed', 'refunded'] as const).map(st => (
+                              <button
+                                key={st}
+                                onClick={() => setPaymentStatusFilter(st)}
+                                className={`px-3 py-1.5 rounded-md capitalize transition-all ${paymentStatusFilter === st ? 'bg-white text-slate-900 shadow-sm font-bold' : 'text-slate-600 hover:text-slate-900'}`}
+                              >
+                                {st === 'captured' ? 'Captured (Success)' : st}
+                              </button>
+                            ))}
+                          </div>
+
+                          <div className="relative w-full sm:w-64">
+                            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
+                            <Input
+                              placeholder="Search email, payment ID..."
+                              value={paymentSearchQuery}
+                              onChange={e => setPaymentSearchQuery(e.target.value)}
+                              className="pl-8 h-9 text-xs bg-white border-slate-200"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </CardHeader>
+
+                    <CardContent className="p-0">
+                      {paymentsLoading ? (
+                        <div className="text-center py-16">
+                          <RefreshCw className="w-8 h-8 text-emerald-600 animate-spin mx-auto mb-3" />
+                          <p className="text-sm font-semibold text-slate-600">Fetching live payment records from Razorpay Gateway...</p>
+                        </div>
+                      ) : (
+                        (() => {
+                          const allPayments = paymentsData?.razorpayPayments || [];
+                          const filtered = allPayments.filter((p: any) => {
+                            const q = paymentSearchQuery.toLowerCase().trim();
+                            const matchesSearch = !q || (
+                              (p.email && p.email.toLowerCase().includes(q)) ||
+                              (p.id && p.id.toLowerCase().includes(q)) ||
+                              (p.orderId && p.orderId.toLowerCase().includes(q)) ||
+                              (p.contact && p.contact.toLowerCase().includes(q))
+                            );
+                            const matchesStatus = paymentStatusFilter === 'all' || p.status === paymentStatusFilter;
+                            return matchesSearch && matchesStatus;
+                          });
+
+                          if (filtered.length === 0) {
+                            return (
+                              <div className="text-center py-16">
+                                <CreditCard className="w-10 h-10 text-slate-200 mx-auto mb-3" />
+                                <p className="text-sm text-slate-500 font-medium">No Razorpay transactions found matching your criteria.</p>
+                              </div>
+                            );
+                          }
+
+                          return (
+                            <div className="overflow-x-auto">
+                              <table className="w-full text-left text-xs text-slate-700">
+                                <thead className="bg-slate-100/80 border-b text-[11px] uppercase font-bold text-slate-500 tracking-wider">
+                                  <tr>
+                                    <th className="px-4 py-3">Date & Time</th>
+                                    <th className="px-4 py-3">Payment ID / Order</th>
+                                    <th className="px-4 py-3">Customer Email & Phone</th>
+                                    <th className="px-4 py-3">Amount</th>
+                                    <th className="px-4 py-3">Method</th>
+                                    <th className="px-4 py-3">Status</th>
+                                    <th className="px-4 py-3 text-right">Member Profile Sync</th>
+                                  </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100">
+                                  {filtered.map((p: any) => {
+                                    const matchedUser = users.find(u => u.email && p.email && u.email.toLowerCase() === p.email.toLowerCase());
+                                    const isUserPaid = matchedUser && (matchedUser.paymentStatus === 'Paid' || matchedUser.paymentStatus === 'Partially Paid');
+                                    const isReconciling = reconcilingId === p.id;
+
+                                    const handleReconcile = async () => {
+                                      if (!p.email) {
+                                        showToast("Cannot sync payment without customer email", "error");
+                                        return;
+                                      }
+                                      setReconcilingId(p.id);
+                                      const res = await reconcileRazorpayPayment(p.id, p.email, p.amount, "Paid");
+                                      if (res.success) {
+                                        showToast(res.message || "Synced payment to member profile!", "success");
+                                        fetchData(true);
+                                        fetchPayments();
+                                      } else {
+                                        showToast(`Sync failed: ${res.error}`, "error");
+                                      }
+                                      setReconcilingId(null);
+                                    };
+
+                                    return (
+                                      <tr key={p.id} className="hover:bg-slate-50/80 transition-colors">
+                                        <td className="px-4 py-3.5 whitespace-nowrap text-slate-600 font-medium">
+                                          {new Date(p.createdAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                        </td>
+                                        <td className="px-4 py-3.5 font-mono text-[11px]">
+                                          <div className="font-bold text-slate-900">{p.id}</div>
+                                          {p.orderId && <div className="text-slate-400 text-[10px]">{p.orderId}</div>}
+                                        </td>
+                                        <td className="px-4 py-3.5">
+                                          <div className="font-bold text-slate-900">{p.email || "No Email Provided"}</div>
+                                          <div className="text-slate-500 text-[11px]">{p.contact || "No Phone"}</div>
+                                        </td>
+                                        <td className="px-4 py-3.5 whitespace-nowrap font-black text-sm text-slate-900">
+                                          ₹{p.amount ? p.amount.toLocaleString('en-IN') : 0} <span className="text-[10px] text-slate-400 font-normal">{p.currency}</span>
+                                        </td>
+                                        <td className="px-4 py-3.5 whitespace-nowrap font-semibold uppercase text-[10px] text-slate-600">
+                                          <span className="px-2 py-0.5 rounded bg-slate-100 border border-slate-200">
+                                            {p.method}
+                                          </span>
+                                        </td>
+                                        <td className="px-4 py-3.5 whitespace-nowrap">
+                                          <span className={`text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase border ${
+                                            p.status === 'captured' ? 'bg-emerald-50 text-emerald-700 border-emerald-300' :
+                                            p.status === 'failed' ? 'bg-rose-50 text-rose-700 border-rose-300' :
+                                            'bg-amber-50 text-amber-700 border-amber-300'
+                                          }`}>
+                                            {p.status === 'captured' ? '✓ Captured' : p.status}
+                                          </span>
+                                        </td>
+                                        <td className="px-4 py-3.5 whitespace-nowrap text-right">
+                                          {matchedUser ? (
+                                            <div className="flex items-center justify-end gap-2">
+                                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${isUserPaid ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
+                                                {matchedUser.name} ({matchedUser.paymentStatus || 'Unpaid'})
+                                              </span>
+                                              {p.status === 'captured' && matchedUser.paymentStatus !== 'Paid' && (
+                                                <Button
+                                                  size="sm"
+                                                  onClick={handleReconcile}
+                                                  disabled={isReconciling}
+                                                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] h-7 px-2.5"
+                                                >
+                                                  {isReconciling ? <RefreshCw className="w-3 h-3 animate-spin mr-1" /> : <ShieldCheck className="w-3 h-3 mr-1" />}
+                                                  Sync to Profile
+                                                </Button>
+                                              )}
+                                            </div>
+                                          ) : (
+                                            <div className="flex items-center justify-end gap-2">
+                                              <span className="text-[10px] text-slate-400 italic">No User Profile</span>
+                                              {p.status === 'captured' && (
+                                                <Button
+                                                  size="sm"
+                                                  onClick={handleReconcile}
+                                                  disabled={isReconciling}
+                                                  variant="outline"
+                                                  className="border-emerald-300 text-emerald-700 hover:bg-emerald-50 font-bold text-[11px] h-7 px-2.5"
+                                                >
+                                                  {isReconciling ? <RefreshCw className="w-3 h-3 animate-spin mr-1" /> : <ShieldCheck className="w-3 h-3 mr-1" />}
+                                                  Sync to Profile
+                                                </Button>
+                                              )}
+                                            </div>
+                                          )}
+                                        </td>
+                                      </tr>
+                                    );
+                                  })}
+                                </tbody>
+                              </table>
+                            </div>
+                          );
+                        })()
+                      )}
+                    </CardContent>
+                  </Card>
                 </div>
               )}
               {activeTab === "Broadcast" && (

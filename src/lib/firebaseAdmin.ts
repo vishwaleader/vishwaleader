@@ -16,57 +16,32 @@ export function safeParseJson(jsonStr: string): any {
   if (!jsonStr || typeof jsonStr !== "string") {
     throw new Error("Invalid JSON string provided");
   }
-  const trimmed = jsonStr.trim();
+  let str = jsonStr.trim();
+
+  // Attempt 1: Standard JSON parse
   try {
-    return JSON.parse(trimmed);
-  } catch (err1) {
-    // Fix unescaped control characters inside JSON string values
-    let inString = false;
-    let escaped = false;
-    let cleaned = "";
+    return JSON.parse(str);
+  } catch (_) {}
 
-    for (let i = 0; i < trimmed.length; i++) {
-      const char = trimmed[i];
-      const code = char.charCodeAt(0);
-
-      if (escaped) {
-        cleaned += char;
-        escaped = false;
-        continue;
-      }
-
-      if (char === "\\") {
-        cleaned += char;
-        escaped = true;
-        continue;
-      }
-
-      if (char === '"') {
-        inString = !inString;
-        cleaned += char;
-        continue;
-      }
-
-      if (inString && code < 32) {
-        if (char === "\n") cleaned += "\\n";
-        else if (char === "\r") cleaned += "\\r";
-        else if (char === "\t") cleaned += "\\t";
-      } else {
-        cleaned += char;
-      }
-    }
-
+  // Attempt 2: If outer-quoted string
+  if ((str.startsWith('"') && str.endsWith('"')) || (str.startsWith("'") && str.endsWith("'"))) {
     try {
-      return JSON.parse(cleaned);
-    } catch (err2) {
-      if (trimmed.startsWith('"') && trimmed.endsWith('"')) {
-        try {
-          return JSON.parse(JSON.parse(trimmed));
-        } catch (_) {}
-      }
-      throw err1;
+      const unquoted = JSON.parse(str);
+      if (typeof unquoted === "string") return safeParseJson(unquoted);
+      if (typeof unquoted === "object" && unquoted !== null) return unquoted;
+    } catch (_) {
+      str = str.slice(1, -1).trim();
     }
   }
+
+  // Attempt 3: Safe Object Evaluator for JSON with raw newlines in string properties
+  try {
+    const obj = (new Function(`return (${str})`))();
+    if (typeof obj === "string") return safeParseJson(obj);
+    if (typeof obj === "object" && obj !== null) return obj;
+  } catch (_) {}
+
+  throw new Error("Could not parse credentials JSON");
 }
 
 function getAdminApp(): App {
@@ -77,7 +52,8 @@ function getAdminApp(): App {
   let credJson: string | undefined;
 
   if (process.env.FIREBASE_ADMIN_CREDENTIALS_BASE64) {
-    credJson = Buffer.from(process.env.FIREBASE_ADMIN_CREDENTIALS_BASE64, 'base64').toString('utf8');
+    const b64 = process.env.FIREBASE_ADMIN_CREDENTIALS_BASE64.replace(/[\r\n\s]+/g, '');
+    credJson = Buffer.from(b64, 'base64').toString('utf8');
   } else {
     credJson = process.env.FIREBASE_ADMIN_CREDENTIALS_JSON || process.env.GOOGLE_CREDENTIALS_JSON;
   }
