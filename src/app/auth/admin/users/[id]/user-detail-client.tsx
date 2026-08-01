@@ -51,6 +51,7 @@ export default function UserDetailClientPage({ userId }: { userId: string }) {
           { key: 'passport', label: 'Passport (Front & Back)' },
           { key: 'evidence', label: 'Nomination Evidence' },
           { key: 'businessDeck', label: 'Business Deck' },
+          { key: 'paper', label: 'Research Paper / PDF' },
           { key: 'guests', label: 'Guest Details & Documents' },
         ];
         items.forEach(item => {
@@ -299,6 +300,53 @@ export default function UserDetailClientPage({ userId }: { userId: string }) {
 
           {/* Right Column: Verification & PDF Dossier */}
           <div className="lg:col-span-8 space-y-6">
+
+            {/* Submitted Research Papers & Abstracts */}
+            {user.submissions && user.submissions.length > 0 && (
+              <Card className="bg-slate-900 border-slate-800 text-slate-100 shadow-xl">
+                <CardHeader className="pb-4 border-b border-slate-800">
+                  <CardTitle className="text-base font-bold text-white uppercase tracking-wide flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-blue-400" />
+                    Conference Research Paper Submissions ({user.submissions.length})
+                  </CardTitle>
+                  <CardDescription className="text-xs text-slate-400">Papers and abstracts registered by this delegate for SOAS London 2026</CardDescription>
+                </CardHeader>
+                <CardContent className="p-6 space-y-4">
+                  {user.submissions.map((sub: any, idx: number) => (
+                    <div key={sub.id || idx} className="p-4 rounded-xl bg-slate-800/60 border border-slate-700/60 space-y-3">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                          <h4 className="font-bold text-sm text-white">{sub.title || "Untitled Paper"}</h4>
+                          <p className="text-xs text-slate-400 mt-0.5">Authors: <span className="text-slate-200">{sub.authors || "N/A"}</span> · Theme: <span className="text-blue-300 capitalize">{sub.theme || "General"}</span></p>
+                        </div>
+                        {(sub.fileUrl || sub.paperUrl) && (
+                          <a
+                            href={sub.fileUrl || sub.paperUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs self-start sm:self-center transition-colors"
+                          >
+                            <Download className="w-3.5 h-3.5" /> View PDF Paper
+                          </a>
+                        )}
+                      </div>
+                      {sub.abstract && (
+                        <div className="bg-slate-900/80 p-3 rounded-lg border border-slate-800 text-xs text-slate-300 max-h-32 overflow-y-auto">
+                          <span className="font-bold text-slate-400 block text-[10px] uppercase mb-1">Abstract</span>
+                          {sub.abstract}
+                        </div>
+                      )}
+                      <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1 border-t border-slate-700/40">
+                        <span>Submitted: {sub.submittedAt ? new Date(sub.submittedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A'}</span>
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${sub.status === 'approved' ? 'bg-emerald-950 text-emerald-300 border border-emerald-500/30' : sub.status === 'rejected' ? 'bg-rose-950 text-rose-300 border border-rose-500/30' : 'bg-amber-950 text-amber-300 border border-amber-500/30'}`}>
+                          Status: {sub.status || 'pending'}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
             
             {/* Document Verification Box */}
             <Card className="bg-slate-900 border-slate-800 text-slate-100 shadow-xl">

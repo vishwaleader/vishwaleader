@@ -19,7 +19,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Gauge, FileSpreadsheet, Database, RefreshCw, CheckCircle2, Clock,
   TrendingUp, MessageCircle, UserCheck, Wifi, Mail, Send,
-  LayoutDashboard, ChartBar, Users, Search, LogOut, Megaphone
+  LayoutDashboard, ChartBar, Users, Search, LogOut, Megaphone, FileText, Download, BookOpen
 } from "lucide-react";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
@@ -38,7 +38,7 @@ const CustomPDFViewer = dynamic(() => import('@react-pdf/renderer').then(mod => 
 }), { ssr: false });
 
 // Server Actions — run on server, bypass Firestore security rules entirely
-import { loginAsAdmin, logoutAdmin, checkAdminSession, getAdminDashboardData, getAnnouncementSettings, updateAnnouncementSettings, getAdSettings, updateAdSettings } from "@/app/actions/adminAuth";
+import { loginAsAdmin, logoutAdmin, checkAdminSession, getAdminDashboardData, getAnnouncementSettings, updateAnnouncementSettings, getAdSettings, updateAdSettings, updateSubmissionStatus } from "@/app/actions/adminAuth";
 import { exportToGoogleSheets } from "@/app/actions/googleSheets";
 import { getWebTrafficData } from "@/app/actions/analytics";
 import { sendBroadcastEmail } from "@/app/actions/emailActions";
@@ -109,10 +109,13 @@ export default function AdminClientPage() {
   const [users, setUsers] = useState<any[]>([]);
   const [inquiries, setInquiries] = useState<any[]>([]);
   const [activityFeed, setActivityFeed] = useState<any[]>([]);
+  const [submissions, setSubmissions] = useState<any[]>([]);
   const [lastSync, setLastSync] = useState<string>("");
   const [dataLoading, setDataLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [userCategoryFilter, setUserCategoryFilter] = useState<'all' | 'skipped' | 'incomplete' | 'paid' | 'online'>('all');
+  const [paperFilter, setPaperFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
+  const [updatingSubId, setUpdatingSubId] = useState<string | null>(null);
 
   // GA4 Data
   const [ga4Data, setGa4Data] = useState<any>(null);
@@ -189,7 +192,7 @@ export default function AdminClientPage() {
         return;
       }
 
-      const { users: newUsers, inquiries: newInq, activity: newActivity } = res.data;
+      const { users: newUsers, inquiries: newInq, activity: newActivity, submissions: newSubmissions } = res.data;
 
       // ── Detect new users since last poll ───────────────────────────────────
       if (!isFirstLoad.current) {
@@ -218,6 +221,7 @@ export default function AdminClientPage() {
       setUsers(newUsers);
       setInquiries(newInq);
       setActivityFeed(newActivity);
+      setSubmissions(newSubmissions || []);
       setLastSync(new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
     } catch (e: any) {
       if (!silent) showToast(`Error: ${e.message}`, 'error');
@@ -582,6 +586,7 @@ export default function AdminClientPage() {
                       { label: "CRM", icon: <ChartBar /> },
                       { label: "Analytics", icon: <Gauge /> },
                       { label: "Users", icon: <Users /> },
+                      { label: "Paper Submissions", icon: <FileText /> },
                       { label: "Broadcast", icon: <Mail /> },
                       { label: "Announcements", icon: <Megaphone /> },
                       { label: "Advertisements", icon: <TrendingUp /> },
@@ -589,12 +594,15 @@ export default function AdminClientPage() {
                       <SidebarMenuItem key={item.label}>
                         <MobileCloseSidebarMenuButton isActive={activeTab === item.label} onClick={() => setActiveTab(item.label)}>
                           {item.icon}
-                          <span>{item.label === "CRM" ? "CRM & Inquiries" : item.label === "Users" ? "User Management" : item.label === "Analytics" ? "Firebase Analytics" : item.label === "Broadcast" ? "Email Broadcast" : item.label === "Announcements" ? "Announcement Banner" : item.label === "Advertisements" ? "Ads Manager" : "Default Dashboard"}</span>
+                          <span>{item.label === "CRM" ? "CRM & Inquiries" : item.label === "Users" ? "User Management" : item.label === "Analytics" ? "Firebase Analytics" : item.label === "Paper Submissions" ? "Paper Submissions" : item.label === "Broadcast" ? "Email Broadcast" : item.label === "Announcements" ? "Announcement Banner" : item.label === "Advertisements" ? "Ads Manager" : "Default Dashboard"}</span>
                           {item.label === "Users" && totalUsers > 0 && (
                             <span className="ml-auto text-[9px] font-bold bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full">{totalUsers}</span>
                           )}
                           {item.label === "CRM" && totalInquiries > 0 && (
                             <span className="ml-auto text-[9px] font-bold bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full">{totalInquiries}</span>
+                          )}
+                          {item.label === "Paper Submissions" && submissions.length > 0 && (
+                            <span className="ml-auto text-[9px] font-bold bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded-full">{submissions.length}</span>
                           )}
                         </MobileCloseSidebarMenuButton>
                       </SidebarMenuItem>
@@ -705,13 +713,20 @@ export default function AdminClientPage() {
               {activeTab === "Dashboard" && (
                 <>
                   {/* Stats */}
-                  <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+                  <div className="grid gap-4 grid-cols-2 lg:grid-cols-5">
                     <StatCard
                       title="Total Members"
                       value={totalUsers}
                       sub={paidUsers > 0 ? `${paidUsers} paid · ${totalUsers - paidUsers} pending` : "Registered delegates"}
                       icon={<Users className="h-4 w-4 text-blue-600" />}
                       color="bg-blue-50"
+                    />
+                    <StatCard
+                      title="Paper Submissions"
+                      value={submissions.length}
+                      sub={`${submissions.filter(s => s.status === 'pending').length} pending review`}
+                      icon={<FileText className="h-4 w-4 text-purple-600" />}
+                      color="bg-purple-50"
                     />
                     <StatCard
                       title="Online Now"
@@ -1065,6 +1080,11 @@ export default function AdminClientPage() {
                                         <p className="text-sm font-bold text-slate-900">{u.name || "Anonymous Delegate"}</p>
                                         
                                         {/* Status Badges */}
+                                        {u.paperUrl && (
+                                          <span className="text-[9px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-full uppercase flex items-center gap-1">
+                                            <FileText className="w-2.5 h-2.5" /> Paper Uploaded
+                                          </span>
+                                        )}
                                         {isSkipped && (
                                           <span className="text-[9px] font-bold text-amber-700 bg-amber-50 border border-amber-300 px-2 py-0.5 rounded-full uppercase">
                                             Skipped Reg
@@ -1115,6 +1135,196 @@ export default function AdminClientPage() {
                             })}
                           </div>
                         )}
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+              )}
+              {activeTab === "Paper Submissions" && (
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                  <div className="lg:col-span-12">
+                    <Card>
+                      <CardHeader className="pb-4">
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                          <div>
+                            <CardTitle className="text-lg font-bold flex items-center gap-2">
+                              <FileText className="w-5 h-5 text-purple-600" />
+                              Conference Paper & Abstract Submissions
+                            </CardTitle>
+                            <CardDescription className="mt-1">
+                              {submissions.length} total papers registered · {submissions.filter(s => s.status === 'pending').length} pending review · {submissions.filter(s => s.status === 'approved').length} approved
+                            </CardDescription>
+                          </div>
+
+                          {/* Filter Tabs */}
+                          <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl flex-wrap">
+                            <button
+                              onClick={() => setPaperFilter('all')}
+                              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${paperFilter === 'all' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
+                            >
+                              All ({submissions.length})
+                            </button>
+                            <button
+                              onClick={() => setPaperFilter('pending')}
+                              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${paperFilter === 'pending' ? 'bg-amber-500 text-white shadow-sm' : 'text-amber-700 hover:bg-amber-100/50'}`}
+                            >
+                              Pending ({submissions.filter(s => s.status === 'pending').length})
+                            </button>
+                            <button
+                              onClick={() => setPaperFilter('approved')}
+                              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${paperFilter === 'approved' ? 'bg-emerald-600 text-white shadow-sm' : 'text-emerald-700 hover:bg-emerald-100/50'}`}
+                            >
+                              Approved ({submissions.filter(s => s.status === 'approved').length})
+                            </button>
+                            <button
+                              onClick={() => setPaperFilter('rejected')}
+                              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${paperFilter === 'rejected' ? 'bg-rose-600 text-white shadow-sm' : 'text-rose-700 hover:bg-rose-100/50'}`}
+                            >
+                              Rejected ({submissions.filter(s => s.status === 'rejected').length})
+                            </button>
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        {dataLoading && submissions.length === 0 ? (
+                          <div className="text-center py-12">
+                            <div className="w-8 h-8 rounded-full border-2 border-slate-200 border-t-purple-500 animate-spin mx-auto mb-3" />
+                            <p className="text-sm text-slate-500">Loading paper submissions from database...</p>
+                          </div>
+                        ) : (() => {
+                          const filteredSubmissions = submissions.filter((sub: any) => {
+                            const q = searchQuery.toLowerCase().trim();
+                            const matchesSearch = !q || (
+                              (sub.title && sub.title.toLowerCase().includes(q)) ||
+                              (sub.authors && sub.authors.toLowerCase().includes(q)) ||
+                              (sub.userEmail && sub.userEmail.toLowerCase().includes(q)) ||
+                              (sub.fileName && sub.fileName.toLowerCase().includes(q)) ||
+                              (sub.abstract && sub.abstract.toLowerCase().includes(q)) ||
+                              (sub.theme && sub.theme.toLowerCase().includes(q))
+                            );
+                            const matchesFilter = paperFilter === 'all' || sub.status === paperFilter;
+                            return matchesSearch && matchesFilter;
+                          });
+
+                          if (filteredSubmissions.length === 0) {
+                            return (
+                              <div className="text-center py-12">
+                                <FileText className="w-10 h-10 text-slate-200 mx-auto mb-3" />
+                                <p className="text-sm text-slate-400">{searchQuery ? "No paper submissions match your search" : "No paper submissions found for this filter"}</p>
+                              </div>
+                            );
+                          }
+
+                          return (
+                            <div className="space-y-4">
+                              {filteredSubmissions.map((sub: any, i: number) => {
+                                const matchedUser = users.find(u => u.id === sub.userId || u.email === sub.userEmail);
+                                const isUpdating = updatingSubId === sub.id;
+
+                                const handleStatusChange = async (newStatus: 'pending' | 'approved' | 'rejected') => {
+                                  setUpdatingSubId(sub.id);
+                                  const res = await updateSubmissionStatus(sub.id, newStatus);
+                                  if (res.success) {
+                                    setSubmissions(prev => prev.map(s => s.id === sub.id ? { ...s, status: newStatus } : s));
+                                    showToast(`Submission status updated to ${newStatus}`, 'success');
+                                  } else {
+                                    showToast(`Failed: ${res.error}`, 'error');
+                                  }
+                                  setUpdatingSubId(null);
+                                };
+
+                                return (
+                                  <div key={sub.id || i} className="p-4 rounded-xl border border-slate-200/80 bg-white hover:border-purple-300 hover:shadow-md transition-all space-y-3">
+                                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                                      <div className="space-y-1 min-w-0 flex-1">
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                          <h3 className="font-bold text-base text-slate-900">{sub.title || "Untitled Research Paper"}</h3>
+                                          <span className={`text-[9px] font-bold px-2 py-0.5 rounded uppercase border ${sub.status === 'approved' ? 'bg-emerald-50 text-emerald-700 border-emerald-300' : sub.status === 'rejected' ? 'bg-rose-50 text-rose-700 border-rose-300' : 'bg-amber-50 text-amber-700 border-amber-300'}`}>
+                                            {sub.status || 'pending'}
+                                          </span>
+                                          {sub.type === 'souvenir_article' && (
+                                            <span className="text-[9px] font-bold bg-purple-50 text-purple-700 border border-purple-200 px-2 py-0.5 rounded uppercase">
+                                              Souvenir Article
+                                            </span>
+                                          )}
+                                        </div>
+                                        <p className="text-xs text-slate-600">
+                                          Authors: <span className="font-semibold text-slate-800">{sub.authors || "Not specified"}</span>
+                                          {sub.theme && <span className="ml-2 text-purple-600 font-medium">· Theme: {sub.theme}</span>}
+                                        </p>
+                                        <p className="text-[11px] text-slate-500">
+                                          Submitted by: <span className="font-semibold text-slate-700">{matchedUser?.name || sub.userEmail || "Anonymous"}</span> ({sub.userEmail || "No Email"})
+                                          {sub.submittedAt && ` · ${new Date(sub.submittedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}`}
+                                        </p>
+                                      </div>
+
+                                      <div className="flex items-center gap-2 flex-wrap self-end sm:self-center">
+                                        {(sub.fileUrl || sub.paperUrl) ? (
+                                          <a
+                                            href={sub.fileUrl || sub.paperUrl}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs transition-colors shadow-sm"
+                                          >
+                                            <Download className="w-3.5 h-3.5" /> View PDF Paper
+                                          </a>
+                                        ) : (
+                                          <span className="text-xs text-rose-500 font-semibold bg-rose-50 px-2.5 py-1 rounded border border-rose-200">No PDF attached</span>
+                                        )}
+
+                                        {matchedUser && (
+                                          <Link href={`/auth/admin/users/${matchedUser.id}`}>
+                                            <Button variant="outline" size="sm" className="text-xs border-slate-300 hover:bg-blue-50 hover:text-blue-700 font-semibold">
+                                              View Member
+                                            </Button>
+                                          </Link>
+                                        )}
+                                      </div>
+                                    </div>
+
+                                    {sub.abstract && (
+                                      <div className="bg-slate-50 p-3 rounded-lg border border-slate-200/80 text-xs text-slate-700 max-h-32 overflow-y-auto">
+                                        <span className="font-bold text-slate-500 block text-[10px] uppercase mb-1">Abstract</span>
+                                        {sub.abstract}
+                                      </div>
+                                    )}
+
+                                    <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-xs">
+                                      <span className="text-[11px] text-slate-400 font-mono">ID: {sub.id} · File: {sub.fileName || "ResearchPaper.pdf"}</span>
+
+                                      <div className="flex items-center gap-1.5">
+                                        <span className="text-[10px] font-bold text-slate-400 uppercase mr-1">Admin Action:</span>
+                                        <button
+                                          disabled={isUpdating || sub.status === 'approved'}
+                                          onClick={() => handleStatusChange('approved')}
+                                          className="px-2.5 py-1 rounded text-[10px] font-bold uppercase transition-all bg-emerald-100 text-emerald-800 hover:bg-emerald-200 disabled:opacity-40"
+                                        >
+                                          Approve
+                                        </button>
+                                        <button
+                                          disabled={isUpdating || sub.status === 'rejected'}
+                                          onClick={() => handleStatusChange('rejected')}
+                                          className="px-2.5 py-1 rounded text-[10px] font-bold uppercase transition-all bg-rose-100 text-rose-800 hover:bg-rose-200 disabled:opacity-40"
+                                        >
+                                          Reject
+                                        </button>
+                                        {sub.status !== 'pending' && (
+                                          <button
+                                            disabled={isUpdating}
+                                            onClick={() => handleStatusChange('pending')}
+                                            className="px-2 py-1 rounded text-[10px] font-bold uppercase transition-all bg-slate-100 text-slate-600 hover:bg-slate-200 disabled:opacity-40"
+                                          >
+                                            Reset
+                                          </button>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          );
+                        })()}
                       </CardContent>
                     </Card>
                   </div>

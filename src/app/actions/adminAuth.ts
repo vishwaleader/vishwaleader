@@ -80,6 +80,7 @@ export async function getAdminDashboardData() {
         passportFrontUrl: data.passportFrontUrl || "",
         passportBackUrl: data.passportBackUrl || "",
         businessDeckUrl: data.businessDeckUrl || "",
+        paperUrl: data.paperUrl || "",
         passportNumber: data.passportNumber || "",
         bio: data.bio || "",
         legalConsent: data.legalConsent || false,
@@ -132,9 +133,60 @@ export async function getAdminDashboardData() {
       // adminActivity collection may not exist yet
     }
 
+    // ── Paper Submissions ──────────────────────────────────────────────────────
+    let submissions: any[] = [];
+    try {
+      const subSnap = await db.collection("submissions").get();
+      const directSubmissions = subSnap.docs.map(d => {
+        const data = d.data();
+        return {
+          id: d.id,
+          title: data.title || "",
+          authors: data.authors || "",
+          theme: data.theme || "",
+          abstract: data.abstract || "",
+          fileName: data.fileName || "",
+          fileUrl: data.fileUrl || data.paperUrl || "",
+          paperUrl: data.fileUrl || data.paperUrl || "",
+          status: data.status || "pending",
+          userId: data.userId || "",
+          userEmail: data.userEmail || "",
+          type: "conference_paper",
+          submittedAt: data.submittedAt || "",
+        };
+      });
+
+      let souvenirSubmissions: any[] = [];
+      try {
+        const souvSnap = await db.collection("souvenir_submissions").get();
+        souvenirSubmissions = souvSnap.docs.map(d => {
+          const data = d.data();
+          return {
+            id: d.id,
+            title: data.title || "",
+            authors: data.author || "",
+            theme: "souvenir",
+            abstract: data.abstract || "",
+            fileName: data.fileName || "SouvenirArticle.pdf",
+            fileUrl: data.fileUrl || "",
+            paperUrl: data.fileUrl || "",
+            status: data.status || "pending",
+            userId: data.userId || "",
+            userEmail: data.userEmail || "",
+            type: "souvenir_article",
+            submittedAt: data.submittedAt || "",
+          };
+        });
+      } catch (_) {}
+
+      submissions = [...directSubmissions, ...souvenirSubmissions].sort((a, b) => {
+        return new Date(b.submittedAt || 0).getTime() - new Date(a.submittedAt || 0).getTime();
+      });
+    } catch (_) {}
+
     return {
       success: true,
-      data: { users, inquiries, activity },
+      data: { users, inquiries, activity, submissions },
       fetchedAt: new Date().toISOString(),
     };
   } catch (e: any) {
@@ -299,6 +351,7 @@ export async function getAdminUserData(userId: string) {
       passportFrontUrl: data.passportFrontUrl || "",
       passportBackUrl: data.passportBackUrl || "",
       businessDeckUrl: data.businessDeckUrl || "",
+      paperUrl: data.paperUrl || "",
       passportNumber: data.passportNumber || "",
       bio: data.bio || "",
       legalConsent: data.legalConsent || false,
@@ -310,10 +363,32 @@ export async function getAdminUserData(userId: string) {
       guestProfiles: data.guestProfiles || guests,
     };
 
-    return { success: true, user };
+    let userSubmissions: any[] = [];
+    try {
+      const userSubSnap = await db.collection("submissions").where("userId", "==", userId).get();
+      userSubmissions = userSubSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    } catch (_) {}
+
+    return { success: true, user: { ...user, submissions: userSubmissions } };
   } catch (e: any) {
     console.error("getAdminUserData error:", e);
     return { success: false, error: e.message || "Failed to fetch user details" };
+  }
+}
+
+export async function updateSubmissionStatus(submissionId: string, status: 'pending' | 'approved' | 'rejected') {
+  const isAdmin = await checkAdminSession();
+  if (!isAdmin) return { success: false, error: "Unauthorized" };
+
+  try {
+    const db = getAdminDb();
+    await db.collection("submissions").doc(submissionId).update({
+      status,
+      updatedAt: new Date().toISOString()
+    });
+    return { success: true };
+  } catch (e: any) {
+    return { success: false, error: e.message };
   }
 }
 
