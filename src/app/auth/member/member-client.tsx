@@ -3192,41 +3192,34 @@ export default function MemberClientPage() {
                 </div>
             </div>
 
-            {/* Suggested Desktop Accounts (Floating pill list below login card) */}
+            {/* Suggested Email Accounts */}
             {authMode === 'login' && savedAccounts.length > 0 && (
-                <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-40 flex flex-col items-center max-w-md w-full px-4 text-center pointer-events-auto">
-                    <div className="bg-slate-950/85 backdrop-blur-md border border-blue-500/30 rounded-2xl p-3 shadow-[0_10px_30px_rgba(0,0,0,0.5)] w-full max-w-sm">
-                        <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-2 flex items-center justify-center gap-1.5">
-                            <i className="fa-solid fa-users text-blue-400"></i> Suggested Desktop Accounts
-                        </p>
-                        <div className="flex flex-wrap justify-center gap-1.5 max-h-24 overflow-y-auto">
-                            {savedAccounts.map((acc) => (
-                                <div
-                                    key={acc.uid}
-                                    onClick={() => { setUserVal(acc.email); handleGoogleLogin(); }}
-                                    className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900/90 hover:bg-blue-600/90 border border-slate-700/60 hover:border-blue-400 text-white text-xs font-medium cursor-pointer transition-all group shadow-sm"
-                                    title={`Log in with ${acc.email}`}
-                                >
-                                    <span className="w-4 h-4 rounded-full bg-blue-500 text-white text-[9px] font-extrabold flex items-center justify-center shrink-0">
-                                        {acc.displayName ? acc.displayName.charAt(0).toUpperCase() : acc.email.charAt(0).toUpperCase()}
-                                    </span>
-                                    <span className="max-w-[140px] truncate text-[11px] font-semibold">{acc.email}</span>
-                                    <button
-                                        type="button"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            const updated = removeSavedAccount(acc.uid);
-                                            setSavedAccounts(updated);
-                                        }}
-                                        className="text-slate-400 hover:text-rose-400 ml-1 text-[10px] font-bold"
-                                        title="Remove account"
-                                    >
-                                        ✕
-                                    </button>
-                                </div>
-                            ))}
+                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex flex-wrap items-center justify-center gap-2 max-w-lg w-full px-4 text-center pointer-events-auto">
+                    {savedAccounts.map((acc) => (
+                        <div
+                            key={acc.uid}
+                            onClick={() => { setUserVal(acc.email); handleGoogleLogin(); }}
+                            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-slate-900/90 hover:bg-blue-600/90 border border-slate-700/60 hover:border-blue-400 text-white text-xs font-semibold cursor-pointer transition-all shadow-lg backdrop-blur-md group"
+                            title={`Log in with ${acc.email}`}
+                        >
+                            <span className="w-4 h-4 rounded-full bg-blue-500 text-white text-[9px] font-extrabold flex items-center justify-center shrink-0">
+                                {acc.displayName ? acc.displayName.charAt(0).toUpperCase() : acc.email.charAt(0).toUpperCase()}
+                            </span>
+                            <span className="max-w-[200px] truncate text-xs">{acc.email}</span>
+                            <button
+                                type="button"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    const updated = removeSavedAccount(acc.uid);
+                                    setSavedAccounts(updated);
+                                }}
+                                className="text-slate-400 hover:text-rose-400 ml-1 text-[10px] font-bold"
+                                title="Remove account"
+                            >
+                                ✕
+                            </button>
                         </div>
-                    </div>
+                    ))}
                 </div>
             )}
             <div className='icon-credits'>by opendev-labs</div>
