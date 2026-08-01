@@ -1,8 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Heart, CreditCard, ShieldCheck, CheckCircle2, Sparkles, Loader2 } from "lucide-react";
+import { onAuthStateChanged, User } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
+import { auth, db } from "@/lib/firebase";
+import { ArrowLeft, Heart, CreditCard, ShieldCheck, Sparkles, Loader2, UserCheck, Phone } from "lucide-react";
 import { createDonationOrder, verifyDonationPayment } from "@/app/actions/donationActions";
 
 declare global {
@@ -11,19 +14,51 @@ declare global {
   }
 }
 
-const PRESET_AMOUNTS = [1000, 5000, 10000, 25000, 50000, 100000];
+const PRESET_AMOUNTS = [5000, 10000, 25000, 50000, 100000];
 
 export default function PatronClientPage() {
   const router = useRouter();
 
-  const [selectedAmount, setSelectedAmount] = useState<number | "custom">(1000);
+  // Auth state
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+
+  // Form state
+  const [selectedAmount, setSelectedAmount] = useState<number | "custom">(5000);
   const [customAmount, setCustomAmount] = useState<string>("");
   const [name, setName] = useState<string>("");
   const [email, setEmail] = useState<string>("");
   const [phone, setPhone] = useState<string>("");
   const [consent, setConsent] = useState<boolean>(true);
   const [loading, setLoading] = useState<boolean>(false);
+  const [authLoading, setAuthLoading] = useState<boolean>(true);
   const [errorMsg, setErrorMsg] = useState<string>("");
+  const [showPhoneEdit, setShowPhoneEdit] = useState<boolean>(false);
+
+  // Load user profile from Firebase auth
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, async (user) => {
+      setAuthLoading(true);
+      if (user) {
+        setCurrentUser(user);
+        if (user.displayName) setName(user.displayName);
+        if (user.email) setEmail(user.email);
+
+        try {
+          const snap = await getDoc(doc(db, "users", user.uid));
+          if (snap.exists()) {
+            const data = snap.data();
+            if (data.name) setName(data.name);
+            if (data.email) setEmail(data.email);
+            if (data.phone) setPhone(data.phone);
+          }
+        } catch (e) {
+          console.error("Error fetching user profile:", e);
+        }
+      }
+      setAuthLoading(false);
+    });
+    return () => unsub();
+  }, []);
 
   const finalAmt =
     selectedAmount === "custom"
@@ -33,20 +68,19 @@ export default function PatronClientPage() {
   const handlePay = async () => {
     setErrorMsg("");
 
-    if (!name.trim()) {
-      setErrorMsg("Please enter your name or organisation.");
-      return;
-    }
-    if (!email.trim() || !email.includes("@")) {
-      setErrorMsg("Please enter a valid email address.");
+    const effectiveName = name.trim() || currentUser?.displayName || currentUser?.email?.split('@')[0] || "Valued Patron";
+    const effectiveEmail = email.trim() || currentUser?.email || "";
+
+    if (!effectiveEmail || !effectiveEmail.includes("@")) {
+      setErrorMsg("Please provide a valid email address.");
       return;
     }
     if (!phone.trim()) {
-      setErrorMsg("Please enter your phone number.");
+      setErrorMsg("Please enter your phone number to receive confirmation.");
       return;
     }
-    if (!finalAmt || finalAmt < 1000) {
-      setErrorMsg("Minimum contribution amount is ₹1,000.");
+    if (!finalAmt || finalAmt < 5000) {
+      setErrorMsg("Minimum patron contribution amount is ₹5,000.");
       return;
     }
 
@@ -88,9 +122,9 @@ export default function PatronClientPage() {
         image: "/assets/images/favicon-32x32.png",
         order_id: orderData.id,
         prefill: {
-          name: name,
-          email: email,
-          contact: phone,
+          name: effectiveName,
+          email: effectiveEmail,
+          contact: phone.trim(),
         },
         theme: {
           color: "#1e3a8a",
@@ -102,10 +136,10 @@ export default function PatronClientPage() {
               paymentId: response.razorpay_payment_id,
               orderId: response.razorpay_order_id,
               signature: response.razorpay_signature,
-              userId: null,
-              name: name,
-              email: email,
-              phone: phone,
+              userId: currentUser?.uid || null,
+              name: effectiveName,
+              email: effectiveEmail,
+              phone: phone.trim(),
               amount: finalAmt,
               purpose: "Patron Contribution — Vishwa Leader 2026",
               consent: consent
@@ -220,7 +254,7 @@ export default function PatronClientPage() {
             </div>
 
             <p className="pt-2 text-slate-700 font-medium text-[11px] sm:text-sm border-t border-slate-100 leading-relaxed">
-              Kindly contribute ₹1,000 or more and become a valued supporter of this prestigious international initiative inspired by the values and teachings of Bharat Ratna Dr. B. R. Ambedkar.
+              Kindly contribute ₹5,000 or more and become a valued supporter of this prestigious international initiative inspired by the values and teachings of Bharat Ratna Dr. B. R. Ambedkar.
             </p>
           </div>
         </div>
@@ -230,10 +264,10 @@ export default function PatronClientPage() {
           
           <div className="space-y-3">
             <h2 className="text-lg sm:text-xl font-bold font-display tracking-tight text-white">Select Contribution Amount</h2>
-            <p className="text-xs text-slate-400">Choose your contribution amount or specify a custom value.</p>
+            <p className="text-xs text-slate-400">Choose your contribution amount or specify a custom value (starting from ₹5,000).</p>
             
             {/* Amount Selection Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 sm:gap-2.5 pt-1 sm:pt-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 sm:gap-2.5 pt-1 sm:pt-2">
               {PRESET_AMOUNTS.map((amt) => (
                 <button
                   key={amt}
@@ -269,8 +303,8 @@ export default function PatronClientPage() {
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-base sm:text-sm">₹</span>
                   <input
                     type="number"
-                    min="1000"
-                    placeholder="Enter amount (min ₹1,000)"
+                    min="5000"
+                    placeholder="Enter amount (min ₹5,000)"
                     value={customAmount}
                     onChange={(e) => setCustomAmount(e.target.value)}
                     className="w-full pl-9 pr-4 py-3.5 bg-slate-800 border border-slate-700 text-white font-bold text-base sm:text-sm rounded-xl focus:ring-1 focus:ring-brandBlue focus:border-brandBlue outline-none min-h-[48px]"
@@ -280,48 +314,75 @@ export default function PatronClientPage() {
             </div>
           </div>
 
-          {/* Donor Information */}
+          {/* Contributor Information Logic:
+              - If number is added (phone is non-empty): NO INFORMATION IS NEEDED.
+              - If number is missing: ONLY ask for phone number.
+          */}
           <div className="space-y-4 pt-3 sm:pt-4 border-t border-slate-800">
-            <h3 className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-400">Contributor Information</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 sm:gap-4 text-xs">
-              <div className="space-y-1.5">
-                <label className="text-slate-400 font-medium text-xs">Full Name / Organisation</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Enter name or organisation"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full px-4 py-3.5 bg-slate-800 border border-slate-700 text-white rounded-xl focus:ring-1 focus:ring-brandBlue focus:border-brandBlue outline-none text-base sm:text-sm min-h-[48px]"
-                />
+            {phone.trim() && !showPhoneEdit ? (
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 p-3.5 bg-slate-800/90 border border-slate-700/80 rounded-xl text-xs">
+                <div className="flex items-center gap-2.5">
+                  <UserCheck className="w-4.5 h-4.5 text-emerald-400 shrink-0" />
+                  <div>
+                    <span className="text-slate-400">Contributing as: </span>
+                    <strong className="text-white font-bold">{name || email || "Patron"}</strong>
+                    {email && <span className="text-slate-300"> ({email} · {phone})</span>}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowPhoneEdit(true)}
+                  className="text-[11px] text-blue-400 hover:underline font-semibold self-end sm:self-center"
+                >
+                  Change Phone Number
+                </button>
               </div>
-
-              <div className="space-y-1.5">
-                <label className="text-slate-400 font-medium text-xs">Email Address</label>
-                <input
-                  type="email"
-                  required
-                  placeholder="name@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-3.5 bg-slate-800 border border-slate-700 text-white rounded-xl focus:ring-1 focus:ring-brandBlue focus:border-brandBlue outline-none text-base sm:text-sm min-h-[48px]"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-slate-400 font-medium text-xs">Phone Number</label>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-slate-300 font-bold text-xs flex items-center gap-1.5">
+                    <Phone className="w-3.5 h-3.5 text-amber-400" /> Phone Number (Required for confirmation)
+                  </label>
+                  {phone.trim() && (
+                    <button
+                      type="button"
+                      onClick={() => setShowPhoneEdit(false)}
+                      className="text-[11px] text-slate-400 hover:text-white"
+                    >
+                      Cancel
+                    </button>
+                  )}
+                </div>
                 <input
                   type="tel"
                   required
-                  placeholder="Enter phone number"
+                  placeholder="Enter your phone number (e.g. +91 9876543210)"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="w-full px-4 py-3.5 bg-slate-800 border border-slate-700 text-white rounded-xl focus:ring-1 focus:ring-brandBlue focus:border-brandBlue outline-none text-base sm:text-sm min-h-[48px]"
+                  className="w-full px-4 py-3.5 bg-slate-800 border border-slate-700 text-white font-bold text-base sm:text-sm rounded-xl focus:ring-1 focus:ring-brandBlue focus:border-brandBlue outline-none min-h-[48px]"
                 />
+                {!currentUser && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                    <input
+                      type="text"
+                      placeholder="Full Name / Organisation"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="w-full px-4 py-3 bg-slate-800/80 border border-slate-700 text-white rounded-xl text-xs outline-none"
+                    />
+                    <input
+                      type="email"
+                      placeholder="Email Address"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full px-4 py-3 bg-slate-800/80 border border-slate-700 text-white rounded-xl text-xs outline-none"
+                    />
+                  </div>
+                )}
               </div>
-            </div>
+            )}
 
-            <div className="flex items-start gap-3 pt-2">
+            <div className="flex items-start gap-3 pt-1">
               <input
                 type="checkbox"
                 id="consent-minimal"
@@ -351,9 +412,9 @@ export default function PatronClientPage() {
               className="w-full py-4 px-6 bg-brandBlue hover:bg-brandBlue/90 active:bg-brandBlue/80 text-white font-bold text-sm sm:text-base rounded-xl transition-all shadow-lg shadow-brandBlue/30 flex items-center justify-center gap-2 min-h-[52px] active:scale-[0.99] disabled:opacity-50 cursor-pointer"
             >
               {loading ? (
-                <><Loader2 className="w-5 h-5 animate-spin" /> Verifying Payment...</>
+                <><Loader2 className="w-5 h-5 animate-spin" /> Initializing Payment...</>
               ) : (
-                <><CreditCard className="w-5 h-5" /> Contribute ₹{finalAmt > 0 ? finalAmt.toLocaleString("en-IN") : "1,000"}</>
+                <><CreditCard className="w-5 h-5" /> Contribute ₹{finalAmt > 0 ? finalAmt.toLocaleString("en-IN") : "5,000"}</>
               )}
             </button>
 
@@ -367,7 +428,7 @@ export default function PatronClientPage() {
 
         {/* Closing Note */}
         <p className="text-center text-[11px] sm:text-xs text-slate-500 leading-relaxed max-w-xl mx-auto px-4">
-          Kindly contribute ₹1,000 or more and become a valued supporter of this prestigious international initiative inspired by the values and teachings of Bharat Ratna Dr. B. R. Ambedkar.
+          Kindly contribute ₹5,000 or more and become a valued supporter of this prestigious international initiative inspired by the values and teachings of Bharat Ratna Dr. B. R. Ambedkar.
         </p>
 
       </main>
