@@ -376,11 +376,7 @@ export async function getAdminUserData(userId: string) {
   }
 }
 
-export function updateSubmissionStatus(submissionId: string, status: 'pending' | 'approved' | 'rejected') {
-  return updateSubmissionStatusAction(submissionId, status);
-}
-
-export async function updateSubmissionStatusAction(submissionId: string, status: 'pending' | 'approved' | 'rejected') {
+export async function updateSubmissionStatus(submissionId: string, status: 'pending' | 'approved' | 'rejected') {
   const isAdmin = await checkAdminSession();
   if (!isAdmin) return { success: false, error: "Unauthorized" };
 
