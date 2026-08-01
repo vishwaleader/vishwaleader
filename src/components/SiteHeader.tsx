@@ -6,6 +6,7 @@ import { auth, db } from "@/lib/firebase";
 import { onAuthStateChanged, signOut, User } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { checkAdminSession, logoutAdmin, getAnnouncementSettings } from "@/app/actions/adminAuth";
+import { saveAccount } from "@/lib/accountSwitcher";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 
@@ -39,6 +40,12 @@ export default function SiteHeader() {
             unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
                 setUser(currentUser);
                 if (currentUser) {
+                    saveAccount({
+                        uid: currentUser.uid,
+                        email: currentUser.email,
+                        displayName: currentUser.displayName || "",
+                        photoURL: currentUser.photoURL || undefined
+                    });
                     try {
                         const userRef = doc(db, 'users', currentUser.uid);
                         const docSnap = await getDoc(userRef);
@@ -190,34 +197,68 @@ export default function SiteHeader() {
                                     </div>
                                 </div>
                                 {/* Role badge */}
-                                <div id="nav-role-badge" className="text-[10px] font-extrabold uppercase tracking-widest px-2.5 py-1 rounded-full mb-3 text-center bg-brandBlue/10 text-brandBlue">
-                                    {memberData?.role || 'Member'}
+                                <div id="nav-role-badge" className={`text-[10px] font-extrabold uppercase tracking-widest px-2.5 py-1 rounded-full mb-3 text-center ${(user as any)?.isAdmin ? 'bg-amber-500/15 text-amber-700 border border-amber-500/30' : 'bg-brandBlue/10 text-brandBlue'}`}>
+                                    {(user as any)?.isAdmin ? 'ADMIN' : (memberData?.role || 'Member')}
                                 </div>
                                 {/* Actions */}
                                 <div className="space-y-1">
-                                    <Link href={(user as any)?.isAdmin ? "/auth/admin" : "/auth/member/dashboard"} className="flex items-center gap-3 w-full text-left text-xs font-semibold text-slate-700 hover:text-brandBlue hover:bg-brandBlue/5 px-3 py-2 rounded-xl transition-all">
-                                        <i className="fa-solid fa-gauge text-brandBlue w-4 text-center"></i>
-                                        <span>Overview Dashboard</span>
-                                    </Link>
-                                    <Link href={(user as any)?.isAdmin ? "/auth/admin" : "/auth/member/settings"} className="flex items-center gap-3 w-full text-left text-xs font-semibold text-slate-700 hover:text-brandBlue hover:bg-brandBlue/5 px-3 py-2 rounded-xl transition-all">
-                                        <i className="fa-solid fa-user text-brandBlue w-4 text-center"></i>
-                                        <span>User Profile</span>
-                                    </Link>
-                                    <Link href={(user as any)?.isAdmin ? "/auth/admin" : "/auth/member/checkout"} className="flex items-center gap-3 w-full text-left text-xs font-semibold text-slate-700 hover:text-brandBlue hover:bg-brandBlue/5 px-3 py-2 rounded-xl transition-all">
-                                        <i className="fa-solid fa-cart-shopping text-brandBlue w-4 text-center"></i>
-                                        <span>Pending Checkout</span>
-                                    </Link>
-                                    <Link href={(user as any)?.isAdmin ? "/auth/admin" : "/auth/member/donations"} className="flex items-center gap-3 w-full text-left text-xs font-semibold text-slate-700 hover:text-brandBlue hover:bg-brandBlue/5 px-3 py-2 rounded-xl transition-all">
-                                        <i className="fa-solid fa-hand-holding-dollar text-brandBlue w-4 text-center"></i>
-                                        <span>Donation History</span>
-                                    </Link>
-                                    <Link href={(user as any)?.isAdmin ? "/auth/admin" : "/auth/member/settings"} className="flex items-center gap-3 w-full text-left text-xs font-semibold text-slate-700 hover:text-brandBlue hover:bg-brandBlue/5 px-3 py-2 rounded-xl transition-all">
-                                        <i className="fa-solid fa-gear text-brandBlue w-4 text-center"></i>
-                                        <span>Settings</span>
-                                    </Link>
+                                    {(user as any)?.isAdmin ? (
+                                        <>
+                                            <Link href="/auth/admin" onClick={() => setIsDropdownOpen(false)} className="flex items-center gap-3 w-full text-left text-xs font-semibold text-slate-700 hover:text-brandBlue hover:bg-brandBlue/5 px-3 py-2 rounded-xl transition-all">
+                                                <i className="fa-solid fa-gauge-high text-brandBlue w-4 text-center"></i>
+                                                <span>Admin Dashboard</span>
+                                            </Link>
+                                            <Link href="/auth/member/dashboard" onClick={() => setIsDropdownOpen(false)} className="flex items-center gap-3 w-full text-left text-xs font-semibold text-slate-700 hover:text-emerald-600 hover:bg-emerald-50 px-3 py-2 rounded-xl transition-all">
+                                                <i className="fa-solid fa-id-card text-emerald-600 w-4 text-center"></i>
+                                                <span>View Member Dashboard</span>
+                                            </Link>
+                                            <Link href="/auth/admin?tab=users" onClick={() => setIsDropdownOpen(false)} className="flex items-center gap-3 w-full text-left text-xs font-semibold text-slate-700 hover:text-brandBlue hover:bg-brandBlue/5 px-3 py-2 rounded-xl transition-all">
+                                                <i className="fa-solid fa-users text-brandBlue w-4 text-center"></i>
+                                                <span>User Management</span>
+                                            </Link>
+                                            <Link href="/auth/admin?tab=settings" onClick={() => setIsDropdownOpen(false)} className="flex items-center gap-3 w-full text-left text-xs font-semibold text-slate-700 hover:text-brandBlue hover:bg-brandBlue/5 px-3 py-2 rounded-xl transition-all">
+                                                <i className="fa-solid fa-sliders text-brandBlue w-4 text-center"></i>
+                                                <span>Admin Settings</span>
+                                            </Link>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Link href="/auth/member/dashboard" onClick={() => setIsDropdownOpen(false)} className="flex items-center gap-3 w-full text-left text-xs font-semibold text-slate-700 hover:text-brandBlue hover:bg-brandBlue/5 px-3 py-2 rounded-xl transition-all">
+                                                <i className="fa-solid fa-gauge text-brandBlue w-4 text-center"></i>
+                                                <span>Overview Dashboard</span>
+                                            </Link>
+                                            <Link href="/auth/member/settings" onClick={() => setIsDropdownOpen(false)} className="flex items-center gap-3 w-full text-left text-xs font-semibold text-slate-700 hover:text-brandBlue hover:bg-brandBlue/5 px-3 py-2 rounded-xl transition-all">
+                                                <i className="fa-solid fa-user text-brandBlue w-4 text-center"></i>
+                                                <span>User Profile</span>
+                                            </Link>
+                                            <Link href="/auth/member/checkout" onClick={() => setIsDropdownOpen(false)} className="flex items-center gap-3 w-full text-left text-xs font-semibold text-slate-700 hover:text-brandBlue hover:bg-brandBlue/5 px-3 py-2 rounded-xl transition-all">
+                                                <i className="fa-solid fa-cart-shopping text-brandBlue w-4 text-center"></i>
+                                                <span>Pending Checkout</span>
+                                            </Link>
+                                            <Link href="/auth/member/donations" onClick={() => setIsDropdownOpen(false)} className="flex items-center gap-3 w-full text-left text-xs font-semibold text-slate-700 hover:text-brandBlue hover:bg-brandBlue/5 px-3 py-2 rounded-xl transition-all">
+                                                <i className="fa-solid fa-hand-holding-dollar text-brandBlue w-4 text-center"></i>
+                                                <span>Donation History</span>
+                                            </Link>
+                                            <Link href="/auth/member/settings" onClick={() => setIsDropdownOpen(false)} className="flex items-center gap-3 w-full text-left text-xs font-semibold text-slate-700 hover:text-brandBlue hover:bg-brandBlue/5 px-3 py-2 rounded-xl transition-all">
+                                                <i className="fa-solid fa-gear text-brandBlue w-4 text-center"></i>
+                                                <span>Settings</span>
+                                            </Link>
+                                        </>
+                                    )}
                                     
                                     <div className="h-px bg-slate-100 my-2"></div>
                                     
+                                    <button 
+                                        onClick={async () => {
+                                            setIsDropdownOpen(false);
+                                            await handleLogout();
+                                            window.location.href = '/auth/member';
+                                        }} 
+                                        className="flex items-center gap-3 w-full text-left text-xs font-semibold text-blue-600 hover:text-blue-700 hover:bg-blue-50 px-3 py-2 rounded-xl transition-all"
+                                    >
+                                        <i className="fa-solid fa-users text-blue-500 w-4 text-center"></i> Switch Desktop Account
+                                    </button>
+
                                     <button onClick={handleLogout} className="flex items-center gap-3 w-full text-left text-xs font-semibold text-rose-600 hover:text-rose-700 hover:bg-rose-50 px-3 py-2 rounded-xl transition-all">
                                         <i className="fa-solid fa-right-from-bracket text-rose-500 w-4 text-center"></i> Sign Out
                                     </button>
@@ -301,21 +342,40 @@ export default function SiteHeader() {
                                     </div>
                                 </div>
                                 <div className="flex flex-col gap-3">
-                                    <Link href={(user as any)?.isAdmin ? "/auth/admin" : "/auth/member/dashboard"} onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 text-sm font-semibold text-slate-700 hover:text-brandBlue">
-                                        <i className="fa-solid fa-gauge text-brandBlue w-4 text-center"></i> Overview Dashboard
-                                    </Link>
-                                    <Link href={(user as any)?.isAdmin ? "/auth/admin" : "/auth/member/settings"} onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 text-sm font-semibold text-slate-700 hover:text-brandBlue">
-                                        <i className="fa-solid fa-user text-brandBlue w-4 text-center"></i> User Profile
-                                    </Link>
-                                    <Link href={(user as any)?.isAdmin ? "/auth/admin" : "/auth/member/checkout"} onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 text-sm font-semibold text-slate-700 hover:text-brandBlue">
-                                        <i className="fa-solid fa-cart-shopping text-brandBlue w-4 text-center"></i> Pending Checkout
-                                    </Link>
-                                    <Link href={(user as any)?.isAdmin ? "/auth/admin" : "/auth/member/donations"} onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 text-sm font-semibold text-slate-700 hover:text-brandBlue">
-                                        <i className="fa-solid fa-hand-holding-dollar text-brandBlue w-4 text-center"></i> Donation History
-                                    </Link>
-                                    <Link href={(user as any)?.isAdmin ? "/auth/admin" : "/auth/member/settings"} onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 text-sm font-semibold text-slate-700 hover:text-brandBlue">
-                                        <i className="fa-solid fa-gear text-brandBlue w-4 text-center"></i> Settings
-                                    </Link>
+                                    {(user as any)?.isAdmin ? (
+                                        <>
+                                            <Link href="/auth/admin" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 text-sm font-semibold text-slate-700 hover:text-brandBlue">
+                                                <i className="fa-solid fa-gauge-high text-brandBlue w-4 text-center"></i> Admin Dashboard
+                                            </Link>
+                                            <Link href="/auth/member/dashboard" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 text-sm font-semibold text-slate-700 hover:text-emerald-600">
+                                                <i className="fa-solid fa-id-card text-emerald-600 w-4 text-center"></i> View Member Dashboard
+                                            </Link>
+                                            <Link href="/auth/admin?tab=users" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 text-sm font-semibold text-slate-700 hover:text-brandBlue">
+                                                <i className="fa-solid fa-users text-brandBlue w-4 text-center"></i> User Management
+                                            </Link>
+                                            <Link href="/auth/admin?tab=settings" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 text-sm font-semibold text-slate-700 hover:text-brandBlue">
+                                                <i className="fa-solid fa-sliders text-brandBlue w-4 text-center"></i> Admin Settings
+                                            </Link>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Link href="/auth/member/dashboard" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 text-sm font-semibold text-slate-700 hover:text-brandBlue">
+                                                <i className="fa-solid fa-gauge text-brandBlue w-4 text-center"></i> Overview Dashboard
+                                            </Link>
+                                            <Link href="/auth/member/settings" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 text-sm font-semibold text-slate-700 hover:text-brandBlue">
+                                                <i className="fa-solid fa-user text-brandBlue w-4 text-center"></i> User Profile
+                                            </Link>
+                                            <Link href="/auth/member/checkout" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 text-sm font-semibold text-slate-700 hover:text-brandBlue">
+                                                <i className="fa-solid fa-cart-shopping text-brandBlue w-4 text-center"></i> Pending Checkout
+                                            </Link>
+                                            <Link href="/auth/member/donations" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 text-sm font-semibold text-slate-700 hover:text-brandBlue">
+                                                <i className="fa-solid fa-hand-holding-dollar text-brandBlue w-4 text-center"></i> Donation History
+                                            </Link>
+                                            <Link href="/auth/member/settings" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 text-sm font-semibold text-slate-700 hover:text-brandBlue">
+                                                <i className="fa-solid fa-gear text-brandBlue w-4 text-center"></i> Settings
+                                            </Link>
+                                        </>
+                                    )}
                                     <button onClick={() => { setIsMobileMenuOpen(false); handleLogout(); }} className="flex items-center gap-2 text-sm font-semibold text-rose-600 text-left">
                                         <i className="fa-solid fa-right-from-bracket text-rose-500 w-4 text-center"></i> Sign Out
                                     </button>

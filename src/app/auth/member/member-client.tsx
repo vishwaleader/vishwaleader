@@ -10,6 +10,8 @@ import { onAuthStateChanged, signOut, type User, GoogleAuthProvider, signInWithP
 import { doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs, addDoc, deleteDoc, serverTimestamp } from "firebase/firestore";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { createDynamicOrder, verifyDynamicPayment, createBalancePaymentOrder } from "@/app/actions/paymentActions";
+import { checkAdminSession, logoutAdmin } from "@/app/actions/adminAuth";
+import { getSavedAccounts, saveAccount, removeSavedAccount, type SavedAccount } from "@/lib/accountSwitcher";
 import Preloader from "@/components/Preloader";
 import NetworkBackground from "@/components/NetworkBackground";
 import AdPlaceholder from "@/components/AdPlaceholder";
@@ -328,6 +330,48 @@ export default function MemberClientPage() {
   const [inlineError, setInlineError] = useState('');
   const [userError, setUserError] = useState<'warning' | 'save' | 'close' | null>(null);
   const [passError, setPassError] = useState<'warning' | 'save' | 'close' | null>(null);
+  const [savedAccounts, setSavedAccounts] = useState<SavedAccount[]>([]);
+
+  useEffect(() => {
+    setSavedAccounts(getSavedAccounts());
+  }, [user]);
+
+  const resetComponentState = () => {
+    setWizardStep(0);
+    setWizardIntents([]);
+    setWizardEventCategories([]);
+    setProfileName("");
+    setProfileGender("");
+    setProfileAge("");
+    setProfileNationality("");
+    setProfilePassport("");
+    setProfileCity("");
+    setProfileState("");
+    setProfileWheelchair(false);
+    setProfileDesignation("");
+    setProfileOrganization("");
+    setProfileSector("Academic/Research");
+    setProfilePhone("");
+    setProfileBio("");
+    setProfileAddress("");
+    setProfileCategory("social-justice-leadership");
+    setProfileVisaSupport(false);
+    setProfileAccommodation(false);
+    setProfilePackageTour("None");
+    setProfileDietary("");
+    setNumDelegates(1);
+    setGroupType('none');
+    setPatronAmount(100000);
+    setProfileAdSize("ad_full_page");
+    setGuestProfiles([]);
+    setProfileOrigin("domestic");
+    setProfileCountry("India");
+    setProfileLegalConsent(false);
+    setBusinessProposalText("");
+    setSubTitle("");
+    setSubAuthors("");
+    setSubAbstract("");
+  };
 
   // Handle traditional email/password login and signup
   const handleDoLoginSubmit = async (e: React.FormEvent) => {
@@ -588,93 +632,141 @@ export default function MemberClientPage() {
       setLoading(false);
     }, 5000);
 
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      setUser(currentUser);
-      if (currentUser) {
-        // Fetch or create user document in firestore with local catch fallbacks
-        try {
-          const userRef = doc(db, 'users', currentUser.uid);
-          const docSnap = await getDoc(userRef);
-          if (docSnap.exists()) {
-            const data = docSnap.data();
-            setMemberData((prev: any) => ({ ...(prev || {}), ...data }));
-            setIsNewMember(false); // existing member → skip wizard
-          } else {
-            const newMember = {
-              name: currentUser.displayName || "",
-              email: currentUser.email || "",
-              photoURL: currentUser.photoURL || "",
-              gender: "",
-              age: "",
-              nationality: "",
-              city: "",
-              wheelchairSupport: false,
-              role: 'member',
-              joinedAt: new Date().toISOString(),
-              designation: "Member Delegate",
-              organization: "Independent Scholar",
-              sector: "Academic/Research",
-              country: "India",
-              phone: "",
-              bio: "",
-              passportNumber: "",
-              fullAddress: "",
-              wizardIntents: [],
-              nominationCategory: "social-justice-leadership",
-              visaSupport: false,
-              accommodationSupport: false,
-              packageTour: "None",
-              dietaryNotes: "",
-              paymentStatus: "Unpaid",
-              legalConsent: false,
-              headshotUrl: "",
-              passportFrontUrl: "", passportBackUrl: "",
-              nationalIdUrl: "",
-              evidenceUrl: ""
-            };
-            await setDoc(userRef, newMember);
-            setMemberData(newMember);
-            setIsNewMember(true); // brand new → show wizard
-            localStorage.removeItem('vishwa_wizard_draft');
-            sessionStorage.removeItem('wizardDraft');
-            setWizardStep(0);
-            // Log join activity for admin feed
+    let unsubscribe = () => {};
+
+    const initAuth = async () => {
+      try {
+        const isAdmin = await checkAdminSession();
+        if (isAdmin) {
+          const adminUser = {
+            email: "vishwaleader@admin",
+            displayName: "Studio Admin",
+            uid: "ADMIN001",
+            photoURL: "/assets/images/vishwaleader-logo-hd.png",
+            isAdmin: true
+          };
+          setUser(adminUser as any);
+          setMemberData({
+            name: "Studio Admin",
+            email: "vishwaleader@admin",
+            role: "admin",
+            designation: "Administrator",
+            organization: "Vishwa Leader Techmedia",
+            legalConsent: true,
+            skippedRegistration: true,
+            paymentStatus: "Paid",
+            photoURL: "/assets/images/vishwaleader-logo-hd.png"
+          });
+          setIsNewMember(false);
+          setLoading(false);
+          return;
+        }
+      } catch (err) {
+        console.error("Admin session check error in member portal:", err);
+      }
+
+      unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+        setUser(currentUser);
+        if (currentUser) {
+          saveAccount({
+            uid: currentUser.uid,
+            email: currentUser.email,
+            displayName: currentUser.displayName || "",
+            photoURL: currentUser.photoURL || undefined
+          });
+
+          // Fetch or create user document in firestore with local catch fallbacks
+          try {
+            const userRef = doc(db, 'users', currentUser.uid);
+            const docSnap = await getDoc(userRef);
+            if (docSnap.exists()) {
+              const data = docSnap.data();
+              setMemberData(data); // Clean set! No merging with previous user state!
+              setIsNewMember(false); // existing member → skip wizard
+            } else {
+              const newMember = {
+                name: currentUser.displayName || "",
+                email: currentUser.email || "",
+                photoURL: currentUser.photoURL || "",
+                gender: "",
+                age: "",
+                nationality: "",
+                city: "",
+                wheelchairSupport: false,
+                role: 'member',
+                joinedAt: new Date().toISOString(),
+                designation: "Member Delegate",
+                organization: "Independent Scholar",
+                sector: "Academic/Research",
+                country: "India",
+                phone: "",
+                bio: "",
+                passportNumber: "",
+                fullAddress: "",
+                wizardIntents: [],
+                nominationCategory: "social-justice-leadership",
+                visaSupport: false,
+                accommodationSupport: false,
+                packageTour: "None",
+                dietaryNotes: "",
+                paymentStatus: "Unpaid",
+                legalConsent: false,
+                headshotUrl: "",
+                passportFrontUrl: "", passportBackUrl: "",
+                nationalIdUrl: "",
+                evidenceUrl: ""
+              };
+              await setDoc(userRef, newMember);
+              setMemberData(newMember);
+              setIsNewMember(true); // brand new → show wizard
+              if (currentUser.uid) {
+                localStorage.removeItem(`vishwa_wizard_draft_${currentUser.uid}`);
+              }
+              localStorage.removeItem('vishwa_wizard_draft');
+              sessionStorage.removeItem('wizardDraft');
+              setWizardStep(0);
+              // Log join activity for admin feed
+              try {
+                await addDoc(collection(db, 'adminActivity'), {
+                  type: 'user_joined',
+                  userId: currentUser.uid,
+                  userName: newMember.name || currentUser.email,
+                  userEmail: currentUser.email,
+                  timestamp: serverTimestamp()
+                });
+              } catch (_) {}
+            }
+            // Mark user as online with presence
             try {
-              await addDoc(collection(db, 'adminActivity'), {
-                type: 'user_joined',
-                userId: currentUser.uid,
-                userName: newMember.name || currentUser.email,
-                userEmail: currentUser.email,
-                timestamp: serverTimestamp()
+              await updateDoc(doc(db, 'users', currentUser.uid), {
+                isOnline: true,
+                lastSeen: serverTimestamp()
               });
             } catch (_) {}
-          }
-          // Mark user as online with presence
-          try {
-            await updateDoc(doc(db, 'users', currentUser.uid), {
-              isOnline: true,
-              lastSeen: serverTimestamp()
+          } catch (e) {
+            console.error("Error fetching firestore document:", e);
+            // On Firestore error: use minimal data — old members see dashboard, new see login
+            setIsNewMember(false);
+            setMemberData({
+              name: currentUser.displayName || "Delegate",
+              email: currentUser.email || "",
+              photoURL: currentUser.photoURL || "",
+              paymentStatus: "Unpaid",
+              legalConsent: false,
+              wizardIntents: []
             });
-          } catch (_) {}
-        } catch (e) {
-          console.error("Error fetching firestore document:", e);
-          // On Firestore error: use minimal data — old members see dashboard, new see login
-          setIsNewMember(false);
-          setMemberData({
-            name: currentUser.displayName || "Delegate",
-            email: currentUser.email || "",
-            photoURL: currentUser.photoURL || "",
-            paymentStatus: "Unpaid",
-            legalConsent: false,
-            wizardIntents: []
-          });
+          }
+          setLoading(false);
+        } else {
+          setMemberData(null);
+          resetComponentState();
+          setLoading(false);
         }
-        setLoading(false);
-      } else {
-        setMemberData(null);
-        setLoading(false);
-      }
-    });
+      });
+    };
+
+    initAuth();
+
     return () => {
       clearTimeout(safetyTimeout);
       unsubscribe();
@@ -707,38 +799,44 @@ export default function MemberClientPage() {
 
   // Sync state variables once memberData is loaded
   useEffect(() => {
-    if (memberData) {
+    if (memberData && user?.uid) {
       const data = memberData;
 
       let draft: any = {};
       try {
-        const saved = localStorage.getItem('vishwa_wizard_draft');
-        if (saved) draft = JSON.parse(saved);
+        const userDraftKey = `vishwa_wizard_draft_${user.uid}`;
+        const saved = localStorage.getItem(userDraftKey);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed.uid === user.uid) draft = parsed;
+        }
+        localStorage.removeItem('vishwa_wizard_draft');
+        sessionStorage.removeItem('wizardDraft');
       } catch (e) {}
 
-      setProfileName(draft.profileName || data.name || "");
-      setProfileGender(draft.profileGender || data.gender || "");
-      setProfileAge(draft.profileAge || data.age || "");
-      setProfileNationality(draft.profileNationality || data.nationality || "");
+      setProfileName(draft.profileName !== undefined ? draft.profileName : (data.name || ""));
+      setProfileGender(draft.profileGender !== undefined ? draft.profileGender : (data.gender || ""));
+      setProfileAge(draft.profileAge !== undefined ? draft.profileAge : (data.age || ""));
+      setProfileNationality(draft.profileNationality !== undefined ? draft.profileNationality : (data.nationality || ""));
       setWizardIntents(draft.wizardIntents || data.wizardIntents || []);
       setWizardEventCategories(draft.wizardEventCategories || []);
-      setProfilePassport(draft.profilePassport || data.passportNumber || "");
+      setProfilePassport(draft.profilePassport !== undefined ? draft.profilePassport : (data.passportNumber || ""));
       setWizardStep(draft.wizardStep !== undefined ? draft.wizardStep : 0);
 
-      setProfileCity(draft.profileCity || data.city || "");
-      setProfileState(draft.profileState || data.state || "");
+      setProfileCity(draft.profileCity !== undefined ? draft.profileCity : (data.city || ""));
+      setProfileState(draft.profileState !== undefined ? draft.profileState : (data.state || ""));
       setProfileWheelchair(draft.profileWheelchair !== undefined ? draft.profileWheelchair : (data.wheelchairSupport || false));
-      setProfileDesignation(draft.profileDesignation || data.designation || "");
-      setProfileOrganization(draft.profileOrganization || data.organization || "");
+      setProfileDesignation(draft.profileDesignation !== undefined ? draft.profileDesignation : (data.designation || ""));
+      setProfileOrganization(draft.profileOrganization !== undefined ? draft.profileOrganization : (data.organization || ""));
       setProfileSector(draft.profileSector || data.sector || "Academic/Research");
-      setProfilePhone(draft.profilePhone || data.phone || "");
-      setProfileBio(draft.profileBio || data.bio || "");
-      setProfileAddress(draft.profileAddress || data.fullAddress || "");
+      setProfilePhone(draft.profilePhone !== undefined ? draft.profilePhone : (data.phone || ""));
+      setProfileBio(draft.profileBio !== undefined ? draft.profileBio : (data.bio || ""));
+      setProfileAddress(draft.profileAddress !== undefined ? draft.profileAddress : (data.fullAddress || ""));
       setProfileCategory(draft.profileCategory || data.nominationCategory || "social-justice-leadership");
       setProfileVisaSupport(draft.profileVisaSupport !== undefined ? draft.profileVisaSupport : (data.visaSupport || false));
       setProfileAccommodation(draft.profileAccommodation !== undefined ? draft.profileAccommodation : (data.accommodationSupport || false));
       setProfilePackageTour(draft.profilePackageTour || data.packageTour || "None");
-      setProfileDietary(draft.profileDietary || data.dietaryNotes || "");
+      setProfileDietary(draft.profileDietary !== undefined ? draft.profileDietary : (data.dietaryNotes || ""));
       
       if (draft.numDelegates !== undefined) setNumDelegates(draft.numDelegates);
       if (draft.groupType) setGroupType(draft.groupType);
@@ -755,12 +853,14 @@ export default function MemberClientPage() {
       setSubAuthors(data.subAuthors || "");
       setSubAbstract(data.subAbstract || "");
     }
-  }, [memberData]);
+  }, [memberData, user?.uid]);
 
-  // Auto-save wizard progress to local storage
+  // Auto-save wizard progress to local storage (User-scoped)
   useEffect(() => {
-    if (!loading && memberData) {
-      localStorage.setItem('vishwa_wizard_draft', JSON.stringify({
+    if (!loading && memberData && user?.uid) {
+      const userDraftKey = `vishwa_wizard_draft_${user.uid}`;
+      localStorage.setItem(userDraftKey, JSON.stringify({
+        uid: user.uid,
         wizardStep,
         wizardIntents,
         wizardEventCategories,
@@ -792,7 +892,7 @@ export default function MemberClientPage() {
         profileState
       }));
     }
-  }, [wizardStep, wizardIntents, wizardEventCategories, profileName, profileGender, profileAge, profileNationality, profilePassport, profilePackageTour, patronAmount, profileAdSize, groupType, numDelegates, guestProfiles, profileOrigin, profileCountry, profileDietary, profileWheelchair, profileDesignation, profileOrganization, profileSector, profilePhone, profileBio, profileAddress, profileCategory, profileVisaSupport, profileAccommodation, profileCity, profileState, loading, memberData]);
+  }, [wizardStep, wizardIntents, wizardEventCategories, profileName, profileGender, profileAge, profileNationality, profilePassport, profilePackageTour, patronAmount, profileAdSize, groupType, numDelegates, guestProfiles, profileOrigin, profileCountry, profileDietary, profileWheelchair, profileDesignation, profileOrganization, profileSector, profilePhone, profileBio, profileAddress, profileCategory, profileVisaSupport, profileAccommodation, profileCity, profileState, loading, memberData, user?.uid]);
 
   // Handle slide rendering and navigation
 
@@ -1291,8 +1391,14 @@ export default function MemberClientPage() {
           isOnline: false,
           lastSeen: serverTimestamp()
         });
+        localStorage.removeItem(`vishwa_wizard_draft_${user.uid}`);
       } catch (_) {}
     }
+    localStorage.removeItem('vishwa_wizard_draft');
+    sessionStorage.removeItem('wizardDraft');
+    resetComponentState();
+    setMemberData(null);
+    setUser(null);
     await signOut(auth);
     showToast("Signed out successfully.");
   };
@@ -3065,6 +3171,48 @@ export default function MemberClientPage() {
                                         </svg>
                                         SIGN IN WITH GOOGLE
                                     </button>
+
+                                    {savedAccounts.length > 0 && (
+                                        <div className="mx-5 mb-4 p-3 rounded-xl bg-slate-900/90 border border-slate-700/80 text-left">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest flex items-center gap-1.5">
+                                                    <i className="fa-solid fa-users text-blue-400"></i> Saved Desktop Accounts
+                                                </span>
+                                                <span className="text-[9px] text-blue-400 font-bold bg-blue-500/10 px-2 py-0.5 rounded-full border border-blue-500/20">{savedAccounts.length}</span>
+                                            </div>
+                                            <div className="space-y-1.5 max-h-36 overflow-y-auto pr-1">
+                                                {savedAccounts.map((acc) => (
+                                                    <div 
+                                                        key={acc.uid} 
+                                                        onClick={() => { setUserVal(acc.email); handleGoogleLogin(); }}
+                                                        className="flex items-center justify-between p-2 rounded-lg bg-slate-800/90 hover:bg-blue-950/60 cursor-pointer transition-all border border-slate-700/60 group"
+                                                    >
+                                                        <div className="flex items-center gap-2.5 overflow-hidden">
+                                                            <div className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px] font-extrabold shrink-0 shadow-sm">
+                                                                {acc.displayName ? acc.displayName.charAt(0).toUpperCase() : acc.email.charAt(0).toUpperCase()}
+                                                            </div>
+                                                            <div className="truncate">
+                                                                <p className="text-xs font-bold text-white truncate leading-tight group-hover:text-blue-300 transition-colors">{acc.displayName || acc.email}</p>
+                                                                <p className="text-[10px] text-slate-400 truncate leading-tight">{acc.email}</p>
+                                                            </div>
+                                                        </div>
+                                                        <button
+                                                            type="button"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                const updated = removeSavedAccount(acc.uid);
+                                                                setSavedAccounts(updated);
+                                                            }}
+                                                            className="text-slate-500 hover:text-rose-400 p-1 text-[11px] font-bold transition-colors"
+                                                            title="Remove account from memory"
+                                                        >
+                                                            ✕
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
                                 </>
                             )}
                         </form>
@@ -3361,14 +3509,49 @@ export default function MemberClientPage() {
 
                   <div className="text-right hidden sm:block">
                     <p className="text-xs font-bold text-slate-800">{memberData?.name || user.displayName || "Delegate"}</p>
-                    <p className="text-[9px] text-slate-400 font-mono">Member ID: VL-2026-{(user.uid.substring(0, 4)).toUpperCase()}</p>
+                    {(user as any)?.isAdmin ? (
+                      <span className="inline-block text-[9px] font-extrabold uppercase tracking-widest px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-700 font-mono">
+                        ADMIN PREVIEW
+                      </span>
+                    ) : (
+                      <p className="text-[9px] text-slate-400 font-mono">Member ID: VL-2026-{(user.uid.substring(0, 4)).toUpperCase()}</p>
+                    )}
                   </div>
-                  <img src={memberData?.headshotUrl || user.photoURL || "https://placehold.co/100x100"} referrerPolicy="no-referrer" alt="" className="w-8 h-8 rounded-full border border-slate-200 object-cover" />
+                  <img src={memberData?.headshotUrl || user.photoURL || "https://placehold.co/100x100"} referrerPolicy="no-referrer" alt="" className={`w-8 h-8 rounded-full border object-cover ${(user as any)?.isAdmin ? 'border-amber-500' : 'border-slate-200'}`} />
                 </div>
               </header>
 
               {/* Main Workspace Scroll View */}
               <main className={`flex-grow w-full ${activeTab === 'registration' ? 'p-0 min-h-[calc(100vh-4rem)] overflow-y-auto' : 'max-w-6xl mx-auto ' + (activeTab === 'checkout' ? 'p-4 md:p-6' : 'p-6 md:p-8 space-y-6')}`}>
+                
+                {/* Admin Preview Mode Alert Banner */}
+                {(user as any)?.isAdmin && (
+                  <div className="bg-gradient-to-r from-amber-600 via-amber-700 to-amber-800 text-white p-4 rounded-2xl shadow-lg border border-amber-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-in fade-in slide-in-from-top-2">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md flex items-center justify-center shrink-0 border border-white/20">
+                        <i className="fa-solid fa-eye text-lg text-amber-200"></i>
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-black uppercase tracking-widest bg-white/20 text-white px-2 py-0.5 rounded-full">
+                            Admin Preview Mode
+                          </span>
+                          <span className="text-xs font-bold text-amber-200">Viewing Member Dashboard</span>
+                        </div>
+                        <p className="text-xs text-amber-100/90 mt-0.5">
+                          You are viewing the member dashboard interface as an administrator. The compulsory member onboarding wizard is bypassed for your preview.
+                        </p>
+                      </div>
+                    </div>
+                    <Link
+                      href="/auth/admin"
+                      className="px-4 py-2 bg-white text-slate-900 font-bold text-xs rounded-xl shadow-md hover:bg-amber-50 hover:scale-105 active:scale-95 transition-all shrink-0 flex items-center gap-2 border border-white/30"
+                    >
+                      <i className="fa-solid fa-shield-halved text-brandBlue"></i>
+                      <span>Return to Admin Panel</span>
+                    </Link>
+                  </div>
+                )}
                 
                 {/* ═════════════════════ TAB: DASHBOARD OVERVIEW ═════════════════════ */}
                 {activeTab === 'dashboard' && (

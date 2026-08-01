@@ -20,7 +20,7 @@ import {
   Gauge, FileSpreadsheet, Database, RefreshCw, CheckCircle2, Clock,
   TrendingUp, MessageCircle, UserCheck, Wifi, Mail, Send,
   LayoutDashboard, ChartBar, Users, Search, LogOut, Megaphone, FileText, Download, BookOpen,
-  CreditCard, ShieldCheck, AlertTriangle
+  CreditCard, ShieldCheck, AlertTriangle, ChevronDown
 } from "lucide-react";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
@@ -713,9 +713,64 @@ export default function AdminClientPage() {
                     placeholder="Search members..."
                     value={searchQuery}
                     onChange={e => setSearchQuery(e.target.value)}
-                    className="w-[180px] lg:w-[260px] pl-8 h-8 text-sm"
+                    className="w-[180px] lg:w-[240px] pl-8 h-8 text-sm"
                   />
                 </div>
+
+                {/* Admin Profile Dropdown */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger className="relative h-9 flex items-center gap-2 rounded-full px-2 hover:bg-slate-100 focus:outline-none outline-none cursor-pointer">
+                    <Avatar className="h-8 w-8 border border-amber-500/40 shrink-0">
+                      <AvatarImage src="/assets/images/vishwaleader-logo-hd.png" alt="Studio Admin" />
+                      <AvatarFallback className="bg-brandBlue text-white text-xs font-bold">SA</AvatarFallback>
+                    </Avatar>
+                    <div className="hidden md:flex flex-col text-left leading-tight">
+                      <span className="text-xs font-bold text-slate-900 truncate max-w-[100px]">Studio Admin</span>
+                      <span className="text-[9px] text-amber-600 font-extrabold uppercase tracking-wider">ADMIN</span>
+                    </div>
+                    <ChevronDown className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-60" align="end">
+                    <div className="flex items-center gap-3 p-3 border-b border-slate-100">
+                      <Avatar className="h-9 w-9 border border-amber-500/30 shrink-0">
+                        <AvatarImage src="/assets/images/vishwaleader-logo-hd.png" alt="Studio Admin" />
+                        <AvatarFallback className="bg-brandBlue text-white text-xs font-bold">SA</AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col overflow-hidden">
+                        <p className="text-xs font-bold text-slate-900 truncate">Studio Admin</p>
+                        <p className="text-[10px] text-slate-500 truncate">vishwaleader@admin</p>
+                        <span className="mt-0.5 inline-block text-[9px] font-extrabold uppercase tracking-widest px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-700 w-fit">
+                          ADMINISTRATOR
+                        </span>
+                      </div>
+                    </div>
+                    <div className="p-1">
+                      <DropdownMenuItem onClick={() => setActiveTab('dashboard')} className="cursor-pointer text-xs font-semibold py-2">
+                        <Gauge className="mr-2 h-4 w-4 text-brandBlue" />
+                        <span>Admin Dashboard</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => router.push('/auth/member/dashboard')} className="cursor-pointer text-xs font-semibold py-2 text-emerald-700 focus:text-emerald-800 focus:bg-emerald-50">
+                        <LayoutDashboard className="mr-2 h-4 w-4 text-emerald-600" />
+                        <span>View Member Dashboard</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setActiveTab('users')} className="cursor-pointer text-xs font-semibold py-2">
+                        <Users className="mr-2 h-4 w-4 text-brandBlue" />
+                        <span>User Directory</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setActiveTab('settings')} className="cursor-pointer text-xs font-semibold py-2">
+                        <ShieldCheck className="mr-2 h-4 w-4 text-brandBlue" />
+                        <span>Admin Settings</span>
+                      </DropdownMenuItem>
+                    </div>
+                    <DropdownMenuSeparator />
+                    <div className="p-1">
+                      <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-xs font-semibold py-2 text-rose-600 focus:text-rose-700 focus:bg-rose-50">
+                        <LogOut className="mr-2 h-4 w-4 text-rose-500" />
+                        <span>Sign Out</span>
+                      </DropdownMenuItem>
+                    </div>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </header>
 
