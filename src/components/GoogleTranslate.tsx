@@ -242,14 +242,19 @@ export default function GoogleTranslate() {
       ) : (
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="flex items-center justify-center transition-all hover:opacity-80 drop-shadow-md hover:scale-105 relative z-20"
+          className="group relative flex items-center h-12 md:h-14 p-2 md:p-2.5 rounded-full bg-white/95 backdrop-blur-md text-slate-800 shadow-2xl border border-slate-200/90 transition-all duration-500 ease-out cursor-pointer overflow-hidden max-w-[48px] md:max-w-[56px] hover:max-w-[190px] md:hover:max-w-[210px] drop-shadow-xl hover:border-blue-300 relative z-20 active:scale-95"
+          title="Google Translate"
+          aria-label="Google Translate"
         >
-          <Image src="/google-translate-logo.png" alt="Google Translate" width={48} height={48} className="shrink-0" />
+          <Image src="/google-translate-logo.png" alt="Google Translate" width={32} height={32} className="w-8 h-8 md:w-9 md:h-9 shrink-0 group-hover:scale-105 transition-transform" />
+          <span className="pl-2 pr-2.5 whitespace-nowrap font-bold text-xs md:text-sm text-slate-800 opacity-0 group-hover:opacity-100 transition-all duration-500 -translate-x-2 group-hover:translate-x-0 tracking-tight">
+            Google Translate
+          </span>
         </button>
       )}
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className={`absolute ${portalTarget ? 'w-full' : 'w-64'} bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden transform transition-all z-10 ${portalTarget ? 'bottom-full mb-2 origin-bottom-left left-0' : 'bottom-0 right-0 origin-bottom-right'}`}>
+        <div className={`absolute ${portalTarget ? 'w-full' : 'w-64'} bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden transform transition-all z-10 ${portalTarget ? 'bottom-full mb-2 origin-bottom-left left-0' : 'bottom-full mb-3 right-0 origin-bottom-right'}`}>
             {!showAll ? (
               <div className="p-2">
                 <div className="text-xs font-semibold text-gray-400 uppercase px-3 py-2">
