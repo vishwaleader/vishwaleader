@@ -11,7 +11,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { ArrowLeft, CheckCircle2, AlertTriangle, FileText, UserCheck, ShieldAlert, Mail, Phone, MapPin, Building, Briefcase, RefreshCw, ExternalLink, Download } from "lucide-react";
 import { ProfilePDF } from "@/components/ProfilePDF";
-import { getAdminUserData, verifyUserDocuments } from "@/app/actions/adminAuth";
+import { InvoiceReceiptModal } from "@/components/InvoiceReceiptModal";
+import { getAdminUserData, verifyUserDocuments, updateUserPaymentLedger } from "@/app/actions/adminAuth";
+import { Edit3, Receipt } from "lucide-react";
 
 const CustomPDFViewer = dynamic(() => import('@react-pdf/renderer').then(mod => {
   return function Viewer({ doc }: { doc: React.ReactElement }) {
@@ -30,6 +32,14 @@ export default function UserDetailClientPage({ userId }: { userId: string }) {
   const [verifying, setVerifying] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: "info" | "success" | "error" } | null>(null);
   const [verificationData, setVerificationData] = useState<Record<string, { approved: boolean; feedback: string; label: string }>>({});
+
+  // Payment Ledger Edit State
+  const [showLedgerModal, setShowLedgerModal] = useState(false);
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
+  const [editTotalAmount, setEditTotalAmount] = useState<string>("0");
+  const [editAmountPaid, setEditAmountPaid] = useState<string>("0");
+  const [editPaymentStatus, setEditPaymentStatus] = useState<'Paid' | 'Partially Paid' | 'Unpaid'>('Unpaid');
+  const [savingLedger, setSavingLedger] = useState(false);
 
   const showToast = (message: string, type: "info" | "success" | "error" = "info") => {
     setToast({ message, type });
@@ -236,7 +246,20 @@ export default function UserDetailClientPage({ userId }: { userId: string }) {
 
                 {/* Financial Ledger & Part Payment Details */}
                 <div className="border-t border-slate-800 pt-4 space-y-2">
-                  <p className="text-[10px] uppercase font-bold tracking-wider text-slate-400">Financial Ledger & Balance</p>
+                  <div className="flex items-center justify-between">
+                    <p className="text-[10px] uppercase font-bold tracking-wider text-slate-400">Financial Ledger & Balance</p>
+                    <button
+                      onClick={() => {
+                        setEditTotalAmount(String(user.totalAmount || 0));
+                        setEditAmountPaid(String(user.amountPaid || 0));
+                        setEditPaymentStatus(user.paymentStatus || 'Unpaid');
+                        setShowLedgerModal(true);
+                      }}
+                      className="text-[11px] font-bold text-amber-400 hover:text-amber-300 flex items-center gap-1 transition-colors"
+                    >
+                      <Edit3 className="w-3 h-3" /> Edit Ledger
+                    </button>
+                  </div>
                   <div className="flex justify-between py-1 border-b border-slate-800/50">
                     <span className="text-slate-400">Total Package Price</span>
                     <span className="font-semibold text-white">₹{(user.totalAmount || 0).toLocaleString('en-IN')}</span>
@@ -247,9 +270,19 @@ export default function UserDetailClientPage({ userId }: { userId: string }) {
                   </div>
                   <div className="flex justify-between py-1 border-b border-slate-800/50">
                     <span className="text-slate-400">Remaining Balance</span>
-                    <span className={`font-semibold ${(user.remainingBalance || 0) > 0 ? 'text-amber-400 font-bold' : 'text-slate-400'}`}>
-                      ₹{(user.remainingBalance || 0).toLocaleString('en-IN')}
+                    <span className={`font-semibold ${(user.remainingBalance !== undefined ? user.remainingBalance : (user.totalAmount - user.amountPaid)) > 0 ? 'text-amber-400 font-bold' : 'text-slate-400'}`}>
+                      ₹{(user.remainingBalance !== undefined ? user.remainingBalance : Math.max(0, (user.totalAmount || 0) - (user.amountPaid || 0))).toLocaleString('en-IN')}
                     </span>
+                  </div>
+                  
+                  <div className="pt-2">
+                    <Button
+                      onClick={() => setShowInvoiceModal(true)}
+                      variant="outline"
+                      className="w-full bg-slate-800 hover:bg-slate-700 text-blue-300 border-slate-700 text-xs font-bold gap-1.5 h-9 rounded-xl"
+                    >
+                      <Receipt className="w-4 h-4 text-blue-400" /> View / Print Official Invoice
+                    </Button>
                   </div>
                 </div>
 
@@ -428,6 +461,112 @@ export default function UserDetailClientPage({ userId }: { userId: string }) {
 
         </div>
       </div>
+
+      {/* Edit Payment Ledger Modal */}
+      {showLedgerModal && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="bg-slate-900 border border-slate-800 text-white rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-5 animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <h3 className="font-bold text-base text-white flex items-center gap-2">
+                <Edit3 className="w-4 h-4 text-amber-400" /> Adjust Payment Ledger & Status
+              </h3>
+              <button onClick={() => setShowLedgerModal(false)} className="text-slate-400 hover:text-white text-xs font-bold">✕</button>
+            </div>
+
+            <div className="space-y-4 text-xs">
+              <div>
+                <label className="block text-slate-400 font-bold uppercase text-[10px] mb-1">Payment Status</label>
+                <select
+                  value={editPaymentStatus}
+                  onChange={(e) => setEditPaymentStatus(e.target.value as any)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-white font-semibold outline-none focus:ring-1 focus:ring-amber-500"
+                >
+                  <option value="Unpaid">Unpaid</option>
+                  <option value="Partially Paid">Partially Paid</option>
+                  <option value="Paid">Paid</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-slate-400 font-bold uppercase text-[10px] mb-1">Total Package Price (₹)</label>
+                <Input
+                  type="number"
+                  value={editTotalAmount}
+                  onChange={(e) => setEditTotalAmount(e.target.value)}
+                  className="bg-slate-950 border-slate-800 text-white font-mono font-bold"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-400 font-bold uppercase text-[10px] mb-1">Amount Paid So Far (₹)</label>
+                <Input
+                  type="number"
+                  value={editAmountPaid}
+                  onChange={(e) => setEditAmountPaid(e.target.value)}
+                  className="bg-slate-950 border-slate-800 text-emerald-400 font-mono font-bold"
+                />
+              </div>
+
+              <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 space-y-1">
+                <div className="flex justify-between text-[11px]">
+                  <span className="text-slate-400">Calculated Remaining Balance:</span>
+                  <span className="font-mono font-extrabold text-amber-400">
+                    ₹{Math.max(0, (Number(editTotalAmount) || 0) - (Number(editAmountPaid) || 0)).toLocaleString('en-IN')}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowLedgerModal(false)}
+                className="border-slate-700 text-slate-300 hover:bg-slate-800 text-xs font-semibold"
+              >
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                disabled={savingLedger}
+                onClick={async () => {
+                  setSavingLedger(true);
+                  const res = await updateUserPaymentLedger(
+                    user.email,
+                    editPaymentStatus,
+                    Number(editTotalAmount) || 0,
+                    Number(editAmountPaid) || 0
+                  );
+                  if (res.success) {
+                    showToast("Payment ledger updated successfully!", "success");
+                    setUser((prev: any) => ({
+                      ...prev,
+                      paymentStatus: editPaymentStatus,
+                      totalAmount: Number(editTotalAmount) || 0,
+                      amountPaid: Number(editAmountPaid) || 0,
+                      remainingBalance: Math.max(0, (Number(editTotalAmount) || 0) - (Number(editAmountPaid) || 0))
+                    }));
+                    setShowLedgerModal(false);
+                  } else {
+                    showToast(`Error: ${res.error}`, "error");
+                  }
+                  setSavingLedger(false);
+                }}
+                className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs"
+              >
+                {savingLedger ? "Saving..." : "Save Ledger Changes"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Invoice & Receipt Modal */}
+      <InvoiceReceiptModal
+        isOpen={showInvoiceModal}
+        onClose={() => setShowInvoiceModal(false)}
+        memberData={user}
+      />
     </div>
   );
 }

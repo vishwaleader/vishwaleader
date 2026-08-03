@@ -34,9 +34,10 @@ import {
 import { 
   LayoutDashboard, User as UserIcon, FileText, LogOut, 
   MapPin, Plus, Trash2, CheckCircle, Clock, Upload, ShieldAlert, CreditCard, Camera, FileCheck, Settings, Wifi, Check, ChevronDown, X, Download, Lock, Bell, Heart, Loader2, AlertCircle,
-  Bot, Sparkles, RefreshCw
+  Bot, Sparkles, RefreshCw, Receipt
 } from "lucide-react";
 import { ProfilePDF } from '@/components/ProfilePDF';
+import { InvoiceReceiptModal } from '@/components/InvoiceReceiptModal';
 
 const PDFDownloadLink = dynamic(() => import('@react-pdf/renderer').then(mod => mod.PDFDownloadLink), { ssr: false });
 
@@ -303,6 +304,7 @@ export default function MemberClientPage() {
   const [transitioning, setTransitioning] = useState(false);
   const [reRegisterMode, setReRegisterMode] = useState(false);
   const [showReRegisterModal, setShowReRegisterModal] = useState(false);
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'registration' | 'checkout' | 'uploads' | 'submissions' | 'settings' | 'donations' | 'sara'>(defaultTab);
 
   useEffect(() => {
@@ -3594,54 +3596,77 @@ export default function MemberClientPage() {
                     <AdPlaceholder />
 
                     {/* Outstanding Balance Banner for Part-Payment */}
-                    {memberData?.paymentStatus === 'Partially Paid' && (
-                      <div className="bg-gradient-to-r from-amber-950 via-slate-900 to-amber-900 border border-amber-500/40 p-6 rounded-2xl shadow-xl text-white space-y-4 relative overflow-hidden">
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <Badge className="bg-amber-500 text-slate-950 font-black uppercase text-[9px] tracking-wider px-2 py-0.5">
-                                Partially Paid
-                              </Badge>
-                              <span className="text-xs text-amber-200/80 font-mono">
-                                Seat Secured via Token Deposit
-                              </span>
+                    {memberData?.paymentStatus === 'Partially Paid' && (() => {
+                      const totalAmt = Number(memberData?.totalAmount) || 0;
+                      const paidAmt = Number(memberData?.amountPaid) || 0;
+                      const remBalance = memberData?.remainingBalance !== undefined ? Number(memberData.remainingBalance) : Math.max(0, totalAmt - paidAmt);
+                      return (
+                        <div className="bg-gradient-to-r from-amber-950 via-slate-900 to-amber-900 border border-amber-500/40 p-6 rounded-2xl shadow-xl text-white space-y-4 relative overflow-hidden">
+                          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <Badge className="bg-amber-500 text-slate-950 font-black uppercase text-[9px] tracking-wider px-2 py-0.5">
+                                  Partially Paid
+                                </Badge>
+                                <span className="text-xs text-amber-200/80 font-mono">
+                                  Seat Secured via Token Deposit
+                                </span>
+                              </div>
+                              <h3 className="text-lg font-bold mt-1.5 text-white">Outstanding Balance Remaining</h3>
+                              <p className="text-xs text-amber-100/70 mt-0.5">
+                                Your seat is locked! Please complete your remaining balance payment prior to the summit.
+                              </p>
                             </div>
-                            <h3 className="text-lg font-bold mt-1.5 text-white">Outstanding Balance Remaining</h3>
-                            <p className="text-xs text-amber-100/70 mt-0.5">
-                              Your seat is locked! Please complete your remaining balance payment prior to the summit.
-                            </p>
+                            <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+                              <Button
+                                onClick={() => setShowInvoiceModal(true)}
+                                variant="outline"
+                                className="bg-white/10 hover:bg-white/20 text-white border-white/20 font-bold text-xs h-11 px-4 rounded-xl transition-all gap-1.5"
+                              >
+                                <Receipt className="w-4 h-4 text-amber-300" /> Tax Invoice
+                              </Button>
+                              <Button
+                                onClick={() => handleBalancePayment()}
+                                disabled={payingBalance}
+                                className="bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs h-11 px-6 rounded-xl shrink-0 shadow-lg transition-all"
+                              >
+                                {payingBalance ? "Processing..." : `Pay Remaining Balance (₹${remBalance.toLocaleString('en-IN')})`}
+                              </Button>
+                            </div>
                           </div>
-                          <Button
-                            onClick={() => handleBalancePayment()}
-                            disabled={payingBalance}
-                            className="bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs h-11 px-6 rounded-xl shrink-0 shadow-lg transition-all"
-                          >
-                            {payingBalance ? "Processing..." : `Pay Remaining Balance (₹${(memberData?.remainingBalance || 0).toLocaleString('en-IN')})`}
-                          </Button>
+                          
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3 border-t border-amber-500/20 text-xs">
+                            <div className="bg-white/5 p-3 rounded-xl border border-white/10">
+                              <span className="text-amber-200/60 text-[10px] uppercase font-bold">Total Package Price</span>
+                              <p className="text-base font-extrabold text-white mt-0.5">₹{totalAmt.toLocaleString('en-IN')}</p>
+                            </div>
+                            <div className="bg-white/5 p-3 rounded-xl border border-white/10">
+                              <span className="text-emerald-400/80 text-[10px] uppercase font-bold">Amount Paid So Far</span>
+                              <p className="text-base font-extrabold text-emerald-400 mt-0.5">₹{paidAmt.toLocaleString('en-IN')}</p>
+                            </div>
+                            <div className="bg-white/5 p-3 rounded-xl border border-white/10">
+                              <span className="text-amber-400 text-[10px] uppercase font-bold">Balance Remaining</span>
+                              <p className="text-base font-extrabold text-amber-300 mt-0.5">₹{remBalance.toLocaleString('en-IN')}</p>
+                            </div>
+                          </div>
                         </div>
-                        
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3 border-t border-amber-500/20 text-xs">
-                          <div className="bg-white/5 p-3 rounded-xl border border-white/10">
-                            <span className="text-amber-200/60 text-[10px] uppercase font-bold">Total Package Price</span>
-                            <p className="text-base font-extrabold text-white mt-0.5">₹{(memberData?.totalAmount || 0).toLocaleString('en-IN')}</p>
-                          </div>
-                          <div className="bg-white/5 p-3 rounded-xl border border-white/10">
-                            <span className="text-emerald-400/80 text-[10px] uppercase font-bold">Amount Paid So Far</span>
-                            <p className="text-base font-extrabold text-emerald-400 mt-0.5">₹{(memberData?.amountPaid || 0).toLocaleString('en-IN')}</p>
-                          </div>
-                          <div className="bg-white/5 p-3 rounded-xl border border-white/10">
-                            <span className="text-amber-400 text-[10px] uppercase font-bold">Balance Remaining</span>
-                            <p className="text-base font-extrabold text-amber-300 mt-0.5">₹{(memberData?.remainingBalance || 0).toLocaleString('en-IN')}</p>
-                          </div>
-                        </div>
-                      </div>
-                    )}
+                      );
+                    })()}
                     
-                    <div className="flex items-center justify-between border-b border-slate-200 pb-4">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-slate-200 pb-4 gap-4">
                       <div>
                         <h2 className="text-2xl font-black font-display text-slate-900 uppercase tracking-tight">Overview Dashboard</h2>
                         <p className="text-xs text-slate-550 mt-0.5 font-medium">Welcome back! Review your active credentials and details below.</p>
                       </div>
+                      {(memberData?.amountPaid > 0 || memberData?.paymentStatus === 'Paid' || memberData?.paymentStatus === 'Partially Paid') && (
+                        <Button
+                          onClick={() => setShowInvoiceModal(true)}
+                          variant="outline"
+                          className="bg-white hover:bg-slate-50 text-slate-900 border-slate-200 font-bold text-xs h-10 px-4 rounded-xl shadow-sm gap-1.5"
+                        >
+                          <Receipt className="w-4 h-4 text-brandBlue" /> View / Download Tax Invoice
+                        </Button>
+                      )}
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
@@ -4869,7 +4894,11 @@ export default function MemberClientPage() {
       )}
 
       {/* ── Billing / Receipt Modal ── */}
-
+      <InvoiceReceiptModal
+        isOpen={showInvoiceModal}
+        onClose={() => setShowInvoiceModal(false)}
+        memberData={memberData}
+      />
     </>
   );
 }

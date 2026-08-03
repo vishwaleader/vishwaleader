@@ -421,10 +421,42 @@ export const ProfilePDF: React.FC<ProfilePDFProps> = ({ memberData, guestProfile
             </View>
           </View>
 
+          {/* FINANCIAL LEDGER & PAYMENT STATUS */}
+          <View style={styles.section}>
+            <View style={styles.sectionTitleBox}>
+              <Text style={styles.sectionTitle}>4. Financial Ledger & Payment Status</Text>
+            </View>
+            
+            <View style={styles.gridRow}>
+              <View style={styles.gridCol}>
+                <Text style={styles.gridLabel}>Payment Status</Text>
+                <Text style={styles.gridValue}>
+                  {memberData?.paymentStatus === 'Paid' 
+                    ? 'PAID / CONFIRMED' 
+                    : memberData?.paymentStatus === 'Partially Paid' 
+                    ? 'PARTIALLY PAID (TOKEN DEPOSIT)' 
+                    : 'UNPAID / PENDING'}
+                </Text>
+              </View>
+              <View style={styles.gridCol}>
+                <Text style={styles.gridLabel}>Total Package Price</Text>
+                <Text style={styles.gridValue}>INR {(Number(memberData?.totalAmount) || 0).toLocaleString('en-IN')}</Text>
+              </View>
+              <View style={styles.gridCol}>
+                <Text style={styles.gridLabel}>Amount Paid So Far</Text>
+                <Text style={styles.gridValue}>INR {(Number(memberData?.amountPaid) || 0).toLocaleString('en-IN')}</Text>
+              </View>
+              <View style={styles.gridCol}>
+                <Text style={styles.gridLabel}>Remaining Balance Due</Text>
+                <Text style={styles.gridValue}>INR {(memberData?.remainingBalance !== undefined ? Number(memberData.remainingBalance) : Math.max(0, (Number(memberData?.totalAmount) || 0) - (Number(memberData?.amountPaid) || 0))).toLocaleString('en-IN')}</Text>
+              </View>
+            </View>
+          </View>
+
           {/* DOCUMENTATION */}
           <View style={styles.section}>
             <View style={styles.sectionTitleBox}>
-              <Text style={styles.sectionTitle}>4. Primary Delegate Identity Documents</Text>
+              <Text style={styles.sectionTitle}>5. Primary Delegate Identity Documents</Text>
             </View>
             <View style={styles.imageGrid}>
               <View style={styles.imageCard}>

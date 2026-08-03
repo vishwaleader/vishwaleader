@@ -482,12 +482,29 @@ export async function reconcileRazorpayPayment(paymentId: string, targetEmail: s
     }
 
     const userData = matchedDoc.data();
-    const previousPaid = Number(userData.amountPaid) || 0;
-    const newAmountPaid = previousPaid + amount;
+    const existingHistory: any[] = userData.paymentHistory || [];
+    const alreadyLogged = userData.paymentId === paymentId || existingHistory.some(h => h.paymentId === paymentId);
+
+    let newAmountPaid = Number(userData.amountPaid) || 0;
+    if (!alreadyLogged) {
+      newAmountPaid += amount;
+    }
+
     const authoritativeTotal = Math.max(Number(userData.totalAmount) || 0, newAmountPaid);
     const remainingBalance = Math.max(0, authoritativeTotal - newAmountPaid);
     
     const determinedStatus = customStatus || (remainingBalance <= 0 ? "Paid" : "Partially Paid");
+
+    const updatedHistory = alreadyLogged ? existingHistory : [
+      ...existingHistory,
+      {
+        paymentId: paymentId,
+        amount: amount,
+        paidAt: new Date().toISOString(),
+        paymentType: determinedStatus === "Paid" ? "Full / Final" : "Partial Deposit",
+        status: "captured"
+      }
+    ];
 
     await matchedDoc.ref.set({
       paymentStatus: determinedStatus,
@@ -495,17 +512,8 @@ export async function reconcileRazorpayPayment(paymentId: string, targetEmail: s
       amountPaid: newAmountPaid,
       totalAmount: authoritativeTotal,
       remainingBalance: remainingBalance,
-      paidAt: new Date().toISOString(),
-      paymentHistory: [
-        ...(userData.paymentHistory || []),
-        {
-          paymentId: paymentId,
-          amount: amount,
-          paidAt: new Date().toISOString(),
-          paymentType: determinedStatus === "Paid" ? "Full / Final" : "Partial Deposit",
-          status: "captured"
-        }
-      ]
+      paidAt: userData.paidAt || new Date().toISOString(),
+      paymentHistory: updatedHistory
     }, { merge: true });
 
     await db.collection("adminActivity").add({
@@ -546,8 +554,24 @@ export async function updateUserPaymentStatus(targetEmail: string, status: 'Paid
       return { success: false, error: `No registered user profile found with email '${targetEmail}'.` };
     }
 
+    const userData = matchedDoc.data();
+    let totalAmount = Number(userData.totalAmount) || 0;
+    let amountPaid = Number(userData.amountPaid) || 0;
+
+    if (status === 'Paid') {
+      if (totalAmount <= 0 && amountPaid > 0) totalAmount = amountPaid;
+      amountPaid = totalAmount;
+    } else if (status === 'Unpaid') {
+      amountPaid = 0;
+    }
+
+    const remainingBalance = Math.max(0, totalAmount - amountPaid);
+
     await matchedDoc.ref.set({
-      paymentStatus: status
+      paymentStatus: status,
+      totalAmount,
+      amountPaid,
+      remainingBalance
     }, { merge: true });
 
     return { success: true, message: `Updated payment status for ${targetEmail} to '${status}'.` };
@@ -556,4 +580,67 @@ export async function updateUserPaymentStatus(targetEmail: string, status: 'Paid
     return { success: false, error: e.message || "Failed to update payment status" };
   }
 }
+
+export async function updateUserPaymentLedger(
+  targetEmail: string, 
+  status: 'Paid' | 'Partially Paid' | 'Unpaid',
+  totalAmountInput?: number,
+  amountPaidInput?: number
+) {
+  const isAdmin = await checkAdminSession();
+  if (!isAdmin) return { success: false, error: "Unauthorized" };
+
+  try {
+    const db = getAdminDb();
+    const cleanEmail = targetEmail.trim().toLowerCase();
+    const usersSnap = await db.collection("users").where("email", "==", cleanEmail).get();
+    
+    let matchedDoc = !usersSnap.empty ? usersSnap.docs[0] : null;
+
+    if (!matchedDoc) {
+      const allUsersSnap = await db.collection("users").get();
+      matchedDoc = allUsersSnap.docs.find(d => (d.data().email || "").toLowerCase() === cleanEmail) || null;
+    }
+
+    if (!matchedDoc) {
+      return { success: false, error: `No registered user profile found with email '${targetEmail}'.` };
+    }
+
+    const userData = matchedDoc.data();
+    const totalAmount = totalAmountInput !== undefined ? totalAmountInput : (Number(userData.totalAmount) || 0);
+    const amountPaid = amountPaidInput !== undefined ? amountPaidInput : (Number(userData.amountPaid) || 0);
+    const remainingBalance = Math.max(0, totalAmount - amountPaid);
+    
+    const finalStatus = status || (remainingBalance <= 0 ? "Paid" : amountPaid > 0 ? "Partially Paid" : "Unpaid");
+
+    await matchedDoc.ref.set({
+      paymentStatus: finalStatus,
+      totalAmount: totalAmount,
+      amountPaid: amountPaid,
+      remainingBalance: remainingBalance,
+      updatedAt: new Date().toISOString()
+    }, { merge: true });
+
+    await db.collection("adminActivity").add({
+      type: "payment_ledger_updated",
+      userId: matchedDoc.id,
+      userEmail: targetEmail,
+      userName: userData.name || "User",
+      totalAmount,
+      amountPaid,
+      remainingBalance,
+      status: finalStatus,
+      timestamp: new Date()
+    });
+
+    return { 
+      success: true, 
+      message: `Updated payment ledger for ${targetEmail}: Total ₹${totalAmount.toLocaleString('en-IN')}, Paid ₹${amountPaid.toLocaleString('en-IN')}, Balance ₹${remainingBalance.toLocaleString('en-IN')} (${finalStatus}).`
+    };
+  } catch (e: any) {
+    console.error("updateUserPaymentLedger error:", e);
+    return { success: false, error: e.message || "Failed to update payment ledger" };
+  }
+}
+
 

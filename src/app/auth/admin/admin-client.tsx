@@ -114,7 +114,7 @@ export default function AdminClientPage() {
   const [lastSync, setLastSync] = useState<string>("");
   const [dataLoading, setDataLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [userCategoryFilter, setUserCategoryFilter] = useState<'all' | 'skipped' | 'incomplete' | 'paid' | 'online'>('all');
+  const [userCategoryFilter, setUserCategoryFilter] = useState<'all' | 'skipped' | 'incomplete' | 'paid' | 'partiallyPaid' | 'online'>('all');
   const [paperFilter, setPaperFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
   const [updatingSubId, setUpdatingSubId] = useState<string | null>(null);
 
@@ -349,6 +349,7 @@ export default function AdminClientPage() {
     return false;
   }).length;
   const paidUsers = users.filter((u: any) => u.paymentStatus === 'Paid').length;
+  const partiallyPaidUsers = users.filter((u: any) => u.paymentStatus === 'Partially Paid').length;
   
   const skippedUsersCount = users.filter((u: any) => u.skippedRegistration === true || (!u.legalConsent && u.joinedAt)).length;
   const incompleteUsersCount = users.filter((u: any) => {
@@ -373,6 +374,7 @@ export default function AdminClientPage() {
     if (userCategoryFilter === 'skipped') return isSkipped;
     if (userCategoryFilter === 'incomplete') return isIncomplete;
     if (userCategoryFilter === 'paid') return u.paymentStatus === 'Paid';
+    if (userCategoryFilter === 'partiallyPaid') return u.paymentStatus === 'Partially Paid';
     if (userCategoryFilter === 'online') return isOnline;
     return true;
   }).sort((a: any, b: any) => {
@@ -929,7 +931,11 @@ export default function AdminClientPage() {
                                 <p className="text-sm font-semibold text-slate-800 truncate">{u.name || "Anonymous"}</p>
                                 <p className="text-xs text-slate-500 truncate">{u.email} · {u.country}</p>
                               </div>
-                              <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase ${u.paymentStatus === 'Paid' ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : 'bg-amber-50 text-amber-600 border border-amber-200'}`}>
+                              <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase ${
+                                u.paymentStatus === 'Paid' ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' :
+                                u.paymentStatus === 'Partially Paid' ? 'bg-amber-50 text-amber-600 border border-amber-200' :
+                                'bg-slate-100 text-slate-500 border border-slate-200'
+                              }`}>
                                 {u.paymentStatus || 'Unpaid'}
                               </span>
                             </div>
@@ -1176,6 +1182,16 @@ export default function AdminClientPage() {
                                         {isSkipped && (
                                           <span className="text-[9px] font-bold text-amber-700 bg-amber-50 border border-amber-300 px-2 py-0.5 rounded-full uppercase">
                                             Skipped Reg
+                                          </span>
+                                        )}
+                                        {u.paymentStatus === 'Paid' && (
+                                          <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full uppercase">
+                                            Paid
+                                          </span>
+                                        )}
+                                        {u.paymentStatus === 'Partially Paid' && (
+                                          <span className="text-[9px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full uppercase">
+                                            Part-Paid
                                           </span>
                                         )}
                                         {!hasPhoto && (
@@ -1612,7 +1628,35 @@ export default function AdminClientPage() {
                                         <td className="px-4 py-3.5 whitespace-nowrap text-right">
                                           {matchedUser ? (
                                             <div className="flex items-center justify-end gap-2">
-                                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${isUserPaid ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
+                                               {(() => {
+                                                 const isLogged = matchedUser.paymentId === p.id || (matchedUser.paymentHistory && matchedUser.paymentHistory.some((h: any) => h.paymentId === p.id));
+                                                 if (isLogged) {
+                                                   return (
+                                                     <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200">
+                                                       ✓ Synced ({matchedUser.paymentStatus || 'Captured'})
+                                                     </span>
+                                                   );
+                                                 }
+                                                 if (p.status === 'captured') {
+                                                   return (
+                                                     <Button
+                                                       size="sm"
+                                                       onClick={handleReconcile}
+                                                       disabled={isReconciling}
+                                                       className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] h-7 px-2.5"
+                                                     >
+                                                       {isReconciling ? <RefreshCw className="w-3 h-3 animate-spin mr-1" /> : <ShieldCheck className="w-3 h-3 mr-1" />}
+                                                       Sync to Profile
+                                                     </Button>
+                                                   );
+                                                 }
+                                                 return null;
+                                               })()}
+                                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
+                                                matchedUser.paymentStatus === 'Paid' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                                                matchedUser.paymentStatus === 'Partially Paid' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                                                'bg-slate-50 text-slate-600 border-slate-200'
+                                              }`}>
                                                 {matchedUser.name} ({matchedUser.paymentStatus || 'Unpaid'})
                                               </span>
                                               {p.status === 'captured' && matchedUser.paymentStatus !== 'Paid' && (
