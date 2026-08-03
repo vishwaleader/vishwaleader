@@ -170,10 +170,10 @@ const getPackageName = (pkg: string) => {
 };
 
 const getPackagePrice = (pkg: string) => {
-  if (pkg === 'pkg_1') return 310000;
-  if (pkg === 'pkg_2') return 235000;
-  if (pkg === 'pkg_3' || pkg === 'From Outside India') return 200501;
-  if (pkg === 'pkg_4' || pkg === 'From India') return 131000;
+  if (pkg === 'pkg_1') return 322400;
+  if (pkg === 'pkg_2') return 244400;
+  if (pkg === 'pkg_3' || pkg === 'From Outside India') return 208520;
+  if (pkg === 'pkg_4' || pkg === 'From India') return 136240;
   return 0;
 };
 
@@ -419,17 +419,17 @@ export default function MemberClientPage() {
     const isTourSelected = (tour && tour !== 'None');
 
     if (!isTourSelected) {
-      if (intents.some(i => i.startsWith('Conference'))) perPersonSubtotal += 5900;
-      if (intents.some(i => i.startsWith('Business'))) perPersonSubtotal += 11800;
-      if (intents.some(i => i.startsWith('Award'))) perPersonSubtotal += 5900;
+      if (intents.some(i => i.startsWith('Conference'))) perPersonSubtotal += 6136;
+      if (intents.some(i => i.startsWith('Business'))) perPersonSubtotal += 12272;
+      if (intents.some(i => i.startsWith('Award'))) perPersonSubtotal += 6136;
     }
     
-    if (tour === 'pkg_1') perPersonSubtotal += 310000;
-    if (tour === 'pkg_2') perPersonSubtotal += 235000;
-    if (tour === 'pkg_3') perPersonSubtotal += 200501;
-    if (tour === 'pkg_4') perPersonSubtotal += 131000;
-    if (tour === 'From India') perPersonSubtotal += 131000;
-    if (tour === 'From Outside India') perPersonSubtotal += 200501;
+    if (tour === 'pkg_1') perPersonSubtotal += 322400;
+    if (tour === 'pkg_2') perPersonSubtotal += 244400;
+    if (tour === 'pkg_3') perPersonSubtotal += 208520;
+    if (tour === 'pkg_4') perPersonSubtotal += 136240;
+    if (tour === 'From India') perPersonSubtotal += 136240;
+    if (tour === 'From Outside India') perPersonSubtotal += 208520;
     
     return perPersonSubtotal;
   };
@@ -437,7 +437,7 @@ export default function MemberClientPage() {
   const calculateWizardTotal = () => {
     let oneTimeSubtotal = 0;
 
-    if (wizardIntents.includes('Souvenir Article')) oneTimeSubtotal += 5900;
+    if (wizardIntents.includes('Souvenir Article')) oneTimeSubtotal += 6136;
     if (wizardIntents.includes('Souvenir Advertisement')) {
       if (profileAdSize === 'ad_front_cover') oneTimeSubtotal += 500000;
       else if (profileAdSize === 'ad_back_cover') oneTimeSubtotal += 200000;
@@ -2226,12 +2226,12 @@ export default function MemberClientPage() {
                       >
                         {profileOrigin === 'India' && (
                           <>
-                            <option value="pkg_1">Tour (Mumbai - London - Mumbai 7N/8D) - ₹3,10,000</option>
-                            <option value="pkg_2">Tour (Mumbai - London - Mumbai 4N/5D) - ₹2,35,000</option>
+                            <option value="pkg_1">Tour (Mumbai - London - Mumbai 7N/8D) - ₹3,22,400</option>
+                            <option value="pkg_2">Tour (Mumbai - London - Mumbai 4N/5D) - ₹2,44,400</option>
                           </>
                         )}
-                        <option value="pkg_3">Land (London Only, 7N/8D) - ₹2,00,500</option>
-                        <option value="pkg_4">Land (London Only, 4N/5D) - ₹1,31,000</option>
+                        <option value="pkg_3">Land (London Only, 7N/8D) - ₹2,08,520</option>
+                        <option value="pkg_4">Land (London Only, 4N/5D) - ₹1,36,240</option>
                       </select>
                       <p className="text-[10px] text-slate-500 mt-1.5 ml-1">Select your preferred package. Event Registration (Worth ₹23,600) is included!</p>
                     </div>
@@ -2726,28 +2726,28 @@ export default function MemberClientPage() {
                 {wizardIntents.some(i => i.startsWith('Conference')) && (
                   <div className="flex justify-between items-start text-sm text-slate-600 pb-2">
                     <span className="flex items-start gap-2"><Check className="size-4 shrink-0 text-slate-900 mt-0.5" /> <span>International Conference</span></span>
-                    <span className={`font-semibold ${profilePackageTour !== 'None' ? 'text-brandBlue' : 'text-slate-900'}`}>{profilePackageTour !== 'None' ? 'INCLUDED' : '₹5,900'}</span>
+                    <span className={`font-semibold ${profilePackageTour !== 'None' ? 'text-brandBlue' : 'text-slate-900'}`}>{profilePackageTour !== 'None' ? 'INCLUDED' : '₹6,136'}</span>
                   </div>
                 )}
 
                 {wizardIntents.some(i => i.startsWith('Business')) && (
                   <div className="flex justify-between items-start text-sm text-slate-600 pb-2">
                     <span className="flex items-start gap-2"><Check className="size-4 shrink-0 text-slate-900 mt-0.5" /> <span>International Business Summit</span></span>
-                    <span className={`font-semibold ${profilePackageTour !== 'None' ? 'text-brandBlue' : 'text-slate-900'}`}>{profilePackageTour !== 'None' ? 'INCLUDED' : '₹11,800'}</span>
+                    <span className={`font-semibold ${profilePackageTour !== 'None' ? 'text-brandBlue' : 'text-slate-900'}`}>{profilePackageTour !== 'None' ? 'INCLUDED' : '₹12,272'}</span>
                   </div>
                 )}
                 
                 {wizardIntents.some(i => i.startsWith('Award')) && (
                   <div className="flex justify-between items-start text-sm text-slate-600 pb-2">
                     <span className="flex items-start gap-2"><Check className="size-4 shrink-0 text-slate-900 mt-0.5" /> <span>International Awards & Cultural Ceremony</span></span>
-                    <span className={`font-semibold ${profilePackageTour !== 'None' ? 'text-brandBlue' : 'text-slate-900'}`}>{profilePackageTour !== 'None' ? 'INCLUDED' : '₹5,900'}</span>
+                    <span className={`font-semibold ${profilePackageTour !== 'None' ? 'text-brandBlue' : 'text-slate-900'}`}>{profilePackageTour !== 'None' ? 'INCLUDED' : '₹6,136'}</span>
                   </div>
                 )}
 
                 {wizardIntents.includes('Souvenir Article') && (
                   <div className="flex justify-between items-start text-sm text-slate-600 pb-2">
                     <span className="flex items-start gap-2"><Check className="size-4 shrink-0 text-slate-900 mt-0.5" /> <span>Official Souvenir Article</span></span>
-                    <span className="font-semibold text-slate-900">₹5,900</span>
+                    <span className="font-semibold text-slate-900">₹6,136</span>
                   </div>
                 )}
 
@@ -3989,25 +3989,25 @@ export default function MemberClientPage() {
                           {(memberData?.wizardIntents || wizardIntents).some((i: string) => i.startsWith('Conference')) && (
                             <div className="flex justify-between items-start text-sm text-slate-600 pb-2">
                               <span className="flex items-start gap-2"><Check className="size-4 shrink-0 text-slate-900 mt-0.5" /> <span>International Conference</span></span>
-                              <span className="font-semibold text-slate-900">₹5,900</span>
+                              <span className="font-semibold text-slate-900">₹6,136</span>
                             </div>
                           )}
                           {(memberData?.wizardIntents || wizardIntents).some((i: string) => i.startsWith('Business')) && (
                             <div className="flex justify-between items-start text-sm text-slate-600 pb-2">
                               <span className="flex items-start gap-2"><Check className="size-4 shrink-0 text-slate-900 mt-0.5" /> <span>International Business Summit</span></span>
-                              <span className="font-semibold text-slate-900">₹11,800</span>
+                              <span className="font-semibold text-slate-900">₹12,272</span>
                             </div>
                           )}
                           {(memberData?.wizardIntents || wizardIntents).some((i: string) => i.startsWith('Award')) && (
                             <div className="flex justify-between items-start text-sm text-slate-600 pb-2">
                               <span className="flex items-start gap-2"><Check className="size-4 shrink-0 text-slate-900 mt-0.5" /> <span>International Awards &amp; Cultural Ceremony</span></span>
-                              <span className="font-semibold text-slate-900">₹5,900</span>
+                              <span className="font-semibold text-slate-900">₹6,136</span>
                             </div>
                           )}
                           {(memberData?.wizardIntents || wizardIntents).includes('Souvenir Article') && (
                             <div className="flex justify-between items-start text-sm text-slate-600 pb-2">
                               <span className="flex items-start gap-2"><Check className="size-4 shrink-0 text-slate-900 mt-0.5" /> <span>Official Souvenir Article</span></span>
-                              <span className="font-semibold text-slate-900">₹5,900</span>
+                              <span className="font-semibold text-slate-900">₹6,136</span>
                             </div>
                           )}
                           {(memberData?.wizardIntents || wizardIntents).includes('Souvenir Advertisement') && (

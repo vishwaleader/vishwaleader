@@ -66,18 +66,18 @@ KEY CORPORATE & EVENT KNOWLEDGE BASE:
    - Global Website Banner: ₹10,000 / month.
    - Page Link: [Book Souvenir Ad →](/advertise)
 
-9. PRICING & PASSES:
+9. PRICING & PASSES (PAYMENT GATEWAY RATES):
    - Tour Packages (including flights BOM-LHR-BOM):
-     - VIP 7 Nights / 8 Days Package: ₹3,10,000 (Includes Event Registration worth ₹23,600)
-     - Popular 4 Nights / 5 Days Package: ₹2,35,000 (Includes Event Registration worth ₹23,600)
+     - VIP 7 Nights / 8 Days Package: ₹3,22,400 (Includes Event Registration worth ₹24,544)
+     - Popular 4 Nights / 5 Days Package: ₹2,44,400 (Includes Event Registration worth ₹24,544)
    - Land-Only Tour Packages (London Only, no flights):
-     - 7 Nights / 8 Days Land Package: ₹2,00,500 (Includes Event Registration worth ₹23,600)
-     - 4 Nights / 5 Days Land Package: ₹1,31,000 (Includes Event Registration worth ₹23,600)
-   - Individual A La Carte Event Passes (Including 18% GST):
-     - International Academic Conference Pass (Sept 18): ₹5,900 (Base: ₹5,000)
-     - International Business Summit Pass (Sept 19): ₹11,800 (Base: ₹10,000)
-     - International Awards Ceremony & Cultural Evening Pass (Sept 20): ₹5,900 (Base: ₹5,000)
-     - All-Event Combined Pass (All 3 Events): ₹23,600
+     - 7 Nights / 8 Days Land Package: ₹2,08,520 (Includes Event Registration worth ₹24,544)
+     - 4 Nights / 5 Days Land Package: ₹1,36,240 (Includes Event Registration worth ₹24,544)
+   - Individual A La Carte Event Passes (Including Gateway Fees & 18% GST):
+     - International Academic Conference Pass (Sept 18): ₹6,136
+     - International Business Summit Pass (Sept 19): ₹12,272
+     - International Awards Ceremony & Cultural Evening Pass (Sept 20): ₹6,136
+     - All-Event Combined Pass (All 3 Events): ₹24,544
    - Page Link: [View Plans & Passes →](/pricing)
 
 GUIDELINES FOR YOUR RESPONSES:

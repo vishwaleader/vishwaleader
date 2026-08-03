@@ -14,11 +14,11 @@ declare global {
 }
 
 const ITEM_INFO: Record<string, { label: string; amount: number }> = {
-  reg_conference:   { label: "International Conference Registration",       amount: 5900 },
-  reg_business:     { label: "International Business Summit Registration",  amount: 11800 },
-  reg_award:        { label: "International Awards Ceremony Registration",  amount: 5900 },
-  reg_presenter:    { label: "Conference Presenter Registration",           amount: 5900 },
-  reg_souvenir:     { label: "Official Souvenir Article Submission",        amount: 5900 },
+  reg_conference:   { label: "International Conference Registration",       amount: 6136 },
+  reg_business:     { label: "International Business Summit Registration",  amount: 12272 },
+  reg_award:        { label: "International Awards Ceremony Registration",  amount: 6136 },
+  reg_presenter:    { label: "Conference Presenter Registration",           amount: 6136 },
+  reg_souvenir:     { label: "Official Souvenir Article Submission",        amount: 6136 },
   ad_front_cover:   { label: "Souvenir Ad — Front Cover (Premium)",        amount: 500000 },
   ad_back_cover:    { label: "Souvenir Ad — Back Cover (Premium)",         amount: 200000 },
   ad_inside_cover:  { label: "Souvenir Ad — Inside Cover",                 amount: 150000 },
@@ -26,10 +26,10 @@ const ITEM_INFO: Record<string, { label: string; amount: number }> = {
   ad_full_page:     { label: "Souvenir Ad — Full Page",                    amount: 50000 },
   ad_half_page:     { label: "Souvenir Ad — Half Page",                    amount: 25000 },
   ad_quarter_page:  { label: "Souvenir Ad — Quarter Page",                 amount: 15000 },
-  pkg_1:            { label: "London Tour Package (Mumbai–London–Mumbai, 7N/8D)", amount: 310000 },
-  pkg_2:            { label: "London Tour Package (Mumbai–London–Mumbai, 4N/5D)", amount: 235000 },
-  pkg_3:            { label: "London Land Package (7N/8D)",                amount: 200501 },
-  pkg_4:            { label: "London Land Package (4N/5D)",                amount: 131000 },
+  pkg_1:            { label: "London Tour Package (Mumbai–London–Mumbai, 7N/8D)", amount: 322400 },
+  pkg_2:            { label: "London Tour Package (Mumbai–London–Mumbai, 4N/5D)", amount: 244400 },
+  pkg_3:            { label: "London Land Package (7N/8D)",                amount: 208520 },
+  pkg_4:            { label: "London Land Package (4N/5D)",                amount: 136240 },
   donation_patron:  { label: "High-Level Patronage Contribution",          amount: 118000 },
 };
 

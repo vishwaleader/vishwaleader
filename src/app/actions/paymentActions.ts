@@ -5,19 +5,19 @@ import crypto from 'crypto';
 import { db } from "@/lib/firebase";
 import { doc, getDoc, updateDoc, addDoc, collection, arrayUnion } from "firebase/firestore";
 
-// Price Dictionary mapping item IDs to their INR prices (including GST where applicable)
+// Price Dictionary mapping item IDs to their Payment Gateway INR prices (including gateway fees & GST)
 const PRICE_DICTIONARY: Record<string, number> = {
     // New Dynamic Unified Onboarding
-    "reg_conference": 5900,
-    "reg_business": 11800,
-    "reg_award": 5900,
-    "reg_presenter": 5900,
-    "reg_souvenir": 5900,
+    "reg_conference": 6136,
+    "reg_business": 12272,
+    "reg_award": 6136,
+    "reg_presenter": 6136,
+    "reg_souvenir": 6136,
     
     // A La Carte Options
-    "day_1": 5900,
-    "day_2": 11800,
-    "day_3": 5900,
+    "day_1": 6136,
+    "day_2": 12272,
+    "day_3": 6136,
     
     // Souvenir Advertisements
     "ad_front_cover": 500000,
@@ -28,13 +28,13 @@ const PRICE_DICTIONARY: Record<string, number> = {
     "ad_half_page": 25000,
     "ad_quarter_page": 15000,
 
-    // Tour Packages (Prices are inclusive of Registration Fee 23600)
-    "pkg_india": 131000,
-    "pkg_intl": 200501,
-    "pkg_1": 310000,
-    "pkg_2": 235000,
-    "pkg_3": 200501,
-    "pkg_4": 131000,
+    // Tour Packages (Prices via Payment Gateway)
+    "pkg_india": 136240,
+    "pkg_intl": 208520,
+    "pkg_1": 322400,
+    "pkg_2": 244400,
+    "pkg_3": 208520,
+    "pkg_4": 136240,
 
     // High-Level Support & Patronage
     "donation_patron": 118000,

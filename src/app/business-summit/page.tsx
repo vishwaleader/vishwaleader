@@ -158,13 +158,13 @@ export default function BusinessSummitPage() {
               <div className="space-y-3 text-xs text-slate-400 mb-6">
                 <div className="flex justify-between items-center">
                   <span>Delegate Registration</span>
-                  <span className="font-bold text-white">₹11,800 <span className="text-slate-500 font-normal">(incl. GST)</span></span>
+                  <span className="font-bold text-white">₹12,272 <span className="text-slate-500 font-normal">(incl. GST)</span></span>
                 </div>
               </div>
 
               <EventRegistrationCTA
                 itemId="reg_business"
-                price="₹11,800"
+                price="₹12,272"
                 label="Register as Delegate"
                 paidLabel="✅ Delegate Registered"
                 dark

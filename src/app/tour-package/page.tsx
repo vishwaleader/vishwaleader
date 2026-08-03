@@ -101,7 +101,7 @@ export default function TourPackagePage() {
               <div className="mb-2"><span className="text-[10px] font-black tracking-widest text-amber-400 uppercase bg-amber-400/10 px-2 py-1 rounded">Online Booking</span></div>
               <h3 className="font-bold text-lg text-white mt-3 mb-6">London Tour Booking</h3>
               <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 text-xs text-amber-300 mb-6">₹ 25,000 booking amount is <strong className="text-amber-200">Non-Refundable</strong>.</div>
-              <EventRegistrationCTA itemId="pkg_1" price="₹3,10,000" label="Book London Tour Package" paidLabel="✅ Tour Package Booked" dark />
+              <EventRegistrationCTA itemId="pkg_1" price="₹3,22,400" label="Book London Tour Package" paidLabel="✅ Tour Package Booked" dark />
               <Link 
                 href="/pricing"
                 className="w-full py-3 px-4 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 bg-transparent text-white border border-white/20 hover:bg-white/10 hover:border-white/40 mt-3"

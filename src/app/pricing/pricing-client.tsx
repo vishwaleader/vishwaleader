@@ -53,14 +53,14 @@ export default function PricingClientPage() {
           <div className="mb-20">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
               
-              {/* Package 1 (3,10,000) - Premium Dark Mode */}
+              {/* Package 1 (3,22,400) - Premium Dark Mode */}
               <div className="bg-[#111111] border border-[#222222] rounded-xl p-8 flex flex-col shadow-xl relative order-1">
                 <div className="flex items-start justify-between gap-2 mb-2 h-[64px]">
                   <h3 className="text-xl font-semibold text-white leading-tight pr-2">7 Nights / 8 Days</h3>
                   <span className="bg-amber-100 text-amber-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0 mt-1">VIP</span>
                 </div>
                 <div className="flex items-baseline gap-1 mb-2">
-                  <span className="text-3xl font-semibold text-white">₹3,10,000</span>
+                  <span className="text-3xl font-semibold text-white">₹3,22,400</span>
                 </div>
                 <p className="text-sm text-slate-400 mb-8 pb-8 border-b border-[#333333] h-[100px]">International Tour Package (Mumbai – London – Mumbai)</p>
                 
@@ -70,20 +70,20 @@ export default function PricingClientPage() {
                   <li className="flex items-start gap-3 text-sm text-slate-300"><Check className="size-4 shrink-0 text-white mt-0.5" /><span>Meals as per itinerary</span></li>
                   <li className="flex items-start gap-3 text-sm text-slate-300"><Check className="size-4 shrink-0 text-white mt-0.5" /><span>Local transportation</span></li>
                   <li className="flex items-start gap-3 text-sm text-slate-300"><Check className="size-4 shrink-0 text-white mt-0.5" /><span>Sightseeing as per programme</span></li>
-                  <li className="flex items-start gap-3 text-sm text-slate-300"><Check className="size-4 shrink-0 text-amber-400 mt-0.5" /><span className="text-amber-400 font-medium">Event Registration (Worth ₹23,600) Included</span></li>
+                  <li className="flex items-start gap-3 text-sm text-slate-300"><Check className="size-4 shrink-0 text-amber-400 mt-0.5" /><span className="text-amber-400 font-medium">Event Registration (Worth ₹24,544) Included</span></li>
                   <li className="flex items-start gap-3 text-sm text-slate-300"><Check className="size-4 shrink-0 text-white mt-0.5" /><span>All applicable taxes and package inclusions</span></li>
                 </ul>
                 <button onClick={handleProceed} className="w-full bg-white text-slate-900 hover:bg-slate-100 font-semibold py-2.5 rounded-lg text-sm transition-colors mt-auto">Register Now</button>
               </div>
 
-              {/* Package 2 (2,35,000) */}
+              {/* Package 2 (2,44,400) */}
               <div className="bg-white border border-slate-200 rounded-xl p-8 flex flex-col hover:border-slate-300 transition-colors relative order-2">
                 <div className="flex items-start justify-between gap-2 mb-2 h-[64px]">
                   <h3 className="text-xl font-semibold text-slate-900 leading-tight pr-2">4 Nights / 5 Days</h3>
                   <span className="bg-orange-100 text-orange-600 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0 mt-1">Popular</span>
                 </div>
                 <div className="flex items-baseline gap-1 mb-2">
-                  <span className="text-3xl font-semibold text-slate-900">₹2,35,000</span>
+                  <span className="text-3xl font-semibold text-slate-900">₹2,44,400</span>
                 </div>
                 <p className="text-sm text-slate-500 mb-8 pb-8 border-b border-slate-100 h-[100px]">International Tour Package (Mumbai – London – Mumbai)</p>
                 
@@ -92,19 +92,19 @@ export default function PricingClientPage() {
                   <li className="flex items-start gap-3 text-sm text-slate-600"><Check className="size-4 shrink-0 text-slate-900 mt-0.5" /><span>Accommodation</span></li>
                   <li className="flex items-start gap-3 text-sm text-slate-600"><Check className="size-4 shrink-0 text-slate-900 mt-0.5" /><span>Meals as per itinerary</span></li>
                   <li className="flex items-start gap-3 text-sm text-slate-600"><Check className="size-4 shrink-0 text-slate-900 mt-0.5" /><span>Local transportation</span></li>
-                  <li className="flex items-start gap-3 text-sm text-slate-600"><Check className="size-4 shrink-0 text-brandBlue mt-0.5" /><span className="text-brandBlue font-medium">Event Registration (Worth ₹23,600) Included</span></li>
+                  <li className="flex items-start gap-3 text-sm text-slate-600"><Check className="size-4 shrink-0 text-brandBlue mt-0.5" /><span className="text-brandBlue font-medium">Event Registration (Worth ₹24,544) Included</span></li>
                   <li className="flex items-start gap-3 text-sm text-slate-600"><Check className="size-4 shrink-0 text-slate-900 mt-0.5" /><span>All applicable taxes and package inclusions</span></li>
                 </ul>
                 <button onClick={handleProceed} className="w-full bg-slate-900 text-white hover:bg-slate-800 font-semibold py-2.5 rounded-lg text-sm transition-colors mt-auto">Register Now</button>
               </div>
 
-              {/* Package 3 (2,00,500) */}
+              {/* Package 3 (2,08,520) */}
               <div className="bg-white border border-slate-200 rounded-xl p-8 flex flex-col hover:border-slate-300 transition-colors order-3">
                 <div className="flex items-start justify-between gap-2 mb-2 h-[64px]">
                   <h3 className="text-xl font-semibold text-slate-900 leading-tight pr-2">7 Nights / 8 Days</h3>
                 </div>
                 <div className="flex items-baseline gap-1 mb-2">
-                  <span className="text-3xl font-semibold text-slate-900">₹2,00,500</span>
+                  <span className="text-3xl font-semibold text-slate-900">₹2,08,520</span>
                 </div>
                 <p className="text-sm text-slate-500 mb-8 pb-8 border-b border-slate-100 h-[100px]">Land Package (London Only)</p>
                 
@@ -112,19 +112,19 @@ export default function PricingClientPage() {
                   <li className="flex items-start gap-3 text-sm text-slate-600"><Check className="size-4 shrink-0 text-slate-900 mt-0.5" /><span>Accommodation</span></li>
                   <li className="flex items-start gap-3 text-sm text-slate-600"><Check className="size-4 shrink-0 text-slate-900 mt-0.5" /><span>Local transportation</span></li>
                   <li className="flex items-start gap-3 text-sm text-slate-600"><Check className="size-4 shrink-0 text-slate-900 mt-0.5" /><span>Meals as per itinerary</span></li>
-                  <li className="flex items-start gap-3 text-sm text-slate-600"><Check className="size-4 shrink-0 text-brandBlue mt-0.5" /><span className="text-brandBlue font-medium">Event Registration (Worth ₹23,600) Included</span></li>
+                  <li className="flex items-start gap-3 text-sm text-slate-600"><Check className="size-4 shrink-0 text-brandBlue mt-0.5" /><span className="text-brandBlue font-medium">Event Registration (Worth ₹24,544) Included</span></li>
                   <li className="flex items-start gap-3 text-sm text-slate-600"><Check className="size-4 shrink-0 text-slate-900 mt-0.5" /><span>All applicable package inclusions within London</span></li>
                 </ul>
                 <button onClick={handleProceed} className="w-full bg-slate-900 text-white hover:bg-slate-800 font-semibold py-2.5 rounded-lg text-sm transition-colors mt-auto">Register Now</button>
               </div>
 
-              {/* Package 4 (1,31,000) */}
+              {/* Package 4 (1,36,240) */}
               <div className="bg-white border border-slate-200 rounded-xl p-8 flex flex-col hover:border-slate-300 transition-colors order-4">
                 <div className="flex items-start justify-between gap-2 mb-2 h-[64px]">
                   <h3 className="text-xl font-semibold text-slate-900 leading-tight pr-2">4 Nights / 5 Days</h3>
                 </div>
                 <div className="flex items-baseline gap-1 mb-2">
-                  <span className="text-3xl font-semibold text-slate-900">₹1,31,000</span>
+                  <span className="text-3xl font-semibold text-slate-900">₹1,36,240</span>
                 </div>
                 <p className="text-sm text-slate-500 mb-8 pb-8 border-b border-slate-100 h-[100px]">Land Package (London Only)</p>
                 
@@ -132,7 +132,7 @@ export default function PricingClientPage() {
                   <li className="flex items-start gap-3 text-sm text-slate-600"><Check className="size-4 shrink-0 text-slate-900 mt-0.5" /><span>Accommodation</span></li>
                   <li className="flex items-start gap-3 text-sm text-slate-600"><Check className="size-4 shrink-0 text-slate-900 mt-0.5" /><span>Local transportation</span></li>
                   <li className="flex items-start gap-3 text-sm text-slate-600"><Check className="size-4 shrink-0 text-slate-900 mt-0.5" /><span>Meals as per itinerary</span></li>
-                  <li className="flex items-start gap-3 text-sm text-slate-600"><Check className="size-4 shrink-0 text-brandBlue mt-0.5" /><span className="text-brandBlue font-medium">Event Registration (Worth ₹23,600) Included</span></li>
+                  <li className="flex items-start gap-3 text-sm text-slate-600"><Check className="size-4 shrink-0 text-brandBlue mt-0.5" /><span className="text-brandBlue font-medium">Event Registration (Worth ₹24,544) Included</span></li>
                   <li className="flex items-start gap-3 text-sm text-slate-600"><Check className="size-4 shrink-0 text-slate-900 mt-0.5" /><span>All applicable package inclusions within London</span></li>
                 </ul>
                 <button onClick={handleProceed} className="w-full bg-slate-900 text-white hover:bg-slate-800 font-semibold py-2.5 rounded-lg text-sm transition-colors mt-auto">Register Now</button>
@@ -149,9 +149,9 @@ export default function PricingClientPage() {
               
               <div className="space-y-3 flex-grow">
                 {[
-                  { name: "International Conference", base: "5,000", gst: "900", total: "5,900" },
-                  { name: "International Business Summit", base: "10,000", gst: "1,800", total: "11,800" },
-                  { name: "International Awards & Cultural Ceremony", base: "5,000", gst: "900", total: "5,900" },
+                  { name: "International Conference", base: "5,200", gst: "936", total: "6,136" },
+                  { name: "International Business Summit", base: "10,400", gst: "1,872", total: "12,272" },
+                  { name: "International Awards & Cultural Ceremony", base: "5,200", gst: "936", total: "6,136" },
                 ].map((item, i) => (
                   <div key={i} className="flex flex-col p-4 rounded-lg border border-slate-100 bg-slate-50">
                     <span className="font-semibold text-slate-800 text-sm mb-1">{item.name}</span>
@@ -164,7 +164,7 @@ export default function PricingClientPage() {
               </div>
               <div className="mt-4 pt-4 border-t border-slate-100 flex justify-between items-center bg-brandBlue/5 p-4 rounded-lg border-brandBlue/10">
                 <span className="font-bold text-brandBlue text-sm">Total Registration for All 3 Events:</span>
-                <span className="font-black text-brandBlue text-lg">₹23,600</span>
+                <span className="font-black text-brandBlue text-lg">₹24,544</span>
               </div>
             </div>
 

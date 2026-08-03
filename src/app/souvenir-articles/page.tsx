@@ -168,7 +168,7 @@ export default function SouvenirArticlesPage() {
               <div className="mb-2"><span className="text-[10px] font-black tracking-widest text-amber-400 uppercase bg-amber-400/10 px-2 py-1 rounded">Souvenir Publication</span></div>
               <h3 className="text-lg font-bold text-white mt-3 mb-1">Submit Your Article</h3>
               <p className="text-slate-400 text-xs mb-6 pb-6 border-b border-white/10">Login required. Submission is free for all registered conference or souvenir participants.</p>
-              <EventRegistrationCTA itemId="reg_souvenir" price="₹5,900" label="Register & Submit" paidLabel="✅ Souvenir Registration Active" dark />
+              <EventRegistrationCTA itemId="reg_souvenir" price="₹6,136" label="Register & Submit" paidLabel="✅ Souvenir Registration Active" dark />
               <div className="mt-4 text-center">
                 <p className="text-[10px] text-slate-600">Secured by</p>
                 <img src="/assets/images/razorpay.svg" alt="Razorpay" className="h-4 object-contain mx-auto opacity-40 invert" />

@@ -204,7 +204,7 @@ export default function AwardsPage() {
 
               <EventRegistrationCTA
                 itemId="reg_award"
-                price="₹5,900"
+                price="₹6,136"
                 label="Register & Nominate"
                 paidLabel="✅ Awards Registration Active"
                 dark

@@ -235,7 +235,7 @@ export default function CallForPapersPage() {
                 <div className="flex justify-between"><span>Full Paper</span><span className="font-bold text-white">15th July 2026</span></div>
               </div>
               <p className="text-slate-500 text-xs mb-4">Sign in to submit your paper directly online. No email required.</p>
-              <EventRegistrationCTA itemId="reg_conference" price="₹5,900" label="Register & Submit" paidLabel="✅ Conference Registration Active" dark />
+              <EventRegistrationCTA itemId="reg_conference" price="₹6,136" label="Register & Submit" paidLabel="✅ Conference Registration Active" dark />
               <div className="mt-4 text-center">
                 <p className="text-[10px] text-slate-600">Secured by</p>
                 <img src="/assets/images/razorpay.svg" alt="Razorpay" className="h-4 object-contain mx-auto mt-1 opacity-40 invert" />
