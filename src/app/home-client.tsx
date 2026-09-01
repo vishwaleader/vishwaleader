@@ -14,6 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { motion } from "framer-motion";
 import NetworkBackground from "@/components/NetworkBackground";
 import AdPlaceholder from "@/components/AdPlaceholder";
+import UnifiedSchedule from "@/components/UnifiedSchedule";
 
 const magazineCoversList = [
   { src: '1001702539.jpg', title: '1001702539', date: '1001702539' },
@@ -537,7 +538,7 @@ export default function HomeClientPage() {
             </motion.div>
 
             {/* Timeline / Cards Layout */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-16">
                 {/* Day 1 Card */}
                 <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.1 }} className="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-md hover:border-brandBlue/30 transition-all flex flex-col justify-between group">
                     <div>
@@ -555,9 +556,12 @@ export default function HomeClientPage() {
                             </p>
                         </div>
                     </div>
-                    <div className="p-6 pt-0">
-                        <a data-field="announcements.abstractLink" href="/call-for-papers" className="block text-center border border-slate-250 text-slate-700 bg-slate-50 hover:bg-brandBlue hover:text-white hover:border-brandBlue font-bold py-3 rounded text-xs uppercase tracking-wider transition-all">
-                            Submit Abstract
+                    <div className="p-6 pt-0 space-y-2">
+                        <a data-field="announcements.abstractLink" href="/call-for-papers" className="block text-center bg-brandBlue text-white hover:bg-brandDark font-bold py-3 rounded text-xs uppercase tracking-wider transition-all shadow-xs">
+                            Submit Abstract / View Day 1
+                        </a>
+                        <a href="/call-for-papers#schedule" className="block text-center border border-slate-250 text-slate-700 bg-slate-50 hover:bg-slate-100 font-bold py-2 rounded text-[11px] uppercase tracking-wider transition-all">
+                            <i className="fa-regular fa-clock mr-1 text-brandBlue"></i> 18th Sept Min-to-Min Schedule
                         </a>
                     </div>
                 </motion.div>
@@ -583,9 +587,12 @@ export default function HomeClientPage() {
                             </div>
                         </div>
                     </div>
-                    <div className="p-6 pt-0">
-                        <a data-field="announcements.businessLink" href="/business-summit" className="block text-center border border-slate-250 text-slate-700 bg-slate-50 hover:bg-brandBlue hover:text-white hover:border-brandBlue font-bold py-3 rounded text-xs uppercase tracking-wider transition-all">
-                            Register for Summit
+                    <div className="p-6 pt-0 space-y-2">
+                        <a data-field="announcements.businessLink" href="/business-summit" className="block text-center bg-brandBlue text-white hover:bg-brandDark font-bold py-3 rounded text-xs uppercase tracking-wider transition-all shadow-xs">
+                            Register for Summit / View Day 2
+                        </a>
+                        <a href="/business-summit#schedule" className="block text-center border border-slate-250 text-slate-700 bg-slate-50 hover:bg-slate-100 font-bold py-2 rounded text-[11px] uppercase tracking-wider transition-all">
+                            <i className="fa-regular fa-clock mr-1 text-brandBlue"></i> 19th Sept Min-to-Min Schedule
                         </a>
                     </div>
                 </motion.div>
@@ -611,13 +618,21 @@ export default function HomeClientPage() {
                             </div>
                         </div>
                     </div>
-                    <div className="p-6 pt-0">
-                        <a data-field="announcements.awardLink" href="/awards" className="block text-center border border-slate-250 text-slate-700 bg-slate-50 hover:bg-brandBlue hover:text-white hover:border-brandBlue font-bold py-3 rounded text-xs uppercase tracking-wider transition-all">
-                            Nominate / Attend
+                    <div className="p-6 pt-0 space-y-2">
+                        <a data-field="announcements.awardLink" href="/awards" className="block text-center bg-brandBlue text-white hover:bg-brandDark font-bold py-3 rounded text-xs uppercase tracking-wider transition-all shadow-xs">
+                            Nominate / View Day 3
+                        </a>
+                        <a href="/awards#schedule" className="block text-center border border-slate-250 text-slate-700 bg-slate-50 hover:bg-slate-100 font-bold py-2 rounded text-[11px] uppercase tracking-wider transition-all">
+                            <i className="fa-regular fa-clock mr-1 text-brandBlue"></i> 20th Sept Min-to-Min Schedule
                         </a>
                     </div>
                 </motion.div>
             </div>
+
+            {/* Interactive 3-Day Minute-to-Minute Schedule Section */}
+            <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
+                <UnifiedSchedule />
+            </motion.div>
         </div>
     </section>
 
@@ -778,7 +793,11 @@ export default function HomeClientPage() {
                             <li><i className="fa-solid fa-check text-emerald-500 mr-2"></i> <strong>Format:</strong> MS Word Document</li>
                         </ul>
                     </div>
-                    <a href="/souvenir-articles" className="block text-center border border-slate-300 bg-white text-brandDark font-bold py-3 rounded text-xs uppercase tracking-wider hover:bg-slate-100 transition-colors">Submit Article</a>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <a href="/souvenir-articles" className="block text-center border border-slate-300 bg-white text-slate-900 font-bold py-3 rounded-xl text-xs uppercase tracking-wider hover:bg-slate-100 transition-colors">Submit Article</a>
+                        <a href="/pdfs/souvenir-invitation.pdf" download="Souvenir-Invitation-Brochure-2026.pdf" className="block text-center bg-amber-400 text-slate-900 font-bold py-3 rounded-xl text-xs uppercase tracking-wider hover:bg-amber-300 transition-colors shadow-sm">Download Brochure</a>
+                        <a href="/pdfs/souvenir-invitation.pdf" target="_blank" rel="noopener noreferrer" className="block text-center border border-amber-400 text-amber-900 bg-amber-50 font-bold py-3 rounded-xl text-xs uppercase tracking-wider hover:bg-amber-100 transition-colors">Preview Brochure</a>
+                    </div>
                 </div>
             </div>
         </div>

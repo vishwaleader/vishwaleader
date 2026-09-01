@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import { Calendar, MapPin, Mail, Trophy, Info, Users, Check, Download } from 'lucide-react';
+import { Calendar, MapPin, Mail, Trophy, Info, Users, Check, Download, Clock } from 'lucide-react';
 import EventRegistrationCTA from '@/components/EventRegistrationCTA';
 
 export default function AwardsPage() {
@@ -38,6 +38,7 @@ export default function AwardsPage() {
             <div className="flex flex-wrap justify-center gap-4">
               <a 
                 href="/pdfs/awards-circular-2026.pdf" 
+                download="Awards-Circular-Brochure-2026.pdf"
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className="inline-flex items-center gap-2 px-6 py-3 bg-amber-400 text-slate-900 font-bold rounded-xl shadow-lg hover:bg-amber-300 transition-all text-sm"
@@ -46,6 +47,7 @@ export default function AwardsPage() {
               </a>
               <a 
                 href="/pdfs/nomination-form-2026.pdf" 
+                download="Awards-Nomination-Form-2026.pdf"
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className="inline-flex items-center gap-2 px-6 py-3 bg-white/10 text-white font-bold rounded-xl border border-white/20 shadow hover:bg-white/20 transition-all text-sm"
@@ -62,6 +64,41 @@ export default function AwardsPage() {
           {/* Main Content (Left) */}
           <div className="md:col-span-2 space-y-8">
             
+            {/* Minute-to-Minute Schedule (20th Sept 2026) */}
+            <div id="schedule" className="bg-white border border-slate-200 rounded-xl p-8 shadow-sm scroll-mt-24">
+              <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100 flex-wrap gap-2">
+                <div>
+                  <h2 className="text-xl font-semibold text-slate-900 flex items-center gap-2">
+                    <Clock className="w-5 h-5 text-brandBlue" /> Minute-to-Minute Program Schedule
+                  </h2>
+                  <p className="text-xs text-slate-500 mt-1">Sunday, 20th September 2026 — Greenwood Theatre, King&apos;s College London</p>
+                </div>
+                <span className="px-3 py-1 bg-amber-50 text-amber-800 text-xs font-bold rounded-full border border-amber-200 uppercase tracking-wider">Day 4 (Awards & Cultural)</span>
+              </div>
+              <div className="space-y-4">
+                {[
+                  { time: "08:30 AM – 10:00 AM", title: "Delegate Breakfast", desc: "Breakfast at Atrium Hotel Heathrow." },
+                  { time: "10:00 AM – 01:00 PM", title: "Morning Leisure & Global Delegate Networking", desc: "Free time for international delegate networking, press & media interactions." },
+                  { time: "01:00 PM – 02:00 PM", title: "Indian Buffet Lunch", desc: "Indian lunch served at hotel." },
+                  { time: "02:30 PM – 03:30 PM", title: "Coach Departure for Central London", desc: "Executive coach transfer to Greenwood Theatre, Guy's Campus, King's College London." },
+                  { time: "04:00 PM – 04:30 PM", title: "Red Carpet VIP Reception", desc: "Arrival of award recipients, VIP dignitaries, House of Lords patrons, and media." },
+                  { time: "04:30 PM – 06:00 PM", title: "Dr. Ambedkar International Awards Ceremony", desc: "Presentation of prestigious International Awards to honored global leaders." },
+                  { time: "06:00 PM – 07:00 PM", title: "Cultural Evening & Performing Arts Showcase", desc: "Live music, poetry, and socio-cultural performances celebrating Dr. Ambedkar's legacy." },
+                  { time: "07:30 PM – 09:30 PM", title: "Gala Awards Dinner & Return Transfer", desc: "Dinner at Indian restaurant in central London followed by return coach to hotel." },
+                ].map((item, idx) => (
+                  <div key={idx} className="flex gap-4 items-start p-3.5 rounded-lg bg-slate-50 border border-slate-100 hover:border-slate-200 transition-all">
+                    <span className="shrink-0 px-2.5 py-1 bg-white border border-slate-200 rounded-md text-slate-900 font-bold text-xs tracking-tight shadow-2xs">
+                      {item.time}
+                    </span>
+                    <div>
+                      <h3 className="text-sm font-bold text-slate-900 leading-snug">{item.title}</h3>
+                      <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">{item.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             <div className="bg-white border border-slate-200 rounded-xl p-8">
               <h2 className="text-xl font-semibold text-slate-900 mb-6 flex items-center gap-2">
                 <Info className="w-5 h-5 text-slate-400" /> About the Awards

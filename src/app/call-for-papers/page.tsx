@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { BookOpen, FileText, Check, Calendar, MapPin, Send, Download } from 'lucide-react';
+import { BookOpen, FileText, Check, Calendar, MapPin, Send, Download, Clock } from 'lucide-react';
 import { auth, db } from '@/lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { collection, addDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
@@ -13,7 +13,7 @@ const subThemes = [
   "Diaspora Mobilization and Advocacy","Education and Empowerment",
   "Gender Justice and Dalit Women","Religion, Ethics, and Philosophy",
   "Ambedkar and Literature","Democracy, Representation, and Political Empowerment",
-  "Ambedkarite Art and Cultural Resistance","Ambedkar and International Relations"
+  "Digital Equity, AI and Human Rights","Legal Tourism and International Dispute Resolution"
 ];
 
 export default function CallForPapersPage() {
@@ -63,6 +63,7 @@ export default function CallForPapersPage() {
             </div>
             <a 
               href="/pdfs/soas-call-for-papers.pdf" 
+              download="SOAS-Conference-Call-for-Papers-2026.pdf"
               target="_blank" 
               rel="noopener noreferrer" 
               className="inline-flex items-center gap-2 px-6 py-3 bg-amber-400 text-slate-900 font-bold rounded-xl shadow-lg hover:bg-amber-300 transition-all text-sm"
@@ -75,6 +76,41 @@ export default function CallForPapersPage() {
         <div className="grid md:grid-cols-3 gap-8 items-start px-6 max-w-7xl mx-auto">
 
           <div className="md:col-span-2 space-y-8">
+
+            {/* Minute-to-Minute Schedule (18th Sept 2026) */}
+            <div id="schedule" className="bg-white border border-slate-200 rounded-xl p-8 shadow-sm scroll-mt-24">
+              <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100 flex-wrap gap-2">
+                <div>
+                  <h2 className="text-xl font-semibold text-slate-900 flex items-center gap-2">
+                    <Clock className="w-5 h-5 text-brandBlue" /> Minute-to-Minute Program Schedule
+                  </h2>
+                  <p className="text-xs text-slate-500 mt-1">Friday, 18th September 2026 — SOAS University of London</p>
+                </div>
+                <span className="px-3 py-1 bg-blue-50 text-brandBlue text-xs font-bold rounded-full border border-blue-100 uppercase tracking-wider">Day 2 (Academic)</span>
+              </div>
+              <div className="space-y-4">
+                {[
+                  { time: "08:30 AM – 09:30 AM", title: "Delegate Breakfast & Assembly", desc: "Continental Breakfast at Atrium Hotel Heathrow before morning departure." },
+                  { time: "09:30 AM – 10:00 AM", title: "Executive Transit to SOAS", desc: "Private coach transfer to Brunei Gallery, SOAS University of London." },
+                  { time: "10:00 AM – 10:30 AM", title: "Inaugural Ceremony & Keynote Address", desc: "Official opening, lighting of lamp, and welcome by SOAS conveners." },
+                  { time: "10:30 AM – 01:00 PM", title: "Academic Session 1: Research Presentations", desc: "Parallel paper presentations, panel discussions & academic exchanges." },
+                  { time: "01:00 PM – 02:00 PM", title: "Networking Lunch Break", desc: "Indian Buffet Lunch provided at the SOAS University Campus." },
+                  { time: "02:00 PM – 03:30 PM", title: "Academic Session 2 & Valedictory Session", desc: "Concluding presentations, chair feedback, and valedictory address." },
+                  { time: "03:30 PM – 06:00 PM", title: "Sightseeing Excursion", desc: "Guided visit to the iconic London Eye and River Thames Cruise." },
+                  { time: "06:30 PM – 08:30 PM", title: "Welcome Dinner & Evening Transfer", desc: "Indian dinner at central London restaurant followed by coach transfer back to hotel." },
+                ].map((item, idx) => (
+                  <div key={idx} className="flex gap-4 items-start p-3.5 rounded-lg bg-slate-50 border border-slate-100 hover:border-slate-200 transition-all">
+                    <span className="shrink-0 px-2.5 py-1 bg-white border border-slate-200 rounded-md text-slate-900 font-bold text-xs tracking-tight shadow-2xs">
+                      {item.time}
+                    </span>
+                    <div>
+                      <h3 className="text-sm font-bold text-slate-900 leading-snug">{item.title}</h3>
+                      <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">{item.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
 
             {/* Sub-Themes */}
             <div className="bg-white border border-slate-200 rounded-xl p-8">

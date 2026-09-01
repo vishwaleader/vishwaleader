@@ -1,6 +1,6 @@
 "use client";
 
-import { Globe, Handshake, Users, Calendar, MapPin, Download } from 'lucide-react';
+import { Globe, Handshake, Users, Calendar, MapPin, Download, Clock } from 'lucide-react';
 import Image from 'next/image';
 import EventRegistrationCTA from '@/components/EventRegistrationCTA';
 
@@ -27,6 +27,7 @@ export default function BusinessSummitPage() {
             </div>
             <a 
               href="/pdfs/business-prospectus-2026.pdf" 
+              download="International-Business-Summit-Prospectus-2026.pdf"
               target="_blank" 
               rel="noopener noreferrer" 
               className="inline-flex items-center gap-2 px-6 py-3 bg-amber-400 text-slate-900 font-bold rounded-xl shadow-lg hover:bg-amber-300 transition-all text-sm"
@@ -40,6 +41,41 @@ export default function BusinessSummitPage() {
 
           {/* Main Content */}
           <div className="md:col-span-2 space-y-8">
+
+            {/* Minute-to-Minute Schedule (19th Sept 2026) */}
+            <div id="schedule" className="bg-white border border-slate-200 rounded-xl p-8 shadow-sm scroll-mt-24">
+              <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100 flex-wrap gap-2">
+                <div>
+                  <h2 className="text-xl font-semibold text-slate-900 flex items-center gap-2">
+                    <Clock className="w-5 h-5 text-brandBlue" /> Minute-to-Minute Program Schedule
+                  </h2>
+                  <p className="text-xs text-slate-500 mt-1">Saturday, 19th September 2026 — Atrium Hotel Heathrow, London</p>
+                </div>
+                <span className="px-3 py-1 bg-amber-50 text-amber-800 text-xs font-bold rounded-full border border-amber-200 uppercase tracking-wider">Day 3 (Business)</span>
+              </div>
+              <div className="space-y-4">
+                {[
+                  { time: "08:30 AM – 09:30 AM", title: "Breakfast at Hotel", desc: "Continental Breakfast at Atrium Hotel Heathrow." },
+                  { time: "09:30 AM – 12:30 PM", title: "Windsor Castle Excursion", desc: "Guided sightseeing tour & entrance to historic Windsor Castle." },
+                  { time: "01:00 PM – 02:00 PM", title: "Indian Buffet Lunch", desc: "Indian lunch at restaurant." },
+                  { time: "02:30 PM – 04:30 PM", title: "Return & Prep Time", desc: "Return to hotel for summit preparation & executive networking." },
+                  { time: "05:00 PM – 05:30 PM", title: "Delegate Registration & Business Welcome", desc: "Arrival of delegates, corporate leaders, and VIP dignitaries at Atrium Suite." },
+                  { time: "05:30 PM – 07:30 PM", title: "Inaugural Keynote & B2B Presentations", desc: "Opening remarks by GBBC, DACC & WLCC conveners, investor presentations." },
+                  { time: "07:30 PM – 09:30 PM", title: "Panel Discussion & Global Network Forum", desc: "Cross-border trade forums, startup pitches & global Bahujan business initiatives." },
+                  { time: "09:30 PM Onwards", title: "Business Summit Gala Dinner", desc: "Networking banquet dinner post summit at Hotel Atrium." },
+                ].map((item, idx) => (
+                  <div key={idx} className="flex gap-4 items-start p-3.5 rounded-lg bg-slate-50 border border-slate-100 hover:border-slate-200 transition-all">
+                    <span className="shrink-0 px-2.5 py-1 bg-white border border-slate-200 rounded-md text-slate-900 font-bold text-xs tracking-tight shadow-2xs">
+                      {item.time}
+                    </span>
+                    <div>
+                      <h3 className="text-sm font-bold text-slate-900 leading-snug">{item.title}</h3>
+                      <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">{item.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
 
             {/* About */}
             <div className="bg-white border border-slate-200 rounded-xl p-8">
