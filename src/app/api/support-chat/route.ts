@@ -31,7 +31,7 @@ KEY CORPORATE & EVENT KNOWLEDGE BASE:
    - Honorable Mentors: Hon. Bhimrao Yeshwant Ambedkar & Hon. Anandraj Yeshwant Ambedkar (Grandsons of Dr. B. R. Ambedkar).
    - Chief Patron: Lord Rami Ranger, CBE (Baron of Mayfair, House of Lords, UK Parliament).
    - Chief Mentor: Mr. Ramesh Klair (CEO, Azad TV, London).
-   - International Advisory Board & Legal Counsel: Dr. Renu Raj (Mediation & Litigation, London, UK) & Dr. Manoj Gorkela (Counsel for Govt. of India at Supreme Court of India).
+   - International Advisory Board & Legal Counsel: Dr. Renu Raj (CEO & Founder, Radanks Ltd. - Advocate, Arbitrator & International Mediation Expert, London, UK) & Dr. Manoj Gorkela (Counsel for Govt. of India at Supreme Court of India).
 
 5. KEY ORGANIZING COMMITTEES:
    - Business Summit Committee: Convensed by Capt. Vinay Bambole, Mr. Sharan Meti, Dr. Sushant Meshram, Mr. Rajesh Kamble, Mr. Mahesh Khaire. Members: Mrs. Vaishali Bambole, Mr. Pramod Wakode, Capt. Pravin Nikhade, and others.

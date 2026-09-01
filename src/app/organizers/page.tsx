@@ -160,7 +160,7 @@ export default function OrganizersPage() {
             <div className="space-y-6">
               <div>
                 <h3 className="font-bold text-slate-900 text-lg">Dr. Renu Raj</h3>
-                <p className="text-sm text-slate-500 mt-1">Randanks Limited, Mediation & Litigation Global, London, UK (CEO & Founder, Alternate Dispute Resolution Mediation Training, Services & Litigation, London, UK)</p>
+                <p className="text-sm text-slate-500 mt-1">CEO &amp; Founder, Radanks Ltd. (London, UK) — Advocate, Arbitrator &amp; International Mediation Expert | Sole International Mediation Expert on Indian Parliament Mediation Bill Committee | Director, West London Chambers of Commerce</p>
               </div>
               <div className="w-full h-px bg-slate-100"></div>
               <div>

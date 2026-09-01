@@ -969,30 +969,34 @@ export default function MemberClientPage() {
       return;
     }
 
-    const scriptLoaded = await loadRazorpayScript();
-    if (!scriptLoaded) {
-      alert("Could not load payment gateway script. Please verify your connection.");
-      return;
-    }
+    setLoading(true);
+    try {
+      const scriptLoaded = await loadRazorpayScript();
+      if (!scriptLoaded) {
+        alert("Could not load payment gateway script. Please verify your connection.");
+        setLoading(false);
+        return;
+      }
 
-    const payableToday = calculateWizardPayableToday();
-    const result = await createDynamicOrder(selectedItems, Number(patronAmount) || 100000, wizardPaymentMode, payableToday);
+      const payableToday = calculateWizardPayableToday();
+      const result = await createDynamicOrder(selectedItems, Number(patronAmount) || 100000, wizardPaymentMode, payableToday);
 
-    if (!result.success || !result.order) {
-      alert(result.error || "Could not generate order order-id from checkout gateway.");
-      return;
-    }
+      if (!result.success || !result.order) {
+        alert(result.error || "Could not generate order order-id from checkout gateway.");
+        setLoading(false);
+        return;
+      }
 
-    const { order, totalAmount, payableAmount } = result;
-    const amountToCharge = payableAmount || payableToday;
+      const { order, totalAmount, payableAmount } = result;
+      const amountToCharge = payableAmount || payableToday;
 
       const rzpKey = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
       if (!rzpKey) {
         alert("Payment gateway key is not configured in environment variables.");
+        setLoading(false);
         return;
       }
 
-      // 2. Configure payment options with transaction verification callback
       const options = {
         key: rzpKey,
         amount: order.amount,
@@ -1005,7 +1009,6 @@ export default function MemberClientPage() {
         handler: async function (response: any) {
           setLoading(true);
           try {
-            // 3. Verify Razorpay response signature securely on the server side
             const verifyRes = await verifyDynamicPayment(
               response.razorpay_payment_id,
               response.razorpay_order_id,
@@ -1023,7 +1026,7 @@ export default function MemberClientPage() {
                 paymentOrderId: response.razorpay_order_id 
               }));
               showToast("Payment completed and verified successfully!");
-              window.location.reload(); // Quick refresh to update state based on accessRights
+              window.location.reload();
             } else {
               alert(`Signature verification failed: ${verifyRes.error}`);
             }
@@ -1047,7 +1050,15 @@ export default function MemberClientPage() {
       };
 
       const rzp = new window.Razorpay(options);
+      rzp.on('payment.failed', function (response: any) {
+        alert("Payment failed: " + (response.error?.description || "Transaction failed."));
+        setLoading(false);
+      });
       rzp.open();
+    } catch (err: any) {
+      alert(`Error initiating payment: ${err.message}`);
+      setLoading(false);
+    }
   };
 
   const [payingBalance, setPayingBalance] = useState(false);
@@ -1059,12 +1070,14 @@ export default function MemberClientPage() {
       const scriptLoaded = await loadRazorpayScript();
       if (!scriptLoaded) {
         alert("Could not load payment gateway script. Please verify your internet connection.");
+        setPayingBalance(false);
         return;
       }
 
       const res = await createBalancePaymentOrder(user.uid, customPayAmount);
       if (!res.success || !res.order) {
         alert(res.error || "Could not generate order for balance payment.");
+        setPayingBalance(false);
         return;
       }
 
@@ -1073,6 +1086,7 @@ export default function MemberClientPage() {
       const rzpKey = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
       if (!rzpKey) {
         alert("Payment gateway key is not configured in environment variables.");
+        setPayingBalance(false);
         return;
       }
 
@@ -1123,6 +1137,10 @@ export default function MemberClientPage() {
       };
 
       const rzp = new window.Razorpay(options);
+      rzp.on('payment.failed', function (response: any) {
+        alert("Payment failed: " + (response.error?.description || "Transaction failed."));
+        setPayingBalance(false);
+      });
       rzp.open();
     } catch (err: any) {
       alert(`Error initiating balance payment: ${err.message}`);

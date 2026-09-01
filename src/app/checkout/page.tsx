@@ -106,15 +106,27 @@ function CheckoutContent() {
     setPaying(true);
     try {
       const loaded = await loadRazorpay();
-      if (!loaded) { alert("Could not load payment gateway. Check your connection."); return; }
+      if (!loaded) { 
+        alert("Could not load payment gateway. Check your connection."); 
+        setPaying(false);
+        return; 
+      }
       const result = await createDynamicOrder([itemId], undefined, effectivePaymentMode, payableToday);
-      if (!result.success || !result.order) { alert(result.error || "Could not create order."); return; }
+      if (!result.success || !result.order) { 
+        alert(result.error || "Could not create order."); 
+        setPaying(false);
+        return; 
+      }
       const { order, totalAmount, payableAmount } = result;
       const amountToCharge = payableAmount || payableToday;
       const rzpKey = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
-      if (!rzpKey) { alert("Payment gateway key is not configured in environment variables."); setPaying(false); return; }
+      if (!rzpKey) { 
+        alert("Payment gateway key is not configured in environment variables."); 
+        setPaying(false); 
+        return; 
+      }
 
-      new window.Razorpay({
+      const rzp = new window.Razorpay({
         key:         rzpKey,
         amount:      order.amount,
         currency:    order.currency,
@@ -134,7 +146,14 @@ function CheckoutContent() {
         prefill: { name: user.displayName || "", email: user.email || "" },
         theme:   { color: "#1d4ed8" },
         modal:   { ondismiss: () => setPaying(false) },
-      }).open();
+      });
+
+      rzp.on('payment.failed', function (response: any) {
+        alert("Payment failed: " + (response.error?.description || "Transaction failed."));
+        setPaying(false);
+      });
+
+      rzp.open();
     } catch (err: any) {
       alert("Unexpected payment error: " + (err?.message || "Please try again."));
       setPaying(false);

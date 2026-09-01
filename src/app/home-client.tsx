@@ -778,7 +778,7 @@ export default function HomeClientPage() {
                             <li><i className="fa-solid fa-check text-emerald-500 mr-2"></i> <strong>Format:</strong> MS Word Document</li>
                         </ul>
                     </div>
-                    <a href="#contact" className="block text-center border border-slate-300 bg-white text-brandDark font-bold py-3 rounded text-xs uppercase tracking-wider hover:bg-slate-100 transition-colors">Submit Article</a>
+                    <a href="/souvenir-articles" className="block text-center border border-slate-300 bg-white text-brandDark font-bold py-3 rounded text-xs uppercase tracking-wider hover:bg-slate-100 transition-colors">Submit Article</a>
                 </div>
             </div>
         </div>
@@ -822,7 +822,7 @@ export default function HomeClientPage() {
             </div>
 
             <div className="max-w-5xl mx-auto mt-6 text-center">
-                <a href="https://vishwaleader.vercel.app/tour-package" className="inline-block bg-brandBlue text-white font-bold px-6 py-3 rounded hover:bg-brandBlue/90 text-xs uppercase tracking-wider transition-all shadow-sm">
+                <a href="/tour-package" className="inline-block bg-brandBlue text-white font-bold px-6 py-3 rounded hover:bg-brandBlue/90 text-xs uppercase tracking-wider transition-all shadow-sm">
                     Read Full Tour Details
                 </a>
             </div>
@@ -867,7 +867,7 @@ export default function HomeClientPage() {
                         </p>
                     </div>
                     <div className="border-t border-slate-100 pt-4 mt-6">
-                        <a href="#advertisers" className="text-xs font-bold text-brandBlue hover:underline uppercase tracking-wider">
+                        <a href="/souvenir-articles" className="text-xs font-bold text-brandBlue hover:underline uppercase tracking-wider">
                             Get Details <i className="fa-solid fa-arrow-right text-[9px] ml-0.5"></i>
                         </a>
                     </div>
