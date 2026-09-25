@@ -107,9 +107,9 @@ export default function EventRegistrationCTA({
     ? "bg-white text-slate-900 hover:bg-slate-100"
     : "bg-brandBlue text-white hover:bg-blue-700 shadow-lg shadow-blue-900/20";
 
-  const isPatron = itemId === "donation_patron" || itemId === "patron" || itemId === "donate";
+  const isAllowed = itemId === "donation_patron" || itemId === "patron" || itemId === "donate" || itemId === "__login_only__";
 
-  if (!isPatron) {
+  if (!isAllowed) {
     return (
       <div className={`w-full py-3.5 px-4 rounded-xl font-bold text-xs text-center flex items-center justify-center gap-2 ${
         dark 
