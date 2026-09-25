@@ -181,6 +181,34 @@ function CheckoutContent() {
     </div>
   );
 
+  const isPatronItem = itemId === "donation_patron" || itemId === "patron" || itemId === "donate";
+
+  if (!isPatronItem) return (
+    <div className="fixed inset-0 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm z-50 p-6 font-sans">
+      <div className="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-8 shadow-2xl text-center space-y-4">
+        <div className="w-14 h-14 bg-amber-100 rounded-full flex items-center justify-center mx-auto text-amber-600 font-bold text-2xl">
+          🔒
+        </div>
+        <h2 className="text-xl font-bold text-slate-900">2026 Event Concluded</h2>
+        <p className="text-xs text-slate-600 leading-relaxed">
+          Registrations for the <strong>Vishwa Leader London 2026 Events</strong> (Academic Conference, Business Summit, Awards Ceremony & London Tour) are now closed as the event (17th–24th Sept 2026) has successfully concluded.
+        </p>
+        <div className="bg-amber-50 p-3.5 rounded-xl border border-amber-200 text-amber-900 text-xs text-left space-y-1">
+          <p className="font-bold flex items-center gap-1.5"><ShieldAlert className="w-4 h-4 text-amber-600" /> Transaction Notice:</p>
+          <p className="text-[11px] leading-relaxed">Event registration purchases are disabled. High-Level Patronage and General Support contributions remain active and open for transactions.</p>
+        </div>
+        <div className="pt-3 flex flex-col gap-2.5">
+          <a href="/patron" className="w-full bg-brandBlue text-white font-bold py-3 rounded-xl text-xs uppercase tracking-wider hover:bg-blue-700 transition-all shadow-md">
+            Become a High-Level Patron
+          </a>
+          <a href="/" className="w-full bg-slate-100 text-slate-700 font-bold py-2.5 rounded-xl text-xs uppercase tracking-wider hover:bg-slate-200 transition-all">
+            Return to Home Page
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="fixed inset-0 z-40 grid grid-cols-1 lg:grid-cols-[1fr_550px] gap-0 bg-white overflow-hidden">
 

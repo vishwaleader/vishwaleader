@@ -107,6 +107,20 @@ export default function EventRegistrationCTA({
     ? "bg-white text-slate-900 hover:bg-slate-100"
     : "bg-brandBlue text-white hover:bg-blue-700 shadow-lg shadow-blue-900/20";
 
+  const isPatron = itemId === "donation_patron" || itemId === "patron" || itemId === "donate";
+
+  if (!isPatron) {
+    return (
+      <div className={`w-full py-3.5 px-4 rounded-xl font-bold text-xs text-center flex items-center justify-center gap-2 ${
+        dark 
+          ? "bg-amber-400/10 border border-amber-400/30 text-amber-300" 
+          : "bg-amber-50 border border-amber-200 text-amber-800"
+      }`}>
+        <span>🔒 Registrations Closed — 2026 Event Concluded</span>
+      </div>
+    );
+  }
+
   if (loading) return <div className="w-full py-3 rounded-xl bg-slate-800/50 animate-pulse h-11" />;
 
   if (hasPaid) return (

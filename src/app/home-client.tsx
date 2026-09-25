@@ -273,27 +273,27 @@ export default function HomeClientPage() {
                 transition={{ duration: 0.8, ease: "easeOut" }}
                 className="lg:col-span-7 space-y-6"
             >
-                <div className="inline-flex items-center gap-2 border border-amber-500/30 bg-amber-500/10 px-4 py-1.5 rounded-full text-xs font-bold tracking-wide text-amber-400">
-                    <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></span>
-                    <span data-field="hero.location">London, UK</span> • SEPTEMBER 18-20, 2026
+                <div className="inline-flex items-center gap-2 border border-emerald-500/40 bg-emerald-500/10 px-4 py-1.5 rounded-full text-xs font-bold tracking-wide text-emerald-400">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+                    <span data-field="hero.location">London, UK</span> • SEPTEMBER 18-20, 2026 (SUCCESSFULLY CONCLUDED)
                 </div>
                 <h1 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black leading-tight tracking-tight text-white">
                     <span data-field="hero.title"><span translate="no" className="notranslate">Vishwa Leader</span> Dr. B. R. Ambedkar International Awards 2026</span>
                 </h1>
                 <p className="text-slate-300 text-base md:text-lg leading-relaxed max-w-2xl font-normal" data-field="hero.description">
-                    On the eve of 135th Birth Anniversary of Dr. B. R. Ambedkar, Vishwa Leader Techmedia Pvt. Ltd. coordinates global advocacy networks, academic research, and media ecosystems to amplify constitutional values and diaspora empowerment. 🎉
+                    The 2026 London International Events have successfully concluded! On the 135th Birth Anniversary of Dr. B. R. Ambedkar, global leaders, scholars, and awardees gathered in London to honor exceptional contributions to social justice, equality, and human rights. 🎉
                 </p>
                 
-                {/* CTA buttons for the three main calls */}
+                {/* CTA buttons for the main sections */}
                 <div className="flex flex-col sm:flex-row flex-wrap gap-4 pt-4 w-full">
                     <motion.a whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} id="btn-abstract" data-field="announcements.abstractLink" href="#conference-details" onClick={(e: any) => handleSmoothScroll(e, 'conference-details')} className="w-full sm:w-auto bg-brandBlue text-white font-bold px-6 py-4 rounded hover:bg-brandBlue/90 active:scale-[0.98] text-xs tracking-wider uppercase text-center transition-all shadow-md flex items-center justify-center gap-2">
-                        <i className="fa-solid fa-graduation-cap"></i> Submit Abstract
+                        <i className="fa-solid fa-graduation-cap"></i> Conference Overview
                     </motion.a>
                     <motion.a whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} id="btn-business" data-field="announcements.businessLink" href="#business-summit" onClick={(e: any) => handleSmoothScroll(e, 'business-summit')} className="w-full sm:w-auto bg-amber-500 text-brandDark font-bold px-6 py-4 rounded hover:bg-amber-400 active:scale-[0.98] text-xs tracking-wider uppercase text-center transition-all shadow-md flex items-center justify-center gap-2">
-                        <i className="fa-solid fa-briefcase"></i> Business Participation
+                        <i className="fa-solid fa-briefcase"></i> Business Summit
                     </motion.a>
-                    <motion.a whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} id="btn-nomination" data-field="announcements.awardLink" href="#awards" onClick={(e: any) => handleSmoothScroll(e, 'awards')} className="w-full sm:w-auto border border-slate-500 text-white bg-slate-900/60 font-bold px-6 py-4 rounded hover:bg-slate-800 active:scale-[0.98] text-xs tracking-wider uppercase text-center transition-all shadow-sm flex items-center justify-center gap-2">
-                        <i className="fa-solid fa-trophy"></i> Nominate for Award
+                    <motion.a whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} id="btn-nomination" data-field="announcements.awardLink" href="#awards" onClick={(e: any) => handleSmoothScroll(e, 'awards')} className="w-full sm:w-auto border border-amber-400/50 text-amber-300 bg-amber-500/10 font-bold px-6 py-4 rounded hover:bg-amber-500/20 active:scale-[0.98] text-xs tracking-wider uppercase text-center transition-all shadow-sm flex items-center justify-center gap-2">
+                        <i className="fa-solid fa-trophy text-amber-400"></i> View 2026 Awardees
                     </motion.a>
                 </div>
             </motion.div>
@@ -557,8 +557,8 @@ export default function HomeClientPage() {
                         </div>
                     </div>
                     <div className="p-6 pt-0 space-y-2">
-                        <a data-field="announcements.abstractLink" href="/call-for-papers" className="block text-center bg-brandBlue text-white hover:bg-brandDark font-bold py-3 rounded text-xs uppercase tracking-wider transition-all shadow-xs">
-                            Submit Abstract / View Day 1
+                        <a data-field="announcements.abstractLink" href="/call-for-papers" className="block text-center bg-slate-900 text-white hover:bg-slate-800 font-bold py-3 rounded text-xs uppercase tracking-wider transition-all shadow-xs">
+                            View Day 1 Details (Completed)
                         </a>
                         <a href="/call-for-papers#schedule" className="block text-center border border-slate-250 text-slate-700 bg-slate-50 hover:bg-slate-100 font-bold py-2 rounded text-[11px] uppercase tracking-wider transition-all">
                             <i className="fa-regular fa-clock mr-1 text-brandBlue"></i> 18th Sept Min-to-Min Schedule
@@ -571,7 +571,7 @@ export default function HomeClientPage() {
                     <div>
                         <div className="p-6 bg-brandDark text-white flex justify-between items-center">
                             <span className="text-xs font-black tracking-widest text-amber-400 uppercase">DAY 2</span>
-                            <span className="bg-brandBlue text-white text-[10px] font-bold px-2 py-0.5 rounded" data-field="events.event2_date">19 Sept 2026</span>
+                            <span className="bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded" data-field="events.event2_date">19 Sept 2026</span>
                         </div>
                         <div className="p-6 space-y-4">
                             <h3 className="font-display font-black text-slate-800 text-lg uppercase leading-tight" data-field="events.event2_name">International Business Summit</h3>
@@ -588,8 +588,8 @@ export default function HomeClientPage() {
                         </div>
                     </div>
                     <div className="p-6 pt-0 space-y-2">
-                        <a data-field="announcements.businessLink" href="/business-summit" className="block text-center bg-brandBlue text-white hover:bg-brandDark font-bold py-3 rounded text-xs uppercase tracking-wider transition-all shadow-xs">
-                            Register for Summit / View Day 2
+                        <a data-field="announcements.businessLink" href="/business-summit" className="block text-center bg-slate-900 text-white hover:bg-slate-800 font-bold py-3 rounded text-xs uppercase tracking-wider transition-all shadow-xs">
+                            View Day 2 Details (Completed)
                         </a>
                         <a href="/business-summit#schedule" className="block text-center border border-slate-250 text-slate-700 bg-slate-50 hover:bg-slate-100 font-bold py-2 rounded text-[11px] uppercase tracking-wider transition-all">
                             <i className="fa-regular fa-clock mr-1 text-brandBlue"></i> 19th Sept Min-to-Min Schedule
@@ -602,7 +602,7 @@ export default function HomeClientPage() {
                     <div>
                         <div className="p-6 bg-brandDark text-white flex justify-between items-center">
                             <span className="text-xs font-black tracking-widest text-amber-400 uppercase">DAY 3</span>
-                            <span className="bg-brandBlue text-white text-[10px] font-bold px-2 py-0.5 rounded" data-field="events.event3_date">20 Sept 2026</span>
+                            <span className="bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded" data-field="events.event3_date">20 Sept 2026</span>
                         </div>
                         <div className="p-6 space-y-4">
                             <h3 className="font-display font-black text-slate-800 text-lg uppercase leading-tight" data-field="events.event3_name">International Award & Cultural Ceremony</h3>
@@ -620,7 +620,7 @@ export default function HomeClientPage() {
                     </div>
                     <div className="p-6 pt-0 space-y-2">
                         <a data-field="announcements.awardLink" href="/awards" className="block text-center bg-brandBlue text-white hover:bg-brandDark font-bold py-3 rounded text-xs uppercase tracking-wider transition-all shadow-xs">
-                            Nominate / View Day 3
+                            View 2026 Winners & Details
                         </a>
                         <a href="/awards#schedule" className="block text-center border border-slate-250 text-slate-700 bg-slate-50 hover:bg-slate-100 font-bold py-2 rounded text-[11px] uppercase tracking-wider transition-all">
                             <i className="fa-regular fa-clock mr-1 text-brandBlue"></i> 20th Sept Min-to-Min Schedule
@@ -720,15 +720,39 @@ export default function HomeClientPage() {
         <div className="max-w-7xl mx-auto px-6">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
                 <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="lg:col-span-5 order-2 lg:order-1">
-                    <div className="bg-white border border-slate-200 rounded-2xl p-8 space-y-4 shadow-sm">
-                        <h4 className="font-display font-bold text-slate-900 text-sm uppercase tracking-wide">Award Categories</h4>
-                        <ul className="space-y-3 text-xs text-slate-600">
-                            <li className="flex gap-2"><i className="fa-solid fa-trophy text-amber-500 mt-0.5"></i> <span>Social Justice Leadership</span></li>
-                            <li className="flex gap-2"><i className="fa-solid fa-trophy text-amber-500 mt-0.5"></i> <span>Education and Empowerment</span></li>
-                            <li className="flex gap-2"><i className="fa-solid fa-trophy text-amber-500 mt-0.5"></i> <span>Economic Development and Inclusion</span></li>
-                            <li className="flex gap-2"><i className="fa-solid fa-trophy text-amber-500 mt-0.5"></i> <span>Human Rights Advocacy</span></li>
-                            <li className="flex gap-2"><i className="fa-solid fa-trophy text-amber-500 mt-0.5"></i> <span>Innovative Community Service</span></li>
-                        </ul>
+                    <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4 shadow-sm">
+                        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                            <h4 className="font-display font-bold text-slate-900 text-sm uppercase tracking-wide flex items-center gap-2">
+                                <i className="fa-solid fa-trophy text-amber-500"></i> Award Categories & 2026 Winners
+                            </h4>
+                            <span className="text-[10px] bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded">Honored Awardees</span>
+                        </div>
+                        <div className="space-y-3 text-xs text-slate-700">
+                            <div>
+                                <span className="font-bold text-slate-900 block">1. Social Justice Leadership</span>
+                                <span className="text-slate-600 text-[11px] pl-3 block">✦ G. Govindaraju</span>
+                                <span className="text-slate-600 text-[11px] pl-3 block">✦ Ambedkar Association of North America (AANA)</span>
+                            </div>
+                            <div>
+                                <span className="font-bold text-slate-900 block">2. Education and Empowerment</span>
+                                <span className="text-slate-600 text-[11px] pl-3 block">✦ POETIC JUSTICE FOUNDATION</span>
+                                <span className="text-slate-600 text-[11px] pl-3 block">✦ Dr Pallavi G.K</span>
+                            </div>
+                            <div>
+                                <span className="font-bold text-slate-900 block">3. Economic Development & Inclusion</span>
+                                <span className="text-slate-600 text-[11px] pl-3 block">✦ Ichiro Koike</span>
+                                <span className="text-slate-600 text-[11px] pl-3 block">✦ M. Suhail Yacoob Khandwani</span>
+                            </div>
+                            <div>
+                                <span className="font-bold text-slate-900 block">4. Human Rights Advocacy</span>
+                                <span className="text-slate-600 text-[11px] pl-3 block">✦ Prof Kevin Brown</span>
+                            </div>
+                            <div>
+                                <span className="font-bold text-slate-900 block">5. Innovative Community Service</span>
+                                <span className="text-slate-600 text-[11px] pl-3 block">✦ Sadguru Yogiraj Dr. Mangeshda</span>
+                                <span className="text-slate-600 text-[11px] pl-3 block">✦ Mr Shivshankar Lature</span>
+                            </div>
+                        </div>
                     </div>
                 </motion.div>
                 <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.2 }} className="lg:col-span-7 order-1 lg:order-2 space-y-6">

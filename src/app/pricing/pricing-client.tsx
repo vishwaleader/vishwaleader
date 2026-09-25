@@ -36,14 +36,30 @@ export default function PricingClientPage() {
 
       <main className="min-h-screen relative font-sans pb-32">
         
-        {/* Header Section */}
-        <section className="pt-32 pb-16 md:pt-40 md:pb-20 text-center px-6">
-          <h1 className="text-4xl md:text-5xl font-semibold text-slate-900 tracking-tight mb-4">
-            Plans and Pricing
-          </h1>
-          <p className="text-slate-500 text-base md:text-lg max-w-xl mx-auto mb-10">
-            Select an all-inclusive VIP tour package, or build a custom itinerary with our a la carte options.
-          </p>
+        {/* Header / Hero Section */}
+        <section className="min-h-screen flex flex-col items-center justify-between -mt-16 md:-mt-20 pt-28 md:pt-36 pb-8 mb-16 bg-white text-slate-900 px-6">
+          <div className="max-w-4xl mx-auto text-center my-auto">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-50 text-amber-800 text-xs font-bold border border-amber-200 mb-6">
+              <span>🔒 2026 London Event Concluded — Event Registrations Closed</span>
+            </div>
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-slate-900 tracking-tight mb-6 leading-tight font-display">
+              Plans and Pricing
+            </h1>
+            <p className="text-slate-600 text-base md:text-xl max-w-2xl mx-auto mb-8 leading-relaxed font-normal">
+              The 2026 London International Events (17th–24th Sept 2026) have successfully concluded. Registration transactions for tour packages and event entries are closed. High-Level Patronage & Support contributions remain active.
+            </p>
+            <div className="flex justify-center">
+              <a href="/patron" className="inline-flex items-center gap-2 bg-brandBlue text-white font-bold px-8 py-4 rounded-xl hover:bg-blue-700 transition-all text-xs uppercase tracking-wider shadow-lg">
+                <Heart className="w-4 h-4 text-rose-400 fill-rose-400" /> Become a High-Level Patron (Active Transactions)
+              </a>
+            </div>
+          </div>
+          <div className="pt-4 flex flex-col items-center gap-2 text-slate-400 text-xs font-bold uppercase tracking-widest animate-bounce">
+            <span>Scroll Down to Explore Pricing Plans</span>
+            <svg className="w-5 h-5 text-brandBlue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+            </svg>
+          </div>
         </section>
 
         {/* Pricing Grids */}
@@ -73,7 +89,7 @@ export default function PricingClientPage() {
                   <li className="flex items-start gap-3 text-sm text-slate-300"><Check className="size-4 shrink-0 text-amber-400 mt-0.5" /><span className="text-amber-400 font-medium">Event Registration (Worth ₹24,544) Included</span></li>
                   <li className="flex items-start gap-3 text-sm text-slate-300"><Check className="size-4 shrink-0 text-white mt-0.5" /><span>All applicable taxes and package inclusions</span></li>
                 </ul>
-                <button onClick={handleProceed} className="w-full bg-white text-slate-900 hover:bg-slate-100 font-semibold py-2.5 rounded-lg text-sm transition-colors mt-auto">Register Now</button>
+                <button disabled className="w-full bg-white text-slate-900 font-semibold py-2.5 rounded-lg text-sm transition-colors mt-auto opacity-80 cursor-not-allowed">🔒 Event Concluded</button>
               </div>
 
               {/* Package 2 (2,44,400) */}
@@ -95,7 +111,7 @@ export default function PricingClientPage() {
                   <li className="flex items-start gap-3 text-sm text-slate-600"><Check className="size-4 shrink-0 text-brandBlue mt-0.5" /><span className="text-brandBlue font-medium">Event Registration (Worth ₹24,544) Included</span></li>
                   <li className="flex items-start gap-3 text-sm text-slate-600"><Check className="size-4 shrink-0 text-slate-900 mt-0.5" /><span>All applicable taxes and package inclusions</span></li>
                 </ul>
-                <button onClick={handleProceed} className="w-full bg-slate-900 text-white hover:bg-slate-800 font-semibold py-2.5 rounded-lg text-sm transition-colors mt-auto">Register Now</button>
+                <button disabled className="w-full bg-slate-900 text-white font-semibold py-2.5 rounded-lg text-sm transition-colors mt-auto opacity-80 cursor-not-allowed">🔒 Event Concluded</button>
               </div>
 
               {/* Package 3 (2,08,520) */}
@@ -115,7 +131,7 @@ export default function PricingClientPage() {
                   <li className="flex items-start gap-3 text-sm text-slate-600"><Check className="size-4 shrink-0 text-brandBlue mt-0.5" /><span className="text-brandBlue font-medium">Event Registration (Worth ₹24,544) Included</span></li>
                   <li className="flex items-start gap-3 text-sm text-slate-600"><Check className="size-4 shrink-0 text-slate-900 mt-0.5" /><span>All applicable package inclusions within London</span></li>
                 </ul>
-                <button onClick={handleProceed} className="w-full bg-slate-900 text-white hover:bg-slate-800 font-semibold py-2.5 rounded-lg text-sm transition-colors mt-auto">Register Now</button>
+                <button disabled className="w-full bg-slate-900 text-white font-semibold py-2.5 rounded-lg text-sm transition-colors mt-auto opacity-80 cursor-not-allowed">🔒 Event Concluded</button>
               </div>
 
               {/* Package 4 (1,36,240) */}
@@ -135,7 +151,7 @@ export default function PricingClientPage() {
                   <li className="flex items-start gap-3 text-sm text-slate-600"><Check className="size-4 shrink-0 text-brandBlue mt-0.5" /><span className="text-brandBlue font-medium">Event Registration (Worth ₹24,544) Included</span></li>
                   <li className="flex items-start gap-3 text-sm text-slate-600"><Check className="size-4 shrink-0 text-slate-900 mt-0.5" /><span>All applicable package inclusions within London</span></li>
                 </ul>
-                <button onClick={handleProceed} className="w-full bg-slate-900 text-white hover:bg-slate-800 font-semibold py-2.5 rounded-lg text-sm transition-colors mt-auto">Register Now</button>
+                <button disabled className="w-full bg-slate-900 text-white font-semibold py-2.5 rounded-lg text-sm transition-colors mt-auto opacity-80 cursor-not-allowed">🔒 Event Concluded</button>
               </div>
 
             </div>

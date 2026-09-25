@@ -22,39 +22,25 @@ export default function AwardsPage() {
       <main className="pb-16 md:pb-20">
         
         {/* Hero Section */}
-        <div className="bg-brandBlue relative overflow-hidden pt-32 pb-20 md:pt-40 md:pb-24 mb-16">
+        <div className="bg-brandBlue relative overflow-hidden min-h-screen flex flex-col items-center justify-between -mt-16 md:-mt-20 pt-28 md:pt-36 pb-8 mb-16 text-white">
           <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] mix-blend-overlay"></div>
-          <div className="max-w-4xl mx-auto px-6 text-center relative z-10">
-            <div className="inline-flex items-center justify-center gap-2 px-4 py-1.5 rounded-full bg-white/10 text-white text-xs font-bold uppercase tracking-widest border border-white/20 mb-6 backdrop-blur-sm">
+          <div className="max-w-4xl mx-auto px-6 text-center relative z-10 my-auto">
+            <div className="inline-flex items-center justify-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-bold uppercase tracking-widest border border-emerald-500/30 mb-6 backdrop-blur-sm">
               <Trophy className="w-4 h-4 text-amber-400" />
-              Applications Now Open
+              2026 Event Concluded
             </div>
-            <h1 className="text-4xl md:text-5xl font-semibold text-white tracking-tight mb-4 leading-tight">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-white tracking-tight mb-6 leading-tight">
               <span translate="no" className="notranslate">Vishwa Leader</span> Dr. B. R. Ambedkar International Awards 2026
             </h1>
-            <p className="text-blue-100 text-base md:text-lg max-w-2xl mx-auto mb-8">
+            <p className="text-blue-100 text-base md:text-xl max-w-2xl mx-auto leading-relaxed font-normal">
               Honoring individuals and organizations making exceptional contributions to social justice, equality, and human rights.
             </p>
-            <div className="flex flex-wrap justify-center gap-4">
-              <a 
-                href="/pdfs/awards-circular-2026.pdf" 
-                download="Awards-Circular-Brochure-2026.pdf"
-                target="_blank" 
-                rel="noopener noreferrer" 
-                className="inline-flex items-center gap-2 px-6 py-3 bg-amber-400 text-slate-900 font-bold rounded-xl shadow-lg hover:bg-amber-300 transition-all text-sm"
-              >
-                <Download className="w-4 h-4" /> Download Awards Circular Brochure (PDF)
-              </a>
-              <a 
-                href="/pdfs/nomination-form-2026.pdf" 
-                download="Awards-Nomination-Form-2026.pdf"
-                target="_blank" 
-                rel="noopener noreferrer" 
-                className="inline-flex items-center gap-2 px-6 py-3 bg-white/10 text-white font-bold rounded-xl border border-white/20 shadow hover:bg-white/20 transition-all text-sm"
-              >
-                <Download className="w-4 h-4" /> Nomination Form (PDF)
-              </a>
-            </div>
+          </div>
+          <div className="relative z-10 pt-4 flex flex-col items-center gap-2 text-blue-200 text-xs font-bold uppercase tracking-widest animate-bounce">
+            <span>Scroll Down to Explore</span>
+            <svg className="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+            </svg>
           </div>
         </div>
 
@@ -108,23 +94,76 @@ export default function AwardsPage() {
               </p>
             </div>
 
-            <div className="bg-white border border-slate-200 rounded-xl p-8">
-              <h2 className="text-xl font-semibold text-slate-900 mb-6 flex items-center gap-2">
-                <Trophy className="w-5 h-5 text-slate-400" /> Award Categories
-              </h2>
-              <div className="grid sm:grid-cols-2 gap-4">
+            <div className="bg-white border border-slate-200 rounded-xl p-8 shadow-xs">
+              <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100 flex-wrap gap-2">
+                <div>
+                  <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                    <Trophy className="w-5 h-5 text-amber-500" /> Award Categories & Honored Awardees (Winners 2026)
+                  </h2>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Official Announcement of Awardees — Dr. B. R. Ambedkar International Awards 2026
+                  </p>
+                </div>
+                <span className="px-3 py-1 bg-amber-50 text-amber-800 text-xs font-bold rounded-full border border-amber-200 uppercase tracking-wider">
+                  Official 2026 Winners
+                </span>
+              </div>
+
+              <div className="space-y-6">
                 {[
-                  "Social Justice Leadership",
-                  "Education and Empowerment",
-                  "Economic Development and Inclusion",
-                  "Human Rights Advocacy",
-                  "Innovative Community Service"
-                ].map((category, i) => (
-                  <div key={i} className="bg-slate-50 p-4 rounded-lg border border-slate-100 flex items-start gap-3">
-                    <div className="bg-white border border-slate-200 text-slate-900 w-8 h-8 rounded flex items-center justify-center font-bold text-sm shrink-0">
-                      {i + 1}
+                  {
+                    category: "Social Justice Leadership",
+                    awardees: [
+                      "G. Govindaraju",
+                      "The Ambedkar Association of North America (AANA)"
+                    ]
+                  },
+                  {
+                    category: "Education and Empowerment",
+                    awardees: [
+                      "POETIC JUSTICE FOUNDATION",
+                      "Dr Pallavi G.K"
+                    ]
+                  },
+                  {
+                    category: "Economic Development and Inclusion",
+                    awardees: [
+                      "Ichiro Koike",
+                      "M. Suhail Yacoob Khandwani"
+                    ]
+                  },
+                  {
+                    category: "Human Rights Advocacy",
+                    awardees: [
+                      "Prof Kevin Brown"
+                    ]
+                  },
+                  {
+                    category: "Innovative Community Service",
+                    awardees: [
+                      "Sadguru Yogiraj Dr. Mangeshda",
+                      "Mr Shivshankar Lature"
+                    ]
+                  }
+                ].map((item, i) => (
+                  <div key={i} className="bg-slate-50 p-5 rounded-xl border border-slate-200 hover:border-amber-300 transition-all">
+                    <div className="flex items-center gap-3 mb-3">
+                      <span className="bg-brandBlue text-white w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 shadow-xs">
+                        {i + 1}
+                      </span>
+                      <h3 className="font-bold text-slate-900 text-base">{item.category}</h3>
                     </div>
-                    <span className="font-medium text-slate-700 text-sm mt-1">{category}</span>
+                    <div className="pl-10 space-y-2">
+                      <p className="text-xs font-bold uppercase tracking-wider text-amber-600">Honored Awardees / Winners:</p>
+                      <div className="grid sm:grid-cols-2 gap-2">
+                        {item.awardees.map((winner, idx) => (
+                          <div key={idx} className="bg-white p-3 rounded-lg border border-slate-200/80 flex items-center gap-2.5 shadow-2xs">
+                            <Trophy className="w-4 h-4 text-amber-500 shrink-0" />
+                            <span className="font-semibold text-slate-800 text-xs">{winner}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>

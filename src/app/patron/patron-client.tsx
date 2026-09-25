@@ -178,14 +178,14 @@ export default function PatronClientPage() {
   return (
     <div className="min-h-screen bg-slate-50/50 font-sans pb-32">
       {/* Header Section */}
-      <div className="bg-brandBlue relative overflow-hidden pt-28 pb-16 sm:pt-36 sm:pb-20 mb-8 sm:mb-12">
+      <div className="bg-brandBlue relative overflow-hidden min-h-screen flex flex-col items-center justify-between -mt-16 md:-mt-20 pt-24 sm:pt-32 pb-8 mb-8 sm:mb-12 text-white">
         <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] mix-blend-overlay"></div>
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center relative z-10">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center relative z-10 my-auto">
           {/* Back Button */}
           <div className="flex justify-start mb-4 sm:mb-6">
             <button
               onClick={() => router.back()}
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs sm:text-sm font-semibold transition-all backdrop-blur-sm border border-white/20 active:scale-95 cursor-pointer"
+              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs sm:text-sm font-semibold transition-all backdrop-blur-sm border border-white/20 active:scale-95 cursor-pointer"
               aria-label="Go back to previous page"
             >
               <ArrowLeft className="w-4 h-4" />
@@ -197,12 +197,18 @@ export default function PatronClientPage() {
             <Heart className="w-4 h-4 fill-amber-300 text-amber-300" />
             Support Vishwa Leader 2026
           </div>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold font-display text-white tracking-tight mb-3 sm:mb-4 leading-tight">
+          <h1 className="text-3xl sm:text-5xl md:text-6xl font-bold font-display text-white tracking-tight mb-4 sm:mb-6 leading-tight">
             Patron Contribution & Recognition
           </h1>
-          <p className="text-blue-100 text-xs sm:text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
+          <p className="text-blue-100 text-sm sm:text-base md:text-xl max-w-2xl mx-auto leading-relaxed font-normal">
             We kindly invite individuals, organisations, institutions and well-wishers to support the <span translate="no" className="notranslate">Vishwa Leader</span> Dr. B. R. Ambedkar International Awards 2026, London, UK.
           </p>
+        </div>
+        <div className="relative z-10 pt-4 flex flex-col items-center gap-2 text-blue-200 text-xs font-bold uppercase tracking-widest animate-bounce">
+          <span>Scroll Down to Contribute</span>
+          <svg className="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+          </svg>
         </div>
       </div>
 

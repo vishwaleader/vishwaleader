@@ -52,19 +52,25 @@ export default function OrganizersPage() {
       <main className="pb-16 md:pb-20">
         
         {/* Hero Section */}
-        <div className="bg-brandBlue relative overflow-hidden pt-32 pb-20 md:pt-40 md:pb-24 mb-16">
+        <div className="bg-brandBlue relative overflow-hidden min-h-screen flex flex-col items-center justify-between -mt-16 md:-mt-20 pt-28 md:pt-36 pb-8 mb-16 text-white">
           <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] mix-blend-overlay"></div>
-          <div className="max-w-4xl mx-auto px-6 text-center relative z-10">
+          <div className="max-w-4xl mx-auto px-6 text-center relative z-10 my-auto">
             <div className="inline-flex items-center justify-center gap-2 px-4 py-1.5 rounded-full bg-white/10 text-white text-xs font-bold uppercase tracking-widest border border-white/20 mb-6 backdrop-blur-sm">
               <Users className="w-4 h-4 text-amber-400" />
               Event Organizers
             </div>
-            <h1 className="text-4xl md:text-5xl font-semibold text-white tracking-tight mb-4 leading-tight">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-white tracking-tight mb-6 leading-tight font-display">
               Organizing Committee
             </h1>
-            <p className="text-blue-100 text-base md:text-lg max-w-2xl mx-auto">
+            <p className="text-blue-100 text-base md:text-xl max-w-2xl mx-auto leading-relaxed font-normal">
               Vishwa Leader Dr. B. R. Ambedkar International Awards 2026
             </p>
+          </div>
+          <div className="relative z-10 pt-4 flex flex-col items-center gap-2 text-blue-200 text-xs font-bold uppercase tracking-widest animate-bounce">
+            <span>Scroll Down to Explore Committee</span>
+            <svg className="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+            </svg>
           </div>
         </div>
 

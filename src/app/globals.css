@@ -513,3 +513,26 @@ body {
 .margin-b_one { margin-bottom: 1rem !important; }
 .margin-t_one { margin-top: 1rem !important; }
 
+/* Custom Sleek Chat Scrollbar at Screen Edge */
+.custom-chat-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+}
+
+.custom-chat-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-chat-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-chat-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 9999px;
+}
+
+.custom-chat-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+

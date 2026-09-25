@@ -328,46 +328,48 @@ export default function SupportClientPage() {
         </div>
 
         {/* iMessage Chat Thread */}
-        <div className="flex-1 overflow-y-auto px-3 py-4 md:py-6 md:px-6 space-y-1.5 max-w-2xl mx-auto w-full select-text imessage-container">
-          {messages.map((msg, index) => {
-            const isUser = msg.role === "user";
-            const isEmoji = isEmojiOnly(msg.content);
-            const nextMsg = messages[index + 1];
-            // If the next message is from the same role, suppress tail for iMessage bubble stacking
-            const hasTail = !nextMsg || nextMsg.role !== msg.role;
+        <div className="flex-1 overflow-y-auto w-full custom-chat-scrollbar">
+          <div className="max-w-2xl mx-auto px-3 py-4 md:py-6 md:px-6 space-y-1.5 w-full select-text imessage-container">
+            {messages.map((msg, index) => {
+              const isUser = msg.role === "user";
+              const isEmoji = isEmojiOnly(msg.content);
+              const nextMsg = messages[index + 1];
+              // If the next message is from the same role, suppress tail for iMessage bubble stacking
+              const hasTail = !nextMsg || nextMsg.role !== msg.role;
 
-            return (
-              <div
-                key={msg.id}
-                className={`flex flex-col ${isUser ? "items-end" : "items-start"} w-full`}
-              >
+              return (
                 <div
-                  className={`imessage-bubble ${isUser ? "from-me" : "from-them"} ${
-                    hasTail ? "" : "no-tail"
-                  } ${isEmoji ? "emoji" : ""}`}
+                  key={msg.id}
+                  className={`flex flex-col ${isUser ? "items-end" : "items-start"} w-full`}
                 >
-                  {renderMessageContent(msg.content, isUser)}
+                  <div
+                    className={`imessage-bubble ${isUser ? "from-me" : "from-them"} ${
+                      hasTail ? "" : "no-tail"
+                    } ${isEmoji ? "emoji" : ""}`}
+                  >
+                    {renderMessageContent(msg.content, isUser)}
+                  </div>
+                  {hasTail && (
+                    <span className="text-[9px] text-slate-500 px-2 mt-0.5 block select-none">
+                      {msg.timestamp}
+                    </span>
+                  )}
                 </div>
-                {hasTail && (
-                  <span className="text-[9px] text-slate-500 px-2 mt-0.5 block select-none">
-                    {msg.timestamp}
-                  </span>
-                )}
-              </div>
-            );
-          })}
+              );
+            })}
 
-          {loading && (
-            <div className="flex items-start w-full my-1">
-              <div className="imessage-bubble from-them flex items-center gap-1.5 text-slate-700">
-                <span className="text-xs font-medium">SARA typing</span>
-                <span className="animate-bounce">.</span>
-                <span className="animate-bounce delay-100">.</span>
-                <span className="animate-bounce delay-200">.</span>
+            {loading && (
+              <div className="flex items-start w-full my-1">
+                <div className="imessage-bubble from-them flex items-center gap-1.5 text-slate-700">
+                  <span className="text-xs font-medium">SARA typing</span>
+                  <span className="animate-bounce">.</span>
+                  <span className="animate-bounce delay-100">.</span>
+                  <span className="animate-bounce delay-200">.</span>
+                </div>
               </div>
-            </div>
-          )}
-          <div ref={messagesEndRef} />
+            )}
+            <div ref={messagesEndRef} />
+          </div>
         </div>
 
         {/* iOS iMessage Input Bar */}
