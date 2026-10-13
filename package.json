@@ -39,7 +39,7 @@
     "uuid": "^14.0.1"
   },
   "devDependencies": {
-    "@capacitor/android": "^8.4.1",
+    "@capacitor/android": "^8.4.3",
     "@capacitor/cli": "^8.4.1",
     "@tailwindcss/postcss": "^4",
     "@types/animejs": "^3.1.13",
